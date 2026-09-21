@@ -109,10 +109,13 @@ const daten = await page.evaluate(({ ZELLE, SPALTEN, NAMEN }) => {
 
   /* ---------- Gegenstände ---------- */
   function muenze(ox,oy,phase){
-    const br = [5,3,1,3][phase];
-    px(ox+8-br, oy+4, br*2, 8, P.goldD);
-    px(ox+8-br, oy+5, br*2, 6, P.gold);
-    if(br>2) px(ox+7, oy+6, 1,4, '#FFE9A8');
+    // Grösser und flacher gedreht als früher: neben den 18er-Kacheln
+    // wirkte die alte Münze wie ein dünner Strich.
+    const br = [6,4,2.5,4][phase];
+    px(ox+8-br, oy+2, br*2, 12, P.goldD);
+    px(ox+8-br, oy+3, br*2, 10, P.gold);
+    if(br>3){ px(ox+7, oy+5, 2,6, '#FFE9A8'); }
+    else    { px(ox+8-br+0.5, oy+5, 1,6, '#FFE9A8'); }
   }
   function stern(ox,oy,phase){
     // Breite pulsiert, damit die Drehung im Spiel auch wirklich auffällt

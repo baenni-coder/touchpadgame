@@ -35,7 +35,7 @@ pruefe('Spiel startet, Fuchs steht am Boden', a.amBoden && !a.tot, `y=${a.y}`);
 
 // 1b) Steht er WIRKLICH ruhig? (fängt den Flacker-Bug in der Bodenprüfung)
 const ruhe = await page.evaluate(() => new Promise(res => {
-  spieler.x = 22 * 16; spieler.y = (levelH-2) * 16 - 14;
+  spieler.x = 22 * TILE; spieler.y = (levelH-2) * TILE - spieler.h;
   spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
   partikel.length = 0;
   let maxStaub = 0, wechsel = 0, vorher = spieler.amBoden;
@@ -69,7 +69,7 @@ const hoch = await page.evaluate(() => new Promise(res => {
   const t = setInterval(() => min = Math.min(min, spieler.y), 8);
   dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
   setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { key: ' ' })), 600);
-  setTimeout(() => { clearInterval(t); res(+((y0 - min) / 16).toFixed(2)); }, 1400);
+  setTimeout(() => { clearInterval(t); res(+((y0 - min) / TILE).toFixed(2)); }, 1400);
 }));
 pruefe('Sprunghöhe zwischen 2.5 und 3.5 Kacheln', hoch > 2.5 && hoch < 3.5, hoch + ' Kacheln');
 
@@ -80,13 +80,13 @@ const kurz = await page.evaluate(() => new Promise(res => {
   const t = setInterval(() => min = Math.min(min, spieler.y), 8);
   dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
   setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { key: ' ' })), 70);
-  setTimeout(() => { clearInterval(t); res(+((y0 - min) / 16).toFixed(2)); }, 1200);
+  setTimeout(() => { clearInterval(t); res(+((y0 - min) / TILE).toFixed(2)); }, 1200);
 }));
 pruefe('Kurzer Tipp springt deutlich niedriger', kurz < hoch * 0.7, kurz + ' statt ' + hoch);
 
 // 5) Coyote Time: kurz nach der Kante darf noch gesprungen werden
 const coyote = await page.evaluate(() => new Promise(res => {
-  spieler.x = 24 * 16; spieler.y = (levelH-3) * 16 - 14; spieler.vx = 60; spieler.vy = 0;
+  spieler.x = 24 * TILE; spieler.y = (levelH-3) * TILE - spieler.h; spieler.vx = 60; spieler.vy = 0;
   spieler.amBoden = true;
   setTimeout(() => {
     const inDerLuft = !spieler.amBoden;
@@ -125,7 +125,7 @@ const vorSturz = await page.evaluate(() => {
   // einen Checkpoint aktivieren und den Fuchs dann abstürzen lassen
   const cp = checkpoints[0];
   cp.aktiv = true; spieler.respawnX = cp.x + 3; spieler.respawnY = cp.y + 2;
-  spieler.y = levelH * 16 + 100;
+  spieler.y = levelH * TILE + 100;
   return { leben: spieler.leben, cpX: cp.x };
 });
 await page.waitForTimeout(140);
@@ -160,15 +160,15 @@ await page.click('.pbtn[data-id="touchpad"]');
 // genug Bildfläche bleibt – sonst landet der Zeiger neben dem Canvas.
 const messeTouchpad = async (versatz) => {
   const b = await page.evaluate(() => {
-    spieler.x = 22 * 16; spieler.y = (levelH-3) * 16 - 14;
+    spieler.x = 22 * TILE; spieler.y = (levelH-3) * TILE - spieler.h;
     spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
     kameraSetzen(true);
     const r = document.getElementById('cv').getBoundingClientRect();
-    return { rx: r.x, ry: r.y, rw: r.width, rh: r.height,
+    return { rx: r.x, ry: r.y, rw: r.width, rh: r.height, iw: cv.width,
              fuchs: spieler.x + spieler.b / 2 - kamera.x };
   });
   const ziel = b.fuchs + versatz;
-  await page.mouse.move(b.rx + ziel / 320 * b.rw, b.ry + b.rh / 2);
+  await page.mouse.move(b.rx + ziel / b.iw * b.rw, b.ry + b.rh / 2);
   await page.waitForTimeout(90);
   return page.evaluate(() => +eingabe.x.toFixed(2));
 };
@@ -186,16 +186,16 @@ pruefe('Touchpad: Zeiger auf dem Fuchs -> steht still (Totzone)', still === 0, '
 //     dem Zeiger entgegen – er darf trotzdem nicht stehen bleiben.
 const amEnde = async (zeigerVersatz) => {
   const b = await page.evaluate(() => {
-    spieler.x = (levelB - 6) * 16; spieler.y = (levelH-2) * 16 - 14;
+    spieler.x = (levelB - 6) * TILE; spieler.y = (levelH-2) * TILE - spieler.h;
     spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
     kameraSetzen(true);
     const r = document.getElementById('cv').getBoundingClientRect();
-    const maxK = levelB * 16 - 320;
-    return { rx: r.x, ry: r.y, rw: r.width, rh: r.height,
+    const maxK = levelB * TILE - cv.width;
+    return { rx: r.x, ry: r.y, rw: r.width, rh: r.height, iw: cv.width,
              fuchs: spieler.x + spieler.b / 2 - kamera.x,
              geklemmt: kamera.x >= maxK - 0.5 };
   });
-  await page.mouse.move(b.rx + (b.fuchs + zeigerVersatz) / 320 * b.rw, b.ry + b.rh / 2);
+  await page.mouse.move(b.rx + (b.fuchs + zeigerVersatz) / b.iw * b.rw, b.ry + b.rh / 2);
   await page.waitForTimeout(90);
   const x = await page.evaluate(() => +eingabe.x.toFixed(2));
   return { ...b, eingabeX: x };
@@ -212,7 +212,7 @@ pruefe('Levelende: Zeiger über den Rand hinaus -> läuft trotzdem weiter',
 
 // Zeiger oben auf den Knöpfen: Steuerung soll ruhen, nicht weiterlaufen
 const oben = await page.evaluate(async () => {
-  spieler.x = 22 * 16; spieler.y = (levelH-2) * 16 - 14; spieler.vx = 0; kameraSetzen(true);
+  spieler.x = 22 * TILE; spieler.y = (levelH-2) * TILE - spieler.h; spieler.vx = 0; kameraSetzen(true);
   return document.getElementById('cv').getBoundingClientRect().y;
 });
 await page.mouse.move(640, Math.max(2, oben - 60));
@@ -226,7 +226,7 @@ await page.click('.pbtn[data-id="tastatur"]');
 const messeSprung = (extraNachMs) => page.evaluate(({ ms }) => new Promise(res => {
   levelNeu();
   setTimeout(() => {
-    spieler.x = 8 * 16; spieler.y = (levelH-2) * 16 - 14;
+    spieler.x = 8 * TILE; spieler.y = (levelH-2) * TILE - spieler.h;
     spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
     const y0 = spieler.y; let min = y0;
     const t = setInterval(() => min = Math.min(min, spieler.y), 8);
@@ -236,7 +236,7 @@ const messeSprung = (extraNachMs) => page.evaluate(({ ms }) => new Promise(res =
       setTimeout(() => dispatchEvent(new KeyboardEvent('keydown', { key: ' ' })), ms);
       setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { key: ' ' })), ms + 40);
     }
-    setTimeout(() => { clearInterval(t); res(+((y0 - min) / 16).toFixed(2)); }, 1600);
+    setTimeout(() => { clearInterval(t); res(+((y0 - min) / TILE).toFixed(2)); }, 1600);
   }, 250);
 }), { ms: extraNachMs });
 
@@ -267,7 +267,7 @@ const platt = await page.evaluate(() => new Promise(res => {
   levelWechseln(1);
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
-    g.x = 5 * 16; g.y = (levelH-2) * 16 - g.h; g.vx = 0;   // flacher Boden, stillgestellt
+    g.x = 5 * TILE; g.y = (levelH-2) * TILE - g.h; g.vx = 0;   // flacher Boden, stillgestellt
     spieler.x = g.x; spieler.y = g.y - 13;         // direkt darüber
     spieler.vx = 0; spieler.vy = 120;              // im Fallen
     const leben0 = spieler.leben;
@@ -286,7 +286,7 @@ const seitlich = await page.evaluate(() => new Promise(res => {
   levelWechseln(1);
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
-    g.x = 5 * 16; g.y = (levelH-2) * 16 - g.h; g.vx = 0;     // flacher Boden, Abschnitt A
+    g.x = 5 * TILE; g.y = (levelH-2) * TILE - g.h; g.vx = 0;     // flacher Boden, Abschnitt A
     spieler.x = g.x - 4; spieler.y = g.y;            // überlappt sicher um 6 px
     spieler.vx = 0; spieler.vy = 0;
     const leben0 = spieler.leben;
@@ -309,7 +309,7 @@ const doppelt = await page.evaluate(() => new Promise(res => {
   levelWechseln(1);
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
-    g.x = 5 * 16; g.y = (levelH-2) * 16 - g.h; g.vx = 0;
+    g.x = 5 * TILE; g.y = (levelH-2) * TILE - g.h; g.vx = 0;
     const treffen = () => { spieler.x = g.x; spieler.y = g.y; spieler.vx = 0; spieler.vy = 0; };
     treffen();
     setTimeout(() => { treffen(); }, 60);      // sofort noch einmal hineinlaufen
@@ -327,7 +327,7 @@ const stachel = await page.evaluate(() => new Promise(res => {
     for (let r = 0; r < levelH && !ziel; r++)
       for (let c = 0; c < levelB; c++)
         if (karte[r][c] === '^') { ziel = { r, c }; break; }
-    spieler.x = ziel.c * 16 + 3; spieler.y = ziel.r * 16 + 2;
+    spieler.x = ziel.c * TILE + 3; spieler.y = ziel.r * TILE + 2;
     spieler.vx = 0; spieler.vy = 0;
     const leben0 = spieler.leben;
     setTimeout(() => res({ leben0, leben: spieler.leben, gefunden: !!ziel }), 130);
@@ -346,9 +346,9 @@ const dauer = await page.evaluate(() => new Promise(res => {
     let steckt = 0, raus = 0;
     const iv = setInterval(() => {
       gegner.forEach(g => {
-        if (g.x < -20 || g.x > levelB*16 + 20 || g.y > levelH*16 + 20) raus++;
+        if (g.x < -20 || g.x > levelB*TILE + 20 || g.y > levelH*TILE + 20) raus++;
         // in einer Wand steckengeblieben?
-        const c = Math.floor((g.x + g.b/2)/16), r = Math.floor((g.y + g.h/2)/16);
+        const c = Math.floor((g.x + g.b/2)/TILE), r = Math.floor((g.y + g.h/2)/TILE);
         if (karte[r] && karte[r][c] === '#') steckt++;
       });
     }, 50);
@@ -390,7 +390,7 @@ pruefe('Leertaste startet einen neuen Versuch',
 const angehalten = await page.evaluate(() => new Promise(res => {
   levelWechseln(1);
   setTimeout(() => {
-    spieler.x = 8 * 16; spieler.y = (levelH-2) * 16 - 14; spieler.vx = 60;
+    spieler.x = 8 * TILE; spieler.y = (levelH-2) * TILE - spieler.h; spieler.vx = 60;
     pause = true;
     const x0 = spieler.x, z0 = zeit;
     setTimeout(() => res({ bewegt: Math.abs(spieler.x - x0), zeitLief: zeit - z0 }), 500);

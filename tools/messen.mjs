@@ -16,9 +16,12 @@ await page.waitForTimeout(400);
 const proben = await page.evaluate(() => {
   // Die Physik direkt schrittweise aufrufen, ohne echte Tasten
   const sim = (vx0, halten) => {
+    // Kachelgrösse aus dem Spiel übernehmen, nicht festschreiben –
+    // sonst misst man bei einem Rasterwechsel stillschweigend falsch.
+    const T = TILE, boden = levelH - 2;
     for (let y = 0; y < levelH; y++) for (let x = 0; x < levelB; x++) karte[y][x] = '.';
-    for (let x = 0; x < 2; x++) karte[11][x] = '#';          // nur ein Absprungblock
-    spieler.x = 16; spieler.y = 11 * 16 - 14; spieler.vx = vx0; spieler.vy = 0;
+    for (let x = 0; x < 2; x++) karte[boden][x] = '#';       // nur ein Absprungblock
+    spieler.x = T; spieler.y = boden * T - spieler.h; spieler.vx = vx0; spieler.vy = 0;
     spieler.amBoden = true; spieler.sprungGehalten = false;
     spieler.coyote = TUNING.coyoteZeit; spieler.puffer = TUNING.puffer;
 
@@ -34,8 +37,8 @@ const proben = await page.evaluate(() => {
       if (n > 5 && spieler.y > y0 + 2) break;                // zurück auf Absprunghöhe
     }
     return {
-      hochKacheln: +(hoch / 16).toFixed(2),
-      weiteKacheln: +((spieler.x - x0) / 16).toFixed(2),
+      hochKacheln: +(hoch / T).toFixed(2),
+      weiteKacheln: +((spieler.x - x0) / T).toFixed(2),
     };
   };
   return [

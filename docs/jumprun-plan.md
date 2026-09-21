@@ -207,13 +207,20 @@ die Bonus-Sterne; das Level bleibt ohne ihn durchspielbar.
 ### Phase 3 · Inhalt — ✅ **erledigt**
 Spritesheet statt gezeichneter Formen (38 Sprites, Autotiling an Kanten), drei Levels mit Schwierigkeitskurve, Levelauswahl, Fortschritt in `localStorage`, Tiled-Austausch in beide Richtungen.
 
-**Nicht wie geplant:** Die Kenney-Sprites liessen sich hier nicht
-beschaffen – `kenney.nl` ist durch die Netzwerkrichtlinie der
-Entwicklungsumgebung gesperrt, und auf npm liegt nur ein Hexagon-Paket.
-Das Spritesheet wird deshalb vorerst von `tools/atlas-bauen.mjs` erzeugt.
-Das Sprite-System ist aber so gebaut, dass ein fremdes Sheet nur noch
-eingehängt werden muss; `docs/sprites.md` beschreibt die Schritte samt der
-Werte für *Pixel Platformer*. Rechnen mit etwa zehn Minuten Handarbeit.
+**Sprites:** `kenney.nl` ist von der Entwicklungsumgebung aus gesperrt
+(Netzwerkrichtlinie, unabhängig vom Netz des Nutzers). Das Paket *Pixel
+Platformer* (CC0) wurde deshalb von Hand hochgeladen und eingehängt.
+
+Kacheln, Gegner, Herzen und Fahnen kommen jetzt von Kenney. Der **Fuchs
+bleibt selbst gezeichnet** – das Paket enthält nur Astronauten und
+Roboter, keine Tiere, und der Fuchs ist das Maskottchen der Lern-App.
+Auch die Münzen bleiben eigene Sprites, weil Kenneys Münzen in einem
+Kachelrahmen sitzen.
+
+Dafür lief das Spiel auf ein **18-Pixel-Raster** um (Kenneys Kachelmass),
+statt die Sprites unscharf zu skalieren. Alle Pixelwerte wurden mit 1.125
+multipliziert; gemessen wurde danach 2.92 statt 2.93 Kacheln Sprunghöhe –
+das Spielgefühl ist also unverändert und alle Levels blieben gültig.
 
 **Ergebnis:** Ein Spiel mit Welt und Fortschritt. 65 Browsertests, alle grün.
 

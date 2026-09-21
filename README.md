@@ -88,12 +88,15 @@ node tools/tiled.mjs import tiled/level1.json
 **immer** `node tools/level-pruefen.mjs` laufen lassen – sonst landet
 schnell eine Plattform im Level, die eine Kachel zu hoch hängt.
 
-## Sprites austauschen
+## Grafik
 
-Siehe `docs/sprites.md`. Alle Figuren und Kacheln kommen aus einem
-Spritesheet; fertige Pakete (z.B. die CC0-Sprites von kenney.nl) lassen
-sich einhängen, indem man Feldgrösse, Spaltenzahl und die Zuordnung
-Name → Feldnummer anpasst.
+Kacheln, Gegner, Herzen und Fahnen stammen aus **Kenneys „Pixel
+Platformer"** ([kenney.nl](https://kenney.nl), **CC0**, gemeinfrei). Der
+Fuchs und die Münzen sind selbst gezeichnet – das Paket enthält keine
+Tiere, und der Fuchs ist das Maskottchen der Lern-App.
+
+Herkunft und Lizenzen stehen in `CREDITS.md`, das Austauschen weiterer
+Sprites beschreibt `docs/sprites.md`.
 
 ## Nächster Schritt
 

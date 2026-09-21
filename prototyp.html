@@ -96,7 +96,7 @@
 </header>
 
 <div id="stage">
-  <canvas id="cv" width="320" height="180"></canvas>
+  <canvas id="cv" width="360" height="200"></canvas>
 </div>
 
 <div class="hint" id="hint"></div>
@@ -109,17 +109,17 @@
    ============================================================ */
 const TUNING = {
   // --- Laufen ---
-  maxLauf:        92,    // Höchsttempo am Boden
-  beschlBoden:    620,   // wie schnell er auf Tempo kommt
-  beschlLuft:     420,   // Steuerung in der Luft (kleiner = träger)
-  bremseBoden:    900,   // wie schnell er stehen bleibt
-  bremseLuft:     160,
+  maxLauf:       104,    // Höchsttempo am Boden
+  beschlBoden:   698,   // wie schnell er auf Tempo kommt
+  beschlLuft:    473,   // Steuerung in der Luft (kleiner = träger)
+  bremseBoden:  1013,   // wie schnell er stehen bleibt
+  bremseLuft:    180,
 
   // --- Springen ---
-  sprungKraft:    258,   // Startgeschwindigkeit nach oben (~3 Kacheln hoch)
-  gravAufwaerts:  680,   // Schwerkraft solange er steigt
-  gravAbwaerts:  1080,   // Schwerkraft beim Fallen – grösser = knackiger
-  maxFall:        360,   // Endgeschwindigkeit beim Fallen
+  sprungKraft:   290,   // Startgeschwindigkeit nach oben (~3 Kacheln hoch)
+  gravAufwaerts: 765,   // Schwerkraft solange er steigt
+  gravAbwaerts: 1215,   // Schwerkraft beim Fallen – grösser = knackiger
+  maxFall:       405,   // Endgeschwindigkeit beim Fallen
   sprungAbbruch:  0.42,  // Taste loslassen: Restgeschwindigkeit nach oben
 
   // --- Die Nachsicht-Mechaniken (wichtig für Kinder!) ---
@@ -129,23 +129,23 @@ const TUNING = {
 
   // --- Doppelklick-Sprung (die Touchpad-Übung) ---
   doppelZeit:     420,   // Millisekunden, in denen der zweite Klick zählt
-  extraHoehe:     70,    // Gesamthöhe des Doppelklick-Sprungs in Pixel (~4.4 Kacheln)
+  extraHoehe:    79,    // Gesamthöhe des Doppelklick-Sprungs in Pixel (~4.4 Kacheln)
 
   // --- Gegner und Treffer ---
   leben:          3,     // Herzen zu Beginn
-  gegnerTempo:    34,    // Lauftempo der Gegner am Boden
-  fliegerTempo:   26,    // waagerechtes Tempo der Flieger
-  fliegerAmplitude:26,   // wie weit sie auf und ab schweben (Pixel)
-  abprall:        190,   // Schub nach oben, wenn man einen Gegner plättet
-  rueckstoss:     120,   // Schub weg vom Gegner bei einem Treffer
+  gegnerTempo:    38,    // Lauftempo der Gegner am Boden
+  fliegerTempo:   29,    // waagerechtes Tempo der Flieger
+  fliegerAmplitude:29,   // wie weit sie auf und ab schweben (Pixel)
+  abprall:       214,   // Schub nach oben, wenn man einen Gegner plättet
+  rueckstoss:    135,   // Schub weg vom Gegner bei einem Treffer
   unverwundbar:   1.4,   // Sekunden Schonzeit nach einem Treffer
 
   // --- Touchpad-Profil ---
-  totzone:        7,     // Pixel um den Fuchs herum, in denen er stehen bleibt
-  randzone:       14,    // am Bildrand läuft der Fuchs weiter (siehe leseEingabe)
+  totzone:        8,     // Pixel um den Fuchs herum, in denen er stehen bleibt
+  randzone:      16,    // am Bildrand läuft der Fuchs weiter (siehe leseEingabe)
 };
 
-const TILE = 16;                 // Kachelgrösse
+const TILE = 18;                 // Kachelgrösse (passend zu den Kenney-Kacheln)
 const DT   = 1/60;               // fester Physik-Zeitschritt
 
 /* ============================================================
@@ -416,7 +416,7 @@ function levelLaden(){
 function gegnerSetzen(){
   gegner = startVorlage.map(v=>({
     art:v.art, x:v.x, y:v.y, heimY:v.y,
-    b: v.art==='laeufer'?12:13, h: v.art==='laeufer'?11:10,
+    b: v.art==='laeufer'?13:15, h: v.art==='laeufer'?12:11,
     vx: v.art==='laeufer' ? -TUNING.gegnerTempo : -TUNING.fliegerTempo,
     t: Math.random()*6, tot:false, totT:0, schritt:0
   }));
@@ -430,7 +430,7 @@ const stachel = (c,r)=> (r<0||c<0||c>=levelB||r>=levelH) ? false : karte[r][c]==
    DER SPIELER
    ============================================================ */
 const spieler = {
-  x:0, y:0, b:10, h:14,            // Rechteck für die Kollision (schmaler als die Figur)
+  x:0, y:0, b:11, h:16,            // Rechteck für die Kollision (schmaler als die Figur)
   vx:0, vy:0,
   amBoden:false, wardAmBoden:false,
   coyote:0, puffer:0, sprungGehalten:false, absprungY:0, extraFrei:false, extraT:0,
@@ -748,19 +748,19 @@ function ruetteln(n){ ruettelStaerke = Math.max(ruettelStaerke, n); }
    KAMERA – mit Totzone, damit sie nicht am Fuchs klebt
    ============================================================ */
 const kamera = { x:0, y:0 };
-const SICHT_B = 320, SICHT_H = 180;
+const SICHT_B = 360, SICHT_H = 200;
 
 function kameraSetzen(sofort=false){
-  const zielX = spieler.x + spieler.b/2 - SICHT_B/2 + spieler.blick*26;  // Vorausschau
+  const zielX = spieler.x + spieler.b/2 - SICHT_B/2 + spieler.blick*29;  // Vorausschau
   // Der Fuchs sitzt bewusst etwas tiefer im Bild: bei einem Plattformer
   // schaut man nach oben (wohin man springt), nicht nach unten. Ausserdem
   // rutschten Sprungziele sonst hinter die Anzeigeleiste.
-  const zielY = spieler.y + spieler.h/2 - SICHT_H/2 - 10;
+  const zielY = spieler.y + spieler.h/2 - SICHT_H/2 - 11;
   const t = sofort ? 1 : 0.11;
   kamera.x += (zielX-kamera.x)*t;
   kamera.y += (zielY-kamera.y)*t;
   kamera.x = Math.max(0, Math.min(kamera.x, levelB*TILE - SICHT_B));
-  kamera.y = Math.max(-26, Math.min(kamera.y, levelH*TILE - SICHT_H));
+  kamera.y = Math.max(-29, Math.min(kamera.y, levelH*TILE - SICHT_H));
 }
 
 /* ============================================================
@@ -791,56 +791,96 @@ ctx.imageSmoothingEnabled=false;
 
 /* ============================================================
    SPRITES
-   Alle Figuren und Kacheln kommen aus einem einzigen Bild
-   (16x16 pro Feld). Es steckt als Base64 in dieser Datei –
-   damit bleibt alles eine Datei, die offline läuft.
+   Figuren und Kacheln kommen aus drei Bildern, die als Base64
+   in dieser Datei stecken – damit bleibt alles eine Datei, die
+   offline läuft.
 
-   Erzeugt von tools/atlas-bauen.mjs.
+     kenney    Kacheln, Gegenstände, Gefahren   (18x18, CC0)
+     figuren   Gegner                            (24x24, CC0)
+     eigen     der Fuchs                         (16x16)
 
-   FERTIGE SPRITES EINHÄNGEN (z.B. die CC0-Pakete von kenney.nl):
-   Nur ATLAS anpassen – zelle, spalten und die Platznummern.
-   Anleitung: docs/sprites.md
+   Die Kenney-Bilder stammen aus "Pixel Platformer" von
+   kenney.nl und sind gemeinfrei (CC0) – siehe CREDITS.md.
+   Der Fuchs ist selbst gezeichnet, weil das Paket keine Tiere
+   enthält und der Fuchs das Maskottchen der Lern-App ist.
+
+   ANDERE SPRITES EINHÄNGEN: siehe docs/sprites.md
    ============================================================ */
-const ATLAS = {
-  zelle: 16,
-  spalten: 8,
-  quelle: 'data:image/png;base64,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',
-  // Name -> Feldnummer im Bild, zeilenweise ab 0 gezählt
-  plaetze: {
-    fuchs_steh:0, fuchs_lauf0:1, fuchs_lauf1:2, fuchs_lauf2:3, fuchs_lauf3:4,
-    fuchs_spring:5, fuchs_fall:6, fuchs_aua:7,
-    kaefer0:8, kaefer1:9, kaefer_platt:10, flieger0:11, flieger1:12,
-    muenze0:13, muenze1:14, muenze2:15, muenze3:16,
-    stern0:17, stern1:18, stern2:19, stern3:20,
-    herz_voll:21, herz_leer:22, stachel:23,
-    boden_oben:24, boden_mitte:25, boden_oben_l:26, boden_oben_r:27,
-    boden_l:28, boden_r:29,
-    plattform_l:30, plattform_m:31, plattform_r:32,
-    fahne_aus:33, fahne_an:34, ziel:35, wolke:36, busch:37,
-  }
+const BLAETTER = {
+  kenney:  { zelle:18, spalten:20, quelle:'data:image/png;base64,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' },
+  figuren: { zelle:24, spalten: 9, quelle:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANgAAABICAMAAACjmMucAAAABGdBTUEAALGPC/xhBQAAAGlQTFRFAAAA3/b1NJle15kF7qFg7ISleKbedHqQ9Kxm//bi1er//8vahva73UQs/Gg7fjEly4Fe/uSBWtKM/5q6NGVHh0lc9MyhQl5/msT3n1pSLMX23OHnFJDD9LQblZqx////bz5Dvt7xQ0pfOp7UIwAAAAF0Uk5TAEDm2GYAAAb7SURBVGje7ZuLdqM4DIa9vWXb3W6SNpkMoQHj93/I8UW2JVsy0Gk37TmjFgq/RcJnGSMbqlTTJmRqgV3T31hbeIDdGZOVJV/KH7hKMuEAp+bPd9tf1B/AhqEAkw6YxonYOM37n5It81/7+Zx/jJcDI2jCAVOtTy0At3FCRvzXfv4af2iGG2ukOUoHePmQLH2DBBDkJ7BQMPv5x2Tk80V/nQyFzNH0YIhMBBix7ArGNoDTn55yAfocFmDEsisYmwBO1xoXZLChTzYQMAHA7v0L5gpmAaz+E4yCCQB27x8wV9AGsH/s3h7MFQBYiNfgLcQsgUkAWXYF8wCn089kWJcAsuwKZgC8vt/nggwWsQIaAeMBrP4CVoDxAF43hgHjAaz+ClaAMQBBv4AlPVxgFCygNQAOh5dkFRgD0ABjAY5Hq4yjLyjAKoCgX5KB7vtDxGXJNkDWAHgXGNsUeQCnj8aMNVgFIIMNgwOL9zEHBnfqNpgxL355WdgUHa5HLsE4gA8EGwLYUIGxABPWp3mACevTPMCEIznNg036YszFLxfoLUNT3GxiQ9xscFPkARwxiiS+UbIAjhhFEvuzAI74NdkR+9cAwR8Dg7/vPGyMQmbpmmLqPASAcKcE3Bea2nAAwT9ee9SfAwj+r6/GOJn6MwDgD7gXknj4lui5wiZOPWqAdjJaA7T9a4C2PwMg+fsuIxvKqb7L8EQaj9mrLHNtUIIvDuAOOBc9zPufsP9p3v+I/Y/z/hr7azpmSZkiHrkIAOpwuImX3s0B6QKAOp0e4qX3cEK6AKCOx/t46d0fkS4AKK1v46V3q3Uxeq6GLR4A38eQ7oGcWUAMRu5jSPdAziwgBsOdBwbzQM4sIAYj3T3SPZAzC6jLiYFqoOnADjc3N7BSBCzm/AXY6eHhAVaKgMVRWgF2vL+/h5UiYDHnL8D07e0trBQBizl/AcZODcSQwYoCH8qtHDJYETnu5q0cMlgROe7mrRwyWBE57uat1mQOkIVFLTIfklPB1TAfkmPB1TAfEl1wtY3l+qh5vy9n75jH+yZY6+fxvgWXnNp0ydA8ni5MzehXA+MB3EaHLCWjWvMEkn7FgLEAQX4ECwUAsCeWwXg9UisWdXUNLO78JACvPz7mgt8BE4Mox1YAMIu7dQkg6D/ACNiFWAbj9XD6e1gqrj0jNwDssFIAK/0lAK//SEbAdrt49nYLgbF6DKYumycU6FqWAYzXzZJQSgAfDBYn08qAQXD1QgATBv9LQvkesPVN0e1fqhRJ0mUAEayuiTZYyC0ZsJjNFWAh8S7z148C2279uMuY7XaeWAJ4Hxij42ByYIwuAGy3W//cYRi2FdkqsAlHcvq9XpG9lgRdALA7/wV7ft6WyHVNSAD+xm0Fj+v0nHnEk9E1mA4ZZ9m8rO9ut6v7CFaXALbb56Q/EzC2JkQAPw0WedE0GDS0eP7lNeZ1Zox4YUdXnC4BiGBCTUgAUnLc6u5zxHZFxKwrQ8bq7wBjC9bO4zXBklVg2i81WK1LAO5BWPjte9JPSAeIA8oOD0A7bg5pYech5oqsLgH4+Rr/O9CJGzGUPIDVu7vYRO+6Thp2LRm2aMjuOTBVg/EAZCobg4XHRz19UhsA8A0a6R7ImQXs1NyA8qOGY/HZa9+XYOE5bFib+QOUO/O7O1gpAhZHaRjss00CWA8WQgYrIsfdvPW/gBHjCxYdEMjC8iWmYezJpd8FegPsj/0xqZ18v8YiABjzzckEALu8nc/jGJbz+c2ZJ2vxxu0vUAcSgJVr/S0Qi2QGg5lrg/EAUXdGdSmS4TWAuDVcm0wGcPo5yhVwFUmFH07yjymZb895nPkUMAkg21wkIWAEjPZB/uxp2zUYzHwKmAAg6lVFQObXR4A4cGmBuZro/vbWLW26i3voFsDbGf3MAMtgLsXtM0A/xPd//ctUWaenuiS7nAUTAUp5Dszm6OlEh3z2FZhJ/n2389b15UhNyqbP7vJ23ztTES2A2uRIphMFgD5fbi5oJgLYIPUmX4hDtxvtz64rR3A8gOuSw1WQeiypImSAML4PC347nq+I1LQAIDet8GURgHx13+uo62IygQfw95rYUtoVIQMM+PXP/IaaUBGpM9j9ZX92pDNwPUcCwI3FgulQEboG4wFkvagIGUDSe8Zy9x3Biu47A5DmM+TufjC/CVbo68EGxlIQMoDhZ7V0MfmTuIq+QwKQ5sEYsPBSnQdI/7hg8H8xDFRvgSk9N19X9N1DzLiHajJkzUSeAJbO1VCw3M/QbQ64BYCnB5iHmaZ+n2rtRB4zj9cCELeZimgCQIEyXB7BDXPWTuQx/pAjpGCQyAg6t90G+OyJPBZslYkVcd2JPM5fGjhyTI2KuO5EnjigVyphqnwIq38y1y/Iv62KHyRYyAAAAABJRU5ErkJggg==' },
+  eigen:   { zelle:16, spalten: 8, quelle:'data:image/png;base64,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' },
 };
 
-const atlasBild = new Image();
-let atlasBereit = false;
-atlasBild.onload = ()=>{ atlasBereit = true; };
-atlasBild.src = ATLAS.quelle;
+/* Name -> [Blatt, Feldnummer]. Feldnummern zeilenweise ab 0.
+   Zum Abzählen hilft: node tools/atlas-zeigen.mjs <datei> <zelle> <spalten> */
+const SPRITES = {
+  // --- der Fuchs (eigen) ---
+  fuchs_steh:  ['eigen',0], fuchs_lauf0:['eigen',1], fuchs_lauf1:['eigen',2],
+  fuchs_lauf2: ['eigen',3], fuchs_lauf3:['eigen',4],
+  fuchs_spring:['eigen',5], fuchs_fall: ['eigen',6], fuchs_aua:  ['eigen',7],
+  ziel:        ['eigen',35],
 
-/* Ein Feld aus dem Bild zeichnen. spiegeln=true dreht es waagerecht um. */
+  // --- Gegner (Kenney-Figuren) ---
+  kaefer0:['figuren',11], kaefer1:['figuren',12], kaefer_platt:['figuren',11],
+  flieger0:['figuren',24], flieger1:['figuren',25],
+
+  // --- Kacheln (Kenney) ---
+  // Kenney liefert von jeder Sorte zwei Varianten: eine gerahmte für
+  // einzeln stehende Blöcke (Feld 1) und eine nahtlose für Flächen
+  // (Feld 2). Nimmt man die gerahmte für den Boden, zieht sich ein
+  // Gitter durch die ganze Landschaft.
+  boden_oben:   ['kenney',2],   // nahtlose Grasfläche
+  boden_einzeln:['kenney',1],   // gerahmt, für allein stehende Blöcke
+  boden_mitte:  ['kenney',122], // nahtlose Erde
+  plattform_l:  ['kenney',48], plattform_m:['kenney',49], plattform_r:['kenney',50],
+  stachel:      ['kenney',68],
+
+  // --- Gegenstände ---
+  // Kenneys Münzen sitzen in einem Kachelrahmen und taugen nicht als
+  // frei schwebende Münze – dafür bleibt das eigene, animierte Sprite.
+  muenze0:['eigen',13], muenze1:['eigen',14], muenze2:['eigen',15], muenze3:['eigen',16],
+  stern0: ['kenney',67], stern1:['kenney',67], stern2:['kenney',67], stern3:['kenney',67],
+  herz_voll:['kenney',44], herz_leer:['kenney',46],
+  fahne_aus:['kenney',111], fahne_an:['kenney',112],
+  busch:['kenney',124], baum:['kenney',126],
+};
+
+/* Bilder laden. Gezeichnet wird erst, wenn alle da sind – sonst
+   blitzt beim Start ein halb leeres Bild auf. */
+const bilder = {};
+let bilderOffen = Object.keys(BLAETTER).length;
+let atlasBereit = false;
+for(const [name, blatt] of Object.entries(BLAETTER)){
+  const img = new Image();
+  img.onload  = ()=>{ if(--bilderOffen === 0) atlasBereit = true; };
+  img.onerror = ()=>{ if(--bilderOffen === 0) atlasBereit = true; };
+  img.src = blatt.quelle;
+  bilder[name] = img;
+}
+
+/* Ein Sprite zeichnen. x,y ist die linke obere Ecke im Kachelraster;
+   grössere Sprites werden darauf zentriert und unten bündig gesetzt,
+   damit eine 24er-Figur nicht in der Kachel schwebt. */
 function sprite(name, x, y, spiegeln=false){
   if(!atlasBereit) return;
-  const nr = ATLAS.plaetze[name];
-  if(nr === undefined) return;
-  const Z = ATLAS.zelle;
-  const sx = (nr % ATLAS.spalten) * Z, sy = Math.floor(nr / ATLAS.spalten) * Z;
-  x = Math.round(x); y = Math.round(y);
+  const eintrag = SPRITES[name];
+  if(!eintrag) return;
+  const [blattName, nr] = eintrag;
+  const blatt = BLAETTER[blattName], img = bilder[blattName];
+  if(!img || !img.width) return;
+  const Z = blatt.zelle;
+  const sx = (nr % blatt.spalten) * Z, sy = Math.floor(nr / blatt.spalten) * Z;
+  const zx = Math.round(x - (Z - TILE)/2);     // waagerecht mittig
+  const zy = Math.round(y - (Z - TILE));       // unten bündig
   if(spiegeln){
     ctx.save();
-    ctx.translate(x + Z, y);
+    ctx.translate(zx + Z, zy);
     ctx.scale(-1, 1);
-    ctx.drawImage(atlasBild, sx, sy, Z, Z, 0, 0, Z, Z);
+    ctx.drawImage(img, sx, sy, Z, Z, 0, 0, Z, Z);
     ctx.restore();
   }else{
-    ctx.drawImage(atlasBild, sx, sy, Z, Z, x, y, Z, Z);
+    ctx.drawImage(img, sx, sy, Z, Z, zx, zy, Z, Z);
   }
 }
 
@@ -855,10 +895,9 @@ function kachelName(c, r){
   if(z === '^') return 'stachel';
   if(z !== '#') return null;
   const oben = fest(c,r-1), links = fest(c-1,r), rechts = fest(c+1,r);
-  if(!oben) return !links ? 'boden_oben_l' : (!rechts ? 'boden_oben_r' : 'boden_oben');
-  if(!links)  return 'boden_l';
-  if(!rechts) return 'boden_r';
-  return 'boden_mitte';
+  // Steht der Block ganz für sich, passt die gerahmte Variante.
+  if(!oben && !links && !rechts) return 'boden_einzeln';
+  return oben ? 'boden_mitte' : 'boden_oben';
 }
 
 /* Welche Haltung hat der Fuchs gerade? */
@@ -885,11 +924,11 @@ function zeichne(){
 
   /* Parallax: Sonne, ferne Hügel, nahe Hügel */
   ctx.fillStyle='#FFD98A';
-  ctx.beginPath(); ctx.arc(268-kx*0.04, 34-ky*0.04, 15, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(302-kx*0.04, 38-ky*0.04, 17, 0, 7); ctx.fill();
 
-  huegel(kx*0.16, 128, 46, '#BFE0C6');
+  huegel(kx*0.16, 142, 51, '#BFE0C6');
   wolken(kx*0.22, ky*0.10);
-  huegel(kx*0.34, 146, 34, '#9ED4AE');
+  huegel(kx*0.34, 162, 38, '#9ED4AE');
 
   /* Kacheln – nur den sichtbaren Ausschnitt zeichnen */
   const c0=Math.max(0,Math.floor(kx/TILE)), c1=Math.min(levelB-1,Math.ceil((kx+SICHT_B)/TILE));
@@ -1047,30 +1086,30 @@ function fortschrittMerken(){
 let gameOver=false, gameOverT=0, pause=false;
 
 function herz(x,y,voll){
-  sprite(voll ? 'herz_voll' : 'herz_leer', x-8, y-8);
+  sprite(voll ? 'herz_voll' : 'herz_leer', x-TILE/2, y-TILE/2);
 }
 
 function hud(){
   ctx.fillStyle='rgba(44,33,64,.55)';
-  ctx.fillRect(0,0,SICHT_B,15);
+  ctx.fillRect(0,0,SICHT_B,17);
   ctx.fillStyle='#fff';
   ctx.font='bold 9px ui-rounded, system-ui, sans-serif';
   ctx.textBaseline='middle';
 
   // Herzen
-  for(let i=0;i<TUNING.leben;i++) herz(11+i*13, 8, i<spieler.leben);
+  for(let i=0;i<TUNING.leben;i++) herz(12+i*14, 9, i<spieler.leben);
 
   const normale = muenzen.filter(m=>!m.bonus).length;
-  ctx.fillText(String(punkte).padStart(2,'0')+'/'+normale, 58, 8);
+  ctx.fillText(String(punkte).padStart(2,'0')+'/'+normale, 62, 9);
   // Bonus-Anzeige nur, wenn es welche gibt
   const bonusZahl = muenzen.filter(m=>m.bonus).length;
   if(bonusZahl){
     ctx.fillStyle='#C9B6FF';
-    ctx.fillText('★ '+boni+'/'+bonusZahl, 92, 8);
+    ctx.fillText('★ '+boni+'/'+bonusZahl, 100, 9);
     ctx.fillStyle='#fff';
   }
-  ctx.fillText((levelNr+1)+'. '+LEVELS[levelNr].name.toUpperCase(), 132, 8);
-  ctx.fillText('ZEIT '+zeit.toFixed(1)+'s', 244, 8);
+  ctx.fillText((levelNr+1)+'. '+LEVELS[levelNr].name.toUpperCase(), 150, 9);
+  ctx.fillText('ZEIT '+zeit.toFixed(1)+'s', 283, 9);
 
   if(spieler.tot && !gameOver){
     ctx.fillStyle='rgba(230,73,128,.30)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);

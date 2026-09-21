@@ -4,17 +4,27 @@
 
 | Was | Herkunft | Lizenz |
 |---|---|---|
+| `assets/kenney-kacheln.png` | **Kenney**, Paket „Pixel Platformer" 1.2 · [kenney.nl](https://kenney.nl) | **CC0** (gemeinfrei) |
+| `assets/kenney-figuren.png` | **Kenney**, Paket „Pixel Platformer" 1.2 · [kenney.nl](https://kenney.nl) | **CC0** (gemeinfrei) |
 | `assets/atlas.png` | selbst erzeugt durch `tools/atlas-bauen.mjs` | gehört zu diesem Projekt |
 
-Es sind **keine fremden Bilddateien** im Projekt. Das Spritesheet wird aus
-Zeichenbefehlen im Code erzeugt.
+Die Originallizenz liegt unverändert als `assets/kenney-License.txt` bei.
+CC0 heisst: nutzbar für private, schulische und kommerzielle Zwecke, ohne
+Pflicht zur Namensnennung. Kenney bittet um eine freiwillige Nennung –
+dieser Bitte kommen wir hier gerne nach.
 
-Wer fertige Sprites einhängt (siehe `docs/sprites.md`), trägt sie hier mit
-Herkunft und Lizenz ein. Beispiel für den vorgesehenen Fall:
+**Was von wem kommt:**
 
-| Was | Herkunft | Lizenz |
-|---|---|---|
-| `assets/tilemap_packed.png` | kenney.nl, Paket „Pixel Platformer" | CC0 (gemeinfrei) |
+| Im Spiel | Quelle |
+|---|---|
+| Bodenkacheln, Plattformen, Stacheln | Kenney |
+| Herzen, Bonus-Diamant, Checkpoint-Fahnen | Kenney |
+| Gegner (Käfer und Flieger) | Kenney |
+| **Der Fuchs** und die Münzen | selbst gezeichnet |
+
+Der Fuchs ist selbst gezeichnet, weil das Kenney-Paket keine Tiere enthält
+und der Fuchs das Maskottchen der Lern-App ist. Kenneys Münzen sitzen in
+einem Kachelrahmen und taugen nicht als frei schwebende Münze.
 
 ## Ton
 
@@ -28,5 +38,5 @@ weder Google Fonts noch ein CDN.
 
 ## Datenschutz
 
-Das Spiel lädt zur Laufzeit nichts nach und sendet nichts. Alle Bilder und
-Klänge stecken in der HTML-Datei oder entstehen im Code.
+Das Spiel lädt zur Laufzeit nichts nach und sendet nichts. Alle Bilder
+stecken als Base64 in der HTML-Datei, alle Klänge entstehen im Code.
