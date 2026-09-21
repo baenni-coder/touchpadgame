@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuchs-Sprung · Prototyp</title>
+<!--
+  ============================================================
+   FUCHS-SPRUNG  ·  Phase-1-Prototyp
+   Arcade-Jump-&-Run für das Touchpad-Abenteuer
+
+   ZWECK DIESER DATEI:
+   Nicht das fertige Spiel, sondern der Test des SPIELGEFÜHLS.
+   Die Grafik ist absichtlich einfach (alles im Code gezeichnet,
+   keine Bilddateien) – hier geht es nur um die Frage:
+   "Macht es Spass, den Fuchs zu steuern?"
+
+   Probiere alle drei Steuerungen aus (Tasten 1 / 2 / 3).
+
+   Läuft komplett lokal · kein Internet · keine Daten verlassen den Laptop.
+   Einfach doppelklicken.
+
+   ZUM ANPASSEN: Ganz oben im <script> steht das Objekt TUNING.
+   Dort stellst du Sprunghöhe, Tempo und Schwerkraft ein.
+  ============================================================
+-->
+<style>
+  :root{
+    --sky-top:#FFF1DC; --sky-bot:#BFE3FF;
+    --ink:#2C2340; --ink-soft:#6B6280; --card:#FFFFFF;
+    --mint:#2FC79B; --tangerine:#FF922B;
+    --shadow:rgba(44,33,64,.16);
+    --font:"SF Pro Rounded",ui-rounded,"Segoe UI Rounded","Nunito","Baloo 2",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--font); color:var(--ink);
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bot) 100%);
+    background-attachment:fixed;
+    -webkit-user-select:none;user-select:none;
+    display:flex;flex-direction:column;align-items:center;
+    padding:14px;gap:12px;overflow:hidden;
+  }
+  header{display:flex;align-items:center;gap:12px;width:100%;max-width:1100px;flex-wrap:wrap}
+  .logo{font-size:clamp(19px,3vw,26px);font-weight:800;display:flex;align-items:center;gap:8px}
+  .spacer{flex:1}
+  .tag{background:var(--card);border-radius:999px;padding:6px 14px;font-weight:800;font-size:13px;
+    box-shadow:0 6px 14px var(--shadow);color:var(--ink-soft)}
+
+  /* Steuerungs-Umschalter */
+  .profiles{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .pbtn{border:none;font-family:inherit;color:var(--ink);background:var(--card);cursor:pointer;
+    border-radius:14px;padding:9px 14px;font-weight:800;font-size:14px;
+    box-shadow:0 6px 14px var(--shadow);transition:transform .12s,background .12s;
+    display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .pbtn:hover{transform:translateY(-2px)}
+  .pbtn.on{background:var(--ink);color:#fff}
+  .pbtn .key{font-size:11px;opacity:.55;font-weight:700}
+  .pbtn.on .key{opacity:.7}
+
+  /* Spielfläche */
+  #stage{position:relative;line-height:0;border-radius:16px;overflow:hidden;
+    box-shadow:0 14px 34px var(--shadow),inset 0 0 0 3px rgba(255,255,255,.7)}
+  canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
+  /* Der Zeiger wird beim Touchpad-Profil gebraucht – sonst blendet er nur ab */
+  #stage.hidecursor canvas{cursor:none}
+
+  .hint{color:var(--ink-soft);font-size:13px;font-weight:700;text-align:center;max-width:760px;line-height:1.5}
+  kbd{background:var(--card);border-radius:6px;padding:2px 7px;font-family:inherit;font-weight:800;
+    font-size:12px;box-shadow:0 2px 5px var(--shadow)}
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.05s!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🦊 <span>Fuchs-Sprung</span></div>
+  <span class="tag">Phase-1-Prototyp · Spielgefühl</span>
+  <div class="spacer"></div>
+  <div class="profiles" id="profiles"></div>
+</header>
+
+<div id="stage">
+  <canvas id="cv" width="320" height="180"></canvas>
+</div>
+
+<div class="hint" id="hint"></div>
+
+<script>
+/* ============================================================
+   TUNING – hier stellst du das Spielgefühl ein
+   Alle Werte in Pixel pro Sekunde (bzw. pro Sekunde²).
+   Eine Kachel ist 16 Pixel gross.
+   ============================================================ */
+const TUNING = {
+  // --- Laufen ---
+  maxLauf:        92,    // Höchsttempo am Boden
+  beschlBoden:    620,   // wie schnell er auf Tempo kommt
+  beschlLuft:     420,   // Steuerung in der Luft (kleiner = träger)
+  bremseBoden:    900,   // wie schnell er stehen bleibt
+  bremseLuft:     160,
+
+  // --- Springen ---
+  sprungKraft:    258,   // Startgeschwindigkeit nach oben (~3 Kacheln hoch)
+  gravAufwaerts:  680,   // Schwerkraft solange er steigt
+  gravAbwaerts:  1080,   // Schwerkraft beim Fallen – grösser = knackiger
+  maxFall:        360,   // Endgeschwindigkeit beim Fallen
+  sprungAbbruch:  0.42,  // Taste loslassen: Restgeschwindigkeit nach oben
+
+  // --- Die Nachsicht-Mechaniken (wichtig für Kinder!) ---
+  coyoteZeit:     0.10,  // Sekunden nach der Kante, in denen noch gesprungen werden darf
+  puffer:         0.13,  // Sekunden vor der Landung, in denen der Sprung gemerkt wird
+  eckenHilfe:     3,     // Pixel, um die ein Sprung an der Kante korrigiert wird
+
+  // --- Touchpad-Profil ---
+  totzone:        7,     // Pixel um den Fuchs herum, in denen er stehen bleibt
+};
+
+const TILE = 16;                 // Kachelgrösse
+const DT   = 1/60;               // fester Physik-Zeitschritt
+
+/* ============================================================
+   DAS TESTLEVEL
+   Jeder Abschnitt prüft etwas anderes:
+   1) Laufen  2) kleine Stufen  3) Lücken  4) hohe Sprünge
+   5) Einweg-Plattformen  6) Abgrund + Ziel
+
+   Zeichen:  # Boden   = Plattform (von unten durchspringbar)
+             o Münze   P Start     F Ziel     . Luft
+   ============================================================ */
+const LEVEL = [
+  '........................................................................',
+  '........................................................................',
+  '........................................................................',
+  '........................................................................',
+  '........................................................................',
+  '........................................................................',
+  '........................................................................',
+  '...........................................oo.........oo................',
+  '....................o.....................====......======..............',
+  '................o..###................o..............o..................',
+  '.............o..##........o.....o....====..........======.......o.......',
+  '.P...o...o...##.........o............................................F..',
+  '##########################..###...#############################...######',
+  '##########################..###...#############################...######',
+];
+
+/* ============================================================
+   Ton – rein synthetisch, es wird keine Datei geladen
+   ============================================================ */
+let AC=null, tonAn=true;
+function beep(freq,dur,type='square',vol=.14,glide=0){
+  if(!tonAn) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,AC.currentTime);
+    if(glide) o.frequency.exponentialRampToValueAtTime(Math.max(40,freq*glide),AC.currentTime+dur);
+    g.gain.setValueAtTime(vol,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+const sfx={
+  sprung: ()=>beep(330,.12,'square',.10,2.2),
+  landung:()=>beep(150,.06,'triangle',.09,.7),
+  muenze: ()=>{beep(880,.05,'square',.11);setTimeout(()=>beep(1320,.08,'square',.10),45);},
+  sterben:()=>beep(300,.35,'sawtooth',.12,.2),
+  ziel:   ()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15,'triangle',.13),i*95))
+};
+
+/* ============================================================
+   EINGABE – die Abstraktion
+   Egal welches Gerät: das Spiel sieht nur diese vier Werte.
+   Dadurch laufen alle Levels mit allen Steuerungen.
+   ============================================================ */
+const eingabe = { x:0, sprung:false, sprungNeu:false, aktion:false };
+
+const PROFILE = [
+  { id:'tastatur', name:'Tastatur', emo:'⌨️', taste:'1',
+    hilfe:'<kbd>←</kbd> <kbd>→</kbd> oder <kbd>A</kbd> <kbd>D</kbd> laufen · <kbd>Leertaste</kbd> springen (länger drücken = höher)' },
+  { id:'touchpad', name:'Touchpad', emo:'👆', taste:'2',
+    hilfe:'Zeiger <b>neben</b> den Fuchs bewegen – er läuft dorthin · <b>Klicken und halten</b> zum Springen' },
+  { id:'gamepad',  name:'Gamepad', emo:'🎮', taste:'3',
+    hilfe:'Steuerkreuz oder linker Stick · <b>A</b>-Taste springen · (Controller anschliessen und eine Taste drücken)' },
+];
+let profil = 'tastatur';
+
+/* --- Rohdaten der drei Quellen --- */
+const tasten = new Set();
+const maus   = { x:0, y:0, imBild:false, unten:false };
+
+addEventListener('keydown', e=>{
+  // Profil umschalten
+  const p = PROFILE.find(p=>p.taste===e.key);
+  if(p){ setzeProfil(p.id); return; }
+  if(e.key==='r'||e.key==='R'){ levelNeu(); return; }
+  if(e.key==='m'||e.key==='M'){ tonAn=!tonAn; zeichneHilfe(); return; }
+  if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key)) e.preventDefault();
+  tasten.add(e.key.toLowerCase());
+});
+addEventListener('keyup', e=>tasten.delete(e.key.toLowerCase()));
+addEventListener('blur', ()=>{ tasten.clear(); maus.unten=false; });
+
+const cv = document.getElementById('cv');
+const stage = document.getElementById('stage');
+cv.addEventListener('pointermove', e=>{
+  const r=cv.getBoundingClientRect();
+  maus.x=(e.clientX-r.left)/r.width*cv.width;   // in interne Pixel umrechnen
+  maus.y=(e.clientY-r.top)/r.height*cv.height;
+  maus.imBild=true;
+});
+cv.addEventListener('pointerleave', ()=>{ maus.imBild=false; maus.unten=false; });
+cv.addEventListener('pointerdown', e=>{ e.preventDefault(); maus.unten=true; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerup',   ()=>{ maus.unten=false; });
+cv.addEventListener('contextmenu', e=>e.preventDefault());
+
+/* --- Rohdaten -> abstrakte Eingabe. Nur das aktive Profil wird gelesen. --- */
+function leseEingabe(){
+  let x=0, sprung=false;
+
+  if(profil==='tastatur'){
+    if(tasten.has('arrowleft') ||tasten.has('a')) x-=1;
+    if(tasten.has('arrowright')||tasten.has('d')) x+=1;
+    sprung = tasten.has(' ')||tasten.has('arrowup')||tasten.has('w');
+
+  }else if(profil==='touchpad'){
+    if(maus.imBild){
+      // Der Fuchs läuft dorthin, wo der Zeiger ist – mit Totzone,
+      // damit er nicht zittert, wenn der Zeiger genau auf ihm liegt.
+      const fuchsBild = spieler.x + spieler.b/2 - kamera.x;
+      const d = maus.x - fuchsBild;
+      if(Math.abs(d) > TUNING.totzone) x = Math.sign(d);
+      // Kleine Distanzen = langsam gehen (feines Touchpad-Training)
+      if(Math.abs(d) < TUNING.totzone*2.6) x *= 0.55;
+    }
+    sprung = maus.unten;
+
+  }else if(profil==='gamepad'){
+    const gp = (navigator.getGamepads?.()||[])[0];
+    if(gp){
+      const ax = gp.axes[0]||0;
+      if(Math.abs(ax)>0.25) x = ax;
+      if(gp.buttons[14]?.pressed) x=-1;
+      if(gp.buttons[15]?.pressed) x= 1;
+      sprung = !!(gp.buttons[0]?.pressed || gp.buttons[1]?.pressed);
+    }
+  }
+
+  eingabe.sprungNeu = sprung && !eingabe.sprung;   // genau in diesem Bild gedrückt
+  eingabe.sprung = sprung;
+  eingabe.x = Math.max(-1, Math.min(1, x));
+}
+
+/* ============================================================
+   LEVEL EINLESEN
+   ============================================================ */
+let karte=[], levelB=0, levelH=0, muenzen=[], startPos={x:0,y:0}, zielPos={x:0,y:0};
+
+function levelLaden(){
+  levelB = Math.max(...LEVEL.map(z=>z.length));
+  levelH = LEVEL.length;
+  karte = LEVEL.map(z => z.padEnd(levelB,'.').split(''));
+  muenzen=[];
+  for(let r=0;r<levelH;r++) for(let c=0;c<levelB;c++){
+    const z = karte[r][c];
+    if(z==='o'){ muenzen.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2, weg:false, t:Math.random()*6}); karte[r][c]='.'; }
+    if(z==='P'){ startPos={x:c*TILE, y:r*TILE}; karte[r][c]='.'; }
+    if(z==='F'){ zielPos={x:c*TILE, y:r*TILE}; karte[r][c]='.'; }
+  }
+}
+
+const fest    = (c,r)=> (r<0||c<0||c>=levelB) ? false : (r>=levelH ? false : karte[r][c]==='#');
+const einweg  = (c,r)=> (r<0||c<0||c>=levelB||r>=levelH) ? false : karte[r][c]==='=';
+
+/* ============================================================
+   DER SPIELER
+   ============================================================ */
+const spieler = {
+  x:0, y:0, b:10, h:14,            // Rechteck für die Kollision (schmaler als die Figur)
+  vx:0, vy:0,
+  amBoden:false, wardAmBoden:false,
+  coyote:0, puffer:0, sprungGehalten:false,
+  blick:1, laufPhase:0, squash:1, tot:false, totT:0
+};
+
+function levelNeu(){
+  levelLaden();
+  spieler.x=startPos.x+3; spieler.y=startPos.y+2;
+  spieler.vx=0; spieler.vy=0; spieler.tot=false; spieler.totT=0;
+  spieler.coyote=0; spieler.puffer=0; spieler.squash=1;
+  punkte=0; zeit=0; gewonnen=false; gewonnenT=0; partikel.length=0;
+  kamera.x=0; kamera.y=0; kameraSetzen(true);
+}
+
+function spielerSchritt(){
+  const T=TUNING;
+
+  /* --- waagerecht: beschleunigen oder bremsen --- */
+  const ziel = eingabe.x * T.maxLauf;
+  const beschl = spieler.amBoden ? T.beschlBoden : T.beschlLuft;
+  const bremse = spieler.amBoden ? T.bremseBoden : T.bremseLuft;
+  if(Math.abs(eingabe.x) > 0.05){
+    const dv = ziel - spieler.vx;
+    spieler.vx += Math.sign(dv) * Math.min(Math.abs(dv), beschl*DT);
+    spieler.blick = Math.sign(eingabe.x);
+  }else{
+    const dv = Math.min(Math.abs(spieler.vx), bremse*DT);
+    spieler.vx -= Math.sign(spieler.vx)*dv;
+  }
+
+  /* --- Coyote Time und Sprungpuffer ---
+     Das sind die zwei Mechaniken, die aus "unfair" "verzeihend" machen. */
+  spieler.coyote = spieler.amBoden ? T.coyoteZeit : Math.max(0, spieler.coyote-DT);
+  spieler.puffer = eingabe.sprungNeu ? T.puffer     : Math.max(0, spieler.puffer-DT);
+
+  if(spieler.puffer>0 && spieler.coyote>0){
+    spieler.vy = -T.sprungKraft;
+    spieler.puffer=0; spieler.coyote=0;
+    spieler.amBoden=false; spieler.sprungGehalten=true;
+    spieler.squash = 0.78;              // Streckung beim Absprung
+    sfx.sprung();
+    staub(spieler.x+spieler.b/2, spieler.y+spieler.h, 4, '#CBB89A');
+  }
+  // Taste früh loslassen -> kleinerer Sprung (variable Sprunghöhe)
+  if(spieler.sprungGehalten && !eingabe.sprung && spieler.vy<0){
+    spieler.vy *= T.sprungAbbruch;
+    spieler.sprungGehalten=false;
+  }
+  if(spieler.vy>=0) spieler.sprungGehalten=false;
+
+  /* --- senkrecht: unterschiedliche Schwerkraft rauf/runter --- */
+  spieler.vy += (spieler.vy<0 ? T.gravAufwaerts : T.gravAbwaerts) * DT;
+  spieler.vy = Math.min(spieler.vy, T.maxFall);
+
+  /* --- bewegen und mit der Karte verrechnen (X und Y getrennt!) --- */
+  spieler.wardAmBoden = spieler.amBoden;
+  bewegeX(spieler.vx*DT);
+  bewegeY(spieler.vy*DT);
+
+  if(spieler.amBoden && !spieler.wardAmBoden){
+    sfx.landung();
+    spieler.squash = 1.32;              // Stauchung bei der Landung
+    staub(spieler.x+spieler.b/2, spieler.y+spieler.h, 5, '#CBB89A');
+  }
+  spieler.squash += (1-spieler.squash)*0.22;
+
+  // Laufanimation
+  if(spieler.amBoden) spieler.laufPhase += Math.abs(spieler.vx)*DT*0.42;
+  else spieler.laufPhase = 0;
+
+  // Herausgefallen?
+  if(spieler.y > levelH*TILE + 40) sterben();
+}
+
+function bewegeX(d){
+  spieler.x += d;
+  const oben = Math.floor(spieler.y/TILE);
+  const unten= Math.floor((spieler.y+spieler.h-1)/TILE);
+  if(d>0){
+    const c = Math.floor((spieler.x+spieler.b-1)/TILE);
+    for(let r=oben;r<=unten;r++) if(fest(c,r)){ spieler.x = c*TILE-spieler.b; spieler.vx=0; break; }
+  }else if(d<0){
+    const c = Math.floor(spieler.x/TILE);
+    for(let r=oben;r<=unten;r++) if(fest(c,r)){ spieler.x = (c+1)*TILE; spieler.vx=0; break; }
+  }
+  spieler.x = Math.max(0, Math.min(spieler.x, levelB*TILE-spieler.b));
+}
+
+function bewegeY(d){
+  const vorherUnten = spieler.y + spieler.h;
+  spieler.y += d;
+  const links = Math.floor(spieler.x/TILE);
+  const rechts= Math.floor((spieler.x+spieler.b-1)/TILE);
+
+  if(d>0){                                  // fallen -> Boden suchen
+    // Achtung: hier OHNE -1 rechnen. Liegt der Fuchs exakt auf einer Kachel,
+    // zeigt (y+h-1) eine Zeile zu hoch – er würde jeden Einzelschritt zwischen
+    // "steht" und "fällt" flackern (Dauerstaub, Coyote Time wirkungslos).
+    const r = Math.floor((spieler.y+spieler.h)/TILE);
+    let treffer=false;
+    for(let c=links;c<=rechts;c++){
+      if(fest(c,r)) treffer=true;
+      // Einweg-Plattform: nur fangen, wenn er vorher oberhalb war
+      else if(einweg(c,r) && vorherUnten <= r*TILE+1) treffer=true;
+      if(treffer) break;
+    }
+    if(treffer){ spieler.y = r*TILE-spieler.h; spieler.vy=0; spieler.amBoden=true; }
+    else spieler.amBoden=false;
+
+  }else if(d<0){                            // steigen -> Decke
+    const r = Math.floor(spieler.y/TILE);
+    let treffer=false;
+    for(let c=links;c<=rechts;c++) if(fest(c,r)){ treffer=true; break; }
+    if(treffer){
+      // Eckenkorrektur: knapp an der Kante vorbei? Dann sanft danebenschieben,
+      // statt den Sprung abzuwürgen. Das fühlt sich viel fairer an.
+      const linksFrei  = !fest(links, r),  rechtsFrei = !fest(rechts,r);
+      const ueberstandL = (links+1)*TILE - spieler.x;
+      const ueberstandR = (spieler.x+spieler.b) - rechts*TILE;
+      if(rechtsFrei && ueberstandL<=TUNING.eckenHilfe){ spieler.x += ueberstandL; }
+      else if(linksFrei && ueberstandR<=TUNING.eckenHilfe){ spieler.x -= ueberstandR; }
+      else { spieler.y = (r+1)*TILE; spieler.vy=0; }
+    }
+    spieler.amBoden=false;
+  }
+}
+
+function sterben(){
+  if(spieler.tot) return;
+  spieler.tot=true; spieler.totT=0; sfx.sterben();
+}
+
+/* ============================================================
+   KAMERA – mit Totzone, damit sie nicht am Fuchs klebt
+   ============================================================ */
+const kamera = { x:0, y:0 };
+const SICHT_B = 320, SICHT_H = 180;
+
+function kameraSetzen(sofort=false){
+  const zielX = spieler.x + spieler.b/2 - SICHT_B/2 + spieler.blick*26;  // Vorausschau
+  const zielY = spieler.y + spieler.h/2 - SICHT_H/2 + 14;
+  const t = sofort ? 1 : 0.11;
+  kamera.x += (zielX-kamera.x)*t;
+  kamera.y += (zielY-kamera.y)*t;
+  kamera.x = Math.max(0, Math.min(kamera.x, levelB*TILE - SICHT_B));
+  kamera.y = Math.max(-20, Math.min(kamera.y, levelH*TILE - SICHT_H));
+}
+
+/* ============================================================
+   PARTIKEL (Staub) – kleiner Aufwand, grosse Wirkung
+   ============================================================ */
+const partikel=[];
+function staub(x,y,n,farbe){
+  for(let i=0;i<n;i++) partikel.push({
+    x, y, vx:(Math.random()-.5)*46, vy:-Math.random()*30,
+    leben:.34+Math.random()*.25, alter:0, farbe, r:1+Math.random()*1.4
+  });
+}
+function partikelSchritt(){
+  for(let i=partikel.length-1;i>=0;i--){
+    const p=partikel[i];
+    p.alter+=DT; p.x+=p.vx*DT; p.y+=p.vy*DT; p.vy+=220*DT; p.vx*=0.94;
+    if(p.alter>=p.leben) partikel.splice(i,1);
+  }
+}
+
+/* ============================================================
+   ZEICHNEN – alles im Code, keine Bilddateien
+   ============================================================ */
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+
+function zeichne(){
+  const kx = Math.round(kamera.x), ky = Math.round(kamera.y);
+
+  /* Himmel */
+  const g = ctx.createLinearGradient(0,0,0,SICHT_H);
+  g.addColorStop(0,'#FFF1DC'); g.addColorStop(1,'#BFE3FF');
+  ctx.fillStyle=g; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+
+  /* Parallax: Sonne, ferne Hügel, nahe Hügel */
+  ctx.fillStyle='#FFD98A';
+  ctx.beginPath(); ctx.arc(268-kx*0.04, 34-ky*0.04, 15, 0, 7); ctx.fill();
+
+  huegel(kx*0.16, 128, 46, '#BFE0C6');
+  wolken(kx*0.22, ky*0.10);
+  huegel(kx*0.34, 146, 34, '#9ED4AE');
+
+  /* Kacheln – nur den sichtbaren Ausschnitt zeichnen */
+  const c0=Math.max(0,Math.floor(kx/TILE)), c1=Math.min(levelB-1,Math.ceil((kx+SICHT_B)/TILE));
+  const r0=Math.max(0,Math.floor(ky/TILE)), r1=Math.min(levelH-1,Math.ceil((ky+SICHT_H)/TILE));
+  for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++){
+    const z=karte[r][c]; if(z==='.') continue;
+    const x=c*TILE-kx, y=r*TILE-ky;
+    if(z==='#'){
+      const obenFrei = !fest(c,r-1);
+      ctx.fillStyle = '#8B5E34';  ctx.fillRect(x,y,TILE,TILE);
+      ctx.fillStyle = '#7A5029';  ctx.fillRect(x,y+TILE-3,TILE,3);
+      if(obenFrei){
+        ctx.fillStyle='#5FBF7E'; ctx.fillRect(x,y,TILE,5);
+        ctx.fillStyle='#8CE0A8'; ctx.fillRect(x,y,TILE,2);
+        ctx.fillStyle='#5FBF7E'; ctx.fillRect(x+3,y+5,2,2); ctx.fillRect(x+11,y+5,2,2);
+      }
+      ctx.fillStyle='rgba(0,0,0,.09)';
+      ctx.fillRect(x+((c*7+r*3)%11), y+7+((c*5)%6), 2,2);
+    }else if(z==='='){
+      ctx.fillStyle='#C89A5B'; ctx.fillRect(x,y,TILE,5);
+      ctx.fillStyle='#E0BA80'; ctx.fillRect(x,y,TILE,2);
+      ctx.fillStyle='rgba(0,0,0,.13)'; ctx.fillRect(x,y+5,TILE,1);
+    }
+  }
+
+  /* Ziel */
+  if(zielPos){
+    const zx=zielPos.x-kx, zy=zielPos.y-ky;
+    if(zx>-30&&zx<SICHT_B+30){
+      ctx.fillStyle='#6B6280'; ctx.fillRect(zx+7,zy-2,2,18);
+      const w=Math.sin(zeit*4)*2;
+      ctx.fillStyle='#FF6B6B';
+      ctx.beginPath(); ctx.moveTo(zx+9,zy-2); ctx.lineTo(zx+21+w,zy+3); ctx.lineTo(zx+9,zy+8); ctx.fill();
+    }
+  }
+
+  /* Münzen */
+  muenzen.forEach(m=>{
+    if(m.weg) return;
+    const mx=m.x-kx, my=m.y-ky+Math.sin(zeit*3+m.t)*1.6;
+    if(mx<-12||mx>SICHT_B+12) return;
+    const br = Math.abs(Math.cos(zeit*3+m.t))*4+1.4;   // Drehung angedeutet
+    ctx.fillStyle='#E8A317'; ctx.beginPath(); ctx.ellipse(mx,my,br+0.9,5.2,0,0,7); ctx.fill();
+    ctx.fillStyle='#FFC93C'; ctx.beginPath(); ctx.ellipse(mx,my,br,4.4,0,0,7); ctx.fill();
+    if(br>2.6){ ctx.fillStyle='#FFE9A8'; ctx.fillRect(mx-0.8,my-2.2,1.4,4.4); }
+  });
+
+  /* Partikel */
+  partikel.forEach(p=>{
+    ctx.globalAlpha = Math.max(0,1-p.alter/p.leben);
+    ctx.fillStyle=p.farbe;
+    ctx.fillRect(Math.round(p.x-kx-p.r), Math.round(p.y-ky-p.r), Math.ceil(p.r*2), Math.ceil(p.r*2));
+  });
+  ctx.globalAlpha=1;
+
+  /* Der Fuchs */
+  if(!spieler.tot || Math.floor(spieler.totT*14)%2===0) zeichneFuchs(kx,ky);
+
+  /* Touchpad-Profil: Zeiger sichtbar machen (der echte ist ausgeblendet) */
+  if(profil==='touchpad' && maus.imBild){
+    ctx.strokeStyle='rgba(44,33,64,.65)'; ctx.lineWidth=1;
+    const mx=Math.round(maus.x)+.5, my=Math.round(maus.y)+.5;
+    ctx.beginPath(); ctx.moveTo(mx-4,my); ctx.lineTo(mx+4,my);
+    ctx.moveTo(mx,my-4); ctx.lineTo(mx,my+4); ctx.stroke();
+    ctx.fillStyle = maus.unten ? '#FF6B6B' : 'rgba(255,255,255,.9)';
+    ctx.fillRect(mx-1.5,my-1.5,3,3);
+  }
+
+  hud();
+}
+
+function huegel(off, y, hoch, farbe){
+  ctx.fillStyle=farbe;
+  ctx.beginPath(); ctx.moveTo(-10,SICHT_H);
+  for(let x=-10;x<=SICHT_B+10;x+=8){
+    const t=(x+off)*0.012;
+    ctx.lineTo(x, y - Math.sin(t)*hoch*0.5 - Math.sin(t*2.3)*hoch*0.25);
+  }
+  ctx.lineTo(SICHT_B+10,SICHT_H); ctx.fill();
+}
+function wolken(offX, offY){
+  ctx.fillStyle='rgba(255,255,255,.75)';
+  [[40,30,11],[150,22,9],[250,42,13],[330,26,10]].forEach(([x,y,r])=>{
+    const px=((x-offX)%420+420)%420-50, py=y-offY;
+    ctx.beginPath(); ctx.arc(px,py,r,0,7); ctx.arc(px+r,py+2,r*0.8,0,7); ctx.arc(px-r,py+2,r*0.7,0,7); ctx.fill();
+  });
+}
+
+function zeichneFuchs(kx,ky){
+  const s=spieler;
+  const cxp = Math.round(s.x - kx + s.b/2);
+  const bod = Math.round(s.y - ky + s.h);
+  const q   = s.squash;                     // >1 gestaucht, <1 gestreckt
+  const hh  = s.h/q, bb = (s.b+4)*q;        // Höhe/Breite verzerren, Volumen bleibt
+  const f   = s.blick;
+  const inLuft = !s.amBoden;
+
+  ctx.save();
+  ctx.translate(cxp, bod);
+  ctx.scale(f,1);
+
+  // Schatten am Boden
+  ctx.fillStyle='rgba(44,33,64,.16)';
+  ctx.beginPath(); ctx.ellipse(0,0.5,bb*0.45,1.8,0,0,7); ctx.fill();
+
+  // Beine
+  const lauf = Math.sin(s.laufPhase*2.2)* (s.amBoden?2.6:0);
+  ctx.fillStyle='#C2611C';
+  if(inLuft){ ctx.fillRect(-4,-4,3,4); ctx.fillRect(1.6,-3,3,3); }
+  else { ctx.fillRect(-4+lauf,-3.5,3,3.5); ctx.fillRect(1.6-lauf,-3.5,3,3.5); }
+
+  // Schwanz
+  const wedel = Math.sin(s.laufPhase*2.2 + 1)*1.6 + (inLuft?-2:0);
+  ctx.fillStyle='#FF922B';
+  ctx.beginPath(); ctx.moveTo(-3,-hh*0.55);
+  ctx.quadraticCurveTo(-10,-hh*0.62+wedel, -9,-hh*0.25+wedel);
+  ctx.quadraticCurveTo(-6,-hh*0.42, -3,-hh*0.42); ctx.fill();
+  ctx.fillStyle='#FFF6EC';
+  ctx.beginPath(); ctx.arc(-8.6,-hh*0.29+wedel,2,0,7); ctx.fill();
+
+  // Körper
+  ctx.fillStyle='#FF922B';
+  ctx.beginPath(); ctx.ellipse(0,-hh*0.42, bb*0.42, hh*0.36, 0,0,7); ctx.fill();
+  ctx.fillStyle='#FFE0C2';
+  ctx.beginPath(); ctx.ellipse(0.8,-hh*0.34, bb*0.27, hh*0.24, 0,0,7); ctx.fill();
+
+  // Kopf
+  const ky2 = -hh*0.78;
+  ctx.fillStyle='#FF922B';
+  ctx.beginPath(); ctx.ellipse(1.2,ky2, bb*0.36, hh*0.28, 0,0,7); ctx.fill();
+  // Ohren
+  ctx.beginPath();
+  ctx.moveTo(-1.5,ky2-2.4); ctx.lineTo(-3.4,ky2-6.4); ctx.lineTo(0.6,ky2-4.2); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo( 3.2,ky2-2.6); ctx.lineTo( 4.0,ky2-6.6); ctx.lineTo( 5.9,ky2-3.2); ctx.fill();
+  ctx.fillStyle='#2C2340';
+  ctx.beginPath(); ctx.moveTo(-1.4,ky2-3.2); ctx.lineTo(-2.6,ky2-5.4); ctx.lineTo(0.1,ky2-4.3); ctx.fill();
+  // Schnauze
+  ctx.fillStyle='#FFF6EC';
+  ctx.beginPath(); ctx.ellipse(4.4,ky2+1.2, 3.0,2.2,0,0,7); ctx.fill();
+  ctx.fillStyle='#2C2340';
+  ctx.beginPath(); ctx.arc(6.6,ky2+1.0,1.1,0,7); ctx.fill();
+  // Auge
+  const blinzel = (Math.sin(zeit*1.7)>0.985) ? 0.3 : 1;
+  ctx.beginPath(); ctx.ellipse(2.0,ky2-0.6, 1.1, 1.3*blinzel, 0,0,7); ctx.fill();
+
+  ctx.restore();
+}
+
+/* --- Anzeige oben im Bild --- */
+let punkte=0, zeit=0, gewonnen=false, gewonnenT=0;
+
+function hud(){
+  ctx.fillStyle='rgba(44,33,64,.55)';
+  ctx.fillRect(0,0,SICHT_B,15);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 9px ui-rounded, system-ui, sans-serif';
+  ctx.textBaseline='middle';
+  ctx.fillText('MÜNZEN  '+String(punkte).padStart(2,'0')+' / '+muenzen.length, 6, 8);
+  const p = PROFILE.find(p=>p.id===profil);
+  ctx.fillText(p.emo+'  '+p.name.toUpperCase(), 120, 8);
+  ctx.fillText('ZEIT  '+zeit.toFixed(1)+'s', 236, 8);
+
+  if(gewonnen){
+    ctx.fillStyle='rgba(44,33,64,.72)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+    ctx.textAlign='center';
+    ctx.fillStyle='#FFC93C'; ctx.font='bold 22px ui-rounded, system-ui, sans-serif';
+    ctx.fillText('GESCHAFFT!', SICHT_B/2, 74);
+    ctx.fillStyle='#fff'; ctx.font='bold 10px ui-rounded, system-ui, sans-serif';
+    ctx.fillText(punkte+' von '+muenzen.length+' Münzen  ·  '+zeit.toFixed(1)+' Sekunden', SICHT_B/2, 98);
+    if(Math.floor(gewonnenT*2)%2===0)
+      ctx.fillText('R drücken für nochmal', SICHT_B/2, 118);
+    ctx.textAlign='left';
+  }
+  if(spieler.tot){
+    ctx.fillStyle='rgba(230,73,128,.30)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+  }
+}
+
+/* ============================================================
+   SPIELSCHLEIFE mit festem Zeitschritt
+   Die Physik rechnet immer 60× pro Sekunde – egal wie schnell
+   der Bildschirm ist. Sonst springt der Fuchs auf einem neuen
+   Laptop anders weit als auf einem alten.
+   ============================================================ */
+let letzte=performance.now(), speicher=0;
+
+function schritt(){
+  leseEingabe();
+  if(gewonnen){ gewonnenT+=DT; partikelSchritt(); kameraSetzen(); return; }
+
+  if(spieler.tot){
+    spieler.totT+=DT;
+    if(spieler.totT>0.85) levelNeu();
+    partikelSchritt();
+    return;
+  }
+
+  zeit+=DT;
+  spielerSchritt();
+  partikelSchritt();
+  kameraSetzen();
+
+  // Münzen einsammeln
+  muenzen.forEach(m=>{
+    if(m.weg) return;
+    if(Math.abs(m.x-(spieler.x+spieler.b/2))<10 && Math.abs(m.y-(spieler.y+spieler.h/2))<11){
+      m.weg=true; punkte++; sfx.muenze();
+      staub(m.x,m.y,5,'#FFC93C');
+    }
+  });
+
+  // Ziel erreicht
+  if(!gewonnen && Math.abs(zielPos.x+8-(spieler.x+spieler.b/2))<11
+              && Math.abs(zielPos.y+8-(spieler.y+spieler.h/2))<14){
+    gewonnen=true; gewonnenT=0; sfx.ziel();
+    for(let i=0;i<24;i++) staub(zielPos.x+8, zielPos.y+8, 1, ['#FFC93C','#FF6B6B','#2FC79B','#4DABF7'][i%4]);
+  }
+}
+
+function bild(jetzt){
+  let d = (jetzt-letzte)/1000; letzte=jetzt;
+  d = Math.min(d, 0.25);                 // nach einem Tab-Wechsel nicht aufholen
+  speicher += d;
+  let n=0;
+  while(speicher >= DT && n<5){ schritt(); speicher-=DT; n++; }
+  zeichne();
+  requestAnimationFrame(bild);
+}
+
+/* ============================================================
+   Oberfläche: Profilknöpfe, Skalierung, Hilfetext
+   ============================================================ */
+function setzeProfil(id){
+  profil=id;
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on', b.dataset.id===id));
+  stage.classList.toggle('hidecursor', id==='touchpad');
+  eingabe.sprung=false; maus.unten=false; tasten.clear();
+  zeichneHilfe();
+}
+function zeichneHilfe(){
+  const p=PROFILE.find(p=>p.id===profil);
+  document.getElementById('hint').innerHTML =
+    p.hilfe + ' &nbsp;·&nbsp; <kbd>R</kbd> neu starten &nbsp;·&nbsp; <kbd>M</kbd> Ton ' + (tonAn?'aus':'an');
+}
+(function baueKnoepfe(){
+  const box=document.getElementById('profiles');
+  PROFILE.forEach(p=>{
+    const b=document.createElement('button');
+    b.className='pbtn'; b.dataset.id=p.id;
+    b.innerHTML=`<span>${p.emo}</span><span>${p.name}</span><span class="key">${p.taste}</span>`;
+    b.onclick=()=>setzeProfil(p.id);
+    box.appendChild(b);
+  });
+})();
+
+/* Ganzzahlige Skalierung – so bleiben die Pixel scharf (Arcade-Optik) */
+function skalieren(){
+  const maxB = Math.min(window.innerWidth-28, 1100);
+  const maxH = window.innerHeight - 170;
+  let f = Math.max(1, Math.floor(Math.min(maxB/SICHT_B, maxH/SICHT_H)));
+  cv.style.width  = (SICHT_B*f)+'px';
+  cv.style.height = (SICHT_H*f)+'px';
+}
+addEventListener('resize', skalieren);
+
+/* Start */
+levelNeu();
+setzeProfil('tastatur');
+skalieren();
+requestAnimationFrame(bild);
+</script>
+</body>
+</html>
