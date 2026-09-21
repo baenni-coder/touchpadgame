@@ -49,12 +49,18 @@ pruefe('Steht ruhig: kein Flackern zwischen Boden und Luft',
        ruhe.wechsel === 0 && ruhe.maxStaub === 0,
        `${ruhe.wechsel} Wechsel, ${ruhe.maxStaub} Staubteilchen`);
 
+// Dieser Test hat den Fuchs versetzt -> sauberen Zustand wiederherstellen,
+// sonst messen die folgenden Tests an der falschen Stelle.
+await page.evaluate(() => levelNeu());
+await page.waitForTimeout(250);
+const a2 = await lies();
+
 // 2) Läuft er auf Tastendruck?
 await page.keyboard.down('ArrowRight');
 await page.waitForTimeout(900);
 await page.keyboard.up('ArrowRight');
 const b = await lies();
-pruefe('Läuft nach rechts', b.x > a.x + 40, `${(b.x - a.x).toFixed(0)} px in 0.9 s`);
+pruefe('Läuft nach rechts', b.x > a2.x + 40, `${(b.x - a2.x).toFixed(0)} px in 0.9 s`);
 
 // 3) Springt er, und ist der Sprung ungefähr 3 Kacheln hoch?
 await page.waitForTimeout(400);

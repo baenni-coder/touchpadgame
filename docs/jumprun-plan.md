@@ -1,6 +1,6 @@
 # Vom Touchpad-Abenteuer zum echten Arcade-Jump-&-Run
 
-**Stand:** 21.09.2026 · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
+**Stand:** 21.09.2026 · **Phase 1 steht** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
 
 ---
 
@@ -172,9 +172,24 @@ Die Zeitangaben sind ungefähre Arbeitssitzungen mit mir – nicht deine Zeit; d
 ### Phase 0 · Entscheiden (dein Part, ~15 Min)
 Steuerungsweg A/B/C · Umfang (wie viele Levels?) · Grafikquelle (Kenney / selbst zeichnen / erst mal Platzhalter) · Verhältnis zu den 8 Stationen (ersetzen, ergänzen, Hub-Welt?)
 
-### Phase 1 · Motor & Spielgefühl (~1–2 Sitzungen)
-Spielschleife, Kollision, Kamera, Spielerbewegung mit allen Game-Feel-Mechaniken, ein Testlevel, Platzhaltergrafik.
-**Ergebnis:** Der Fuchs rennt und springt und es fühlt sich schon jetzt gut an. ← *Das ist der wichtigste Meilenstein. Wenn das hier nicht Spass macht, retten es zehn schöne Levels auch nicht.*
+### Phase 1 · Motor & Spielgefühl — ✅ **erledigt** (`prototyp.html`)
+Spielschleife mit festem Zeitschritt, Kachel-Kollision, Einweg-Plattformen, Kamera, alle Game-Feel-Mechaniken, ein Testlevel, Grafik und Ton komplett aus Code.
+
+**Gemessen** (`tools/messen.mjs`, echter Browser):
+
+| | Wert |
+|---|---|
+| Sprunghöhe, Taste gehalten | 2.93 Kacheln |
+| Sprunghöhe, kurz getippt | 1.28 Kacheln |
+| Sprungweite bei Volltempo | 3.93 Kacheln |
+
+Daraus die Level-Regeln: **Stufen höchstens 2 Kacheln, Lücken höchstens 3.**
+`tools/level-pruefen.mjs` prüft jede Karte per Breitensuche gegen diese
+Grenzen – das Testlevel ist damit nachweislich durchspielbar (15 Münzen und
+das Ziel sicher erreichbar, keine Warnungen).
+
+**Entschieden:** Steuerung als Hybrid (drei austauschbare Profile), Sterne
+aus den Übungsstationen schalten später die Levels frei.
 
 ### Phase 2 · Das Spiel drumherum (~2 Sitzungen)
 Gegner, Gefahren, Sammelobjekte, Leben & Treffer, Checkpoints, Levelziel, HUD, Pause-Menü, Sieg-/Niederlagen-Bildschirme.
