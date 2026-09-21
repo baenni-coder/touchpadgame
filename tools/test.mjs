@@ -157,6 +157,79 @@ pruefe('Touchpad: Zeiger links -> läuft links', links < 0, 'eingabe.x = ' + lin
 const still = await messeTouchpad(0);
 pruefe('Touchpad: Zeiger auf dem Fuchs -> steht still (Totzone)', still === 0, 'eingabe.x = ' + still);
 
+// 11) Der gemeldete Fehler: am Levelende klemmt die Kamera, der Fuchs läuft
+//     dem Zeiger entgegen – er darf trotzdem nicht stehen bleiben.
+const amEnde = async (zeigerVersatz) => {
+  const b = await page.evaluate(() => {
+    spieler.x = 66 * 16; spieler.y = 12 * 16 - 14;
+    spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
+    kameraSetzen(true);
+    const r = document.getElementById('cv').getBoundingClientRect();
+    const maxK = levelB * 16 - 320;
+    return { rx: r.x, ry: r.y, rw: r.width, rh: r.height,
+             fuchs: spieler.x + spieler.b / 2 - kamera.x,
+             geklemmt: kamera.x >= maxK - 0.5 };
+  });
+  await page.mouse.move(b.rx + (b.fuchs + zeigerVersatz) / 320 * b.rw, b.ry + b.rh / 2);
+  await page.waitForTimeout(90);
+  const x = await page.evaluate(() => +eingabe.x.toFixed(2));
+  return { ...b, eingabeX: x };
+};
+
+const e1 = await amEnde(40);
+pruefe('Levelende: Kamera klemmt dort tatsächlich', e1.geklemmt);
+pruefe('Levelende: Zeiger rechts vom Fuchs -> läuft weiter', e1.eingabeX > 0, 'eingabe.x = ' + e1.eingabeX);
+
+// Zeiger an den äussersten Bildrand: Randzone muss greifen
+const e2 = await amEnde(400);   // weit rechts, landet ausserhalb -> wird geklemmt
+pruefe('Levelende: Zeiger über den Rand hinaus -> läuft trotzdem weiter',
+       e2.eingabeX > 0, 'eingabe.x = ' + e2.eingabeX);
+
+// Zeiger oben auf den Knöpfen: Steuerung soll ruhen, nicht weiterlaufen
+const oben = await page.evaluate(async () => {
+  spieler.x = 22 * 16; spieler.y = 12 * 16 - 14; spieler.vx = 0; kameraSetzen(true);
+  return document.getElementById('cv').getBoundingClientRect().y;
+});
+await page.mouse.move(640, Math.max(2, oben - 60));
+await page.waitForTimeout(90);
+const ruhig = await page.evaluate(() => ({ x: +eingabe.x.toFixed(2), imBild: maus.imBild }));
+pruefe('Zeiger weit über dem Spielfeld -> Steuerung ruht', ruhig.x === 0 && !ruhig.imBild,
+       'eingabe.x = ' + ruhig.x);
+
+// 12) Doppelklick-Sprung: höher als normal UND verlässlich gleich hoch
+await page.click('.pbtn[data-id="tastatur"]');
+const messeSprung = (extraNachMs) => page.evaluate(({ ms }) => new Promise(res => {
+  levelNeu();
+  setTimeout(() => {
+    spieler.x = 8 * 16; spieler.y = 12 * 16 - 14;
+    spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
+    const y0 = spieler.y; let min = y0;
+    const t = setInterval(() => min = Math.min(min, spieler.y), 8);
+    dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+    setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { key: ' ' })), 40);
+    if (ms !== null) {
+      setTimeout(() => dispatchEvent(new KeyboardEvent('keydown', { key: ' ' })), ms);
+      setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { key: ' ' })), ms + 40);
+    }
+    setTimeout(() => { clearInterval(t); res(+((y0 - min) / 16).toFixed(2)); }, 1600);
+  }, 250);
+}), { ms: extraNachMs });
+
+const normal = await messeSprung(null);
+const doppel80 = await messeSprung(80);
+const doppel260 = await messeSprung(260);
+pruefe('Doppeltipp springt deutlich höher als ein einzelner Sprung',
+       doppel80 > normal + 0.8, `${normal} -> ${doppel80} Kacheln`);
+pruefe('Doppeltipp-Höhe hängt nicht vom Timing ab',
+       Math.abs(doppel80 - doppel260) < 0.35, `nach 80 ms: ${doppel80} · nach 260 ms: ${doppel260}`);
+pruefe('Doppeltipp erreicht die eingestellte Höhe (~4.4 Kacheln)',
+       doppel80 > 4.0 && doppel80 < 4.8, doppel80 + ' Kacheln');
+
+// Ein langsamer zweiter Tipp (ausserhalb des Zeitfensters) ist KEIN Doppeltipp
+const zuSpaet = await messeSprung(900);
+pruefe('Zu langsamer zweiter Tipp löst keinen Extrasprung aus',
+       zuSpaet < normal + 0.5, zuSpaet + ' Kacheln');
+
 pruefe('Keine JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();

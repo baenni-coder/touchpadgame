@@ -113,8 +113,13 @@ const TUNING = {
   puffer:         0.13,  // Sekunden vor der Landung, in denen der Sprung gemerkt wird
   eckenHilfe:     3,     // Pixel, um die ein Sprung an der Kante korrigiert wird
 
+  // --- Doppelklick-Sprung (die Touchpad-Übung) ---
+  doppelZeit:     420,   // Millisekunden, in denen der zweite Klick zählt
+  extraHoehe:     70,    // Gesamthöhe des Doppelklick-Sprungs in Pixel (~4.4 Kacheln)
+
   // --- Touchpad-Profil ---
   totzone:        7,     // Pixel um den Fuchs herum, in denen er stehen bleibt
+  randzone:       14,    // am Bildrand läuft der Fuchs weiter (siehe leseEingabe)
 };
 
 const TILE = 16;                 // Kachelgrösse
@@ -165,6 +170,7 @@ function beep(freq,dur,type='square',vol=.14,glide=0){
 }
 const sfx={
   sprung: ()=>beep(330,.12,'square',.10,2.2),
+  extra:  ()=>{beep(520,.10,'square',.11,1.9);setTimeout(()=>beep(780,.13,'triangle',.12,1.6),55);},
   landung:()=>beep(150,.06,'triangle',.09,.7),
   muenze: ()=>{beep(880,.05,'square',.11);setTimeout(()=>beep(1320,.08,'square',.10),45);},
   sterben:()=>beep(300,.35,'sawtooth',.12,.2),
@@ -176,21 +182,23 @@ const sfx={
    Egal welches Gerät: das Spiel sieht nur diese vier Werte.
    Dadurch laufen alle Levels mit allen Steuerungen.
    ============================================================ */
-const eingabe = { x:0, sprung:false, sprungNeu:false, aktion:false };
+const eingabe = { x:0, sprung:false, sprungNeu:false, extraNeu:false, aktion:false };
 
 const PROFILE = [
   { id:'tastatur', name:'Tastatur', emo:'⌨️', taste:'1',
-    hilfe:'<kbd>←</kbd> <kbd>→</kbd> oder <kbd>A</kbd> <kbd>D</kbd> laufen · <kbd>Leertaste</kbd> springen (länger drücken = höher)' },
+    hilfe:'<kbd>←</kbd> <kbd>→</kbd> oder <kbd>A</kbd> <kbd>D</kbd> laufen · <kbd>Leertaste</kbd> springen (länger drücken = höher) · <b>zweimal schnell = Extrasprung</b>' },
   { id:'touchpad', name:'Touchpad', emo:'👆', taste:'2',
-    hilfe:'Zeiger <b>neben</b> den Fuchs bewegen – er läuft dorthin · <b>Klicken und halten</b> zum Springen' },
+    hilfe:'Zeiger <b>neben</b> den Fuchs bewegen – er läuft dorthin · <b>Klicken und halten</b> zum Springen · <b>Doppelklick = Extrasprung</b>' },
   { id:'gamepad',  name:'Gamepad', emo:'🎮', taste:'3',
-    hilfe:'Steuerkreuz oder linker Stick · <b>A</b>-Taste springen · (Controller anschliessen und eine Taste drücken)' },
+    hilfe:'Steuerkreuz oder linker Stick · <b>A</b> springen · <b>B</b> oder zweimal A = Extrasprung' },
 ];
 let profil = 'tastatur';
 
 /* --- Rohdaten der drei Quellen --- */
 const tasten = new Set();
-const maus   = { x:0, y:0, imBild:false, unten:false };
+const maus   = { x:0, y:0, imBild:false, unten:false, letzterKlick:0, doppelt:false };
+let letzterSprungTipp = 0, tastenDoppelt = false;   // Doppeltipp auf der Tastatur
+let gpVorher = false, gpLetzter = 0, gpDoppelt = false;
 
 addEventListener('keydown', e=>{
   // Profil umschalten
@@ -199,6 +207,14 @@ addEventListener('keydown', e=>{
   if(e.key==='r'||e.key==='R'){ levelNeu(); return; }
   if(e.key==='m'||e.key==='M'){ tonAn=!tonAn; zeichneHilfe(); return; }
   if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key)) e.preventDefault();
+  // Zweimal schnell springen = Doppeltipp. e.repeat aussortieren, sonst
+  // löst eine gehaltene Taste die Tastenwiederholung als "Doppeltipp" aus.
+  const istSprung = e.key===' '||e.key==='Spacebar'||e.key==='ArrowUp'||e.key.toLowerCase()==='w';
+  if(istSprung && !e.repeat){
+    const jetzt = performance.now();
+    if(jetzt - letzterSprungTipp < TUNING.doppelZeit) tastenDoppelt = true;
+    letzterSprungTipp = jetzt;
+  }
   tasten.add(e.key.toLowerCase());
 });
 addEventListener('keyup', e=>tasten.delete(e.key.toLowerCase()));
@@ -206,25 +222,45 @@ addEventListener('blur', ()=>{ tasten.clear(); maus.unten=false; });
 
 const cv = document.getElementById('cv');
 const stage = document.getElementById('stage');
-cv.addEventListener('pointermove', e=>{
-  const r=cv.getBoundingClientRect();
-  maus.x=(e.clientX-r.left)/r.width*cv.width;   // in interne Pixel umrechnen
-  maus.y=(e.clientY-r.top)/r.height*cv.height;
-  maus.imBild=true;
+/* Den Zeiger im ganzen Fenster verfolgen, nicht nur über dem Spielfeld.
+   Sonst verliert der Fuchs die Steuerung, sobald der Zeiger über den Rand
+   hinausgeht – und genau das passiert am Levelende: dort scrollt die Kamera
+   nicht mehr weiter, der Fuchs läuft dem Zeiger entgegen und schiebt ihn
+   praktisch aus dem Bild. */
+addEventListener('pointermove', e=>{
+  const r  = cv.getBoundingClientRect();
+  const ix = (e.clientX-r.left)/r.width *cv.width;    // in interne Pixel
+  const iy = (e.clientY-r.top )/r.height*cv.height;
+  // seitlich an den Rand klemmen: der Zeiger "drückt" dann dagegen
+  maus.x = Math.max(0, Math.min(cv.width,  ix));
+  maus.y = Math.max(0, Math.min(cv.height, iy));
+  // Deutlich über oder unter dem Spielfeld (z.B. auf den Knöpfen) ruht die
+  // Steuerung – sonst würde der Fuchs weiterlaufen, während man klickt.
+  // In Bildschirmpixeln rechnen: intern gemessen wäre die Zone je nach
+  // Fenstergrösse unterschiedlich gross.
+  const tol = 30 / (r.height/cv.height);
+  maus.imBild = iy > -tol && iy < cv.height+tol;
 });
-cv.addEventListener('pointerleave', ()=>{ maus.imBild=false; maus.unten=false; });
-cv.addEventListener('pointerdown', e=>{ e.preventDefault(); maus.unten=true; cv.setPointerCapture(e.pointerId); });
-cv.addEventListener('pointerup',   ()=>{ maus.unten=false; });
+cv.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  maus.unten = true;
+  const jetzt = performance.now();
+  if(jetzt - maus.letzterKlick < TUNING.doppelZeit) maus.doppelt = true;
+  maus.letzterKlick = jetzt;
+  cv.setPointerCapture(e.pointerId);
+});
+addEventListener('pointerup', ()=>{ maus.unten=false; });
 cv.addEventListener('contextmenu', e=>e.preventDefault());
 
 /* --- Rohdaten -> abstrakte Eingabe. Nur das aktive Profil wird gelesen. --- */
 function leseEingabe(){
-  let x=0, sprung=false;
+  let x=0, sprung=false, extra=false;
 
   if(profil==='tastatur'){
     if(tasten.has('arrowleft') ||tasten.has('a')) x-=1;
     if(tasten.has('arrowright')||tasten.has('d')) x+=1;
     sprung = tasten.has(' ')||tasten.has('arrowup')||tasten.has('w');
+    extra = tastenDoppelt; tastenDoppelt = false;
 
   }else if(profil==='touchpad'){
     if(maus.imBild){
@@ -235,8 +271,15 @@ function leseEingabe(){
       if(Math.abs(d) > TUNING.totzone) x = Math.sign(d);
       // Kleine Distanzen = langsam gehen (feines Touchpad-Training)
       if(Math.abs(d) < TUNING.totzone*2.6) x *= 0.55;
+
+      // Randzone: liegt der Zeiger ganz aussen, läuft der Fuchs weiter –
+      // auch wenn er ihn längst eingeholt hat. Ohne das bleibt er am
+      // Levelende stehen, sobald die Kamera nicht mehr mitscrollt.
+      if(maus.x <= TUNING.randzone)                 x = -1;
+      else if(maus.x >= cv.width - TUNING.randzone) x =  1;
     }
     sprung = maus.unten;
+    extra = maus.doppelt; maus.doppelt = false;
 
   }else if(profil==='gamepad'){
     const gp = (navigator.getGamepads?.()||[])[0];
@@ -246,11 +289,21 @@ function leseEingabe(){
       if(gp.buttons[14]?.pressed) x=-1;
       if(gp.buttons[15]?.pressed) x= 1;
       sprung = !!(gp.buttons[0]?.pressed || gp.buttons[1]?.pressed);
+      // Doppeltipp auf der Sprungtaste – oder einfach die B-Taste
+      if(sprung && !gpVorher){
+        const jetzt = performance.now();
+        if(jetzt - gpLetzter < TUNING.doppelZeit) gpDoppelt = true;
+        gpLetzter = jetzt;
+      }
+      gpVorher = sprung;
+      if(gp.buttons[2]?.pressed || gp.buttons[3]?.pressed) gpDoppelt = true;
+      extra = gpDoppelt; gpDoppelt = false;
     }
   }
 
   eingabe.sprungNeu = sprung && !eingabe.sprung;   // genau in diesem Bild gedrückt
   eingabe.sprung = sprung;
+  eingabe.extraNeu = extra;
   eingabe.x = Math.max(-1, Math.min(1, x));
 }
 
@@ -282,7 +335,7 @@ const spieler = {
   x:0, y:0, b:10, h:14,            // Rechteck für die Kollision (schmaler als die Figur)
   vx:0, vy:0,
   amBoden:false, wardAmBoden:false,
-  coyote:0, puffer:0, sprungGehalten:false,
+  coyote:0, puffer:0, sprungGehalten:false, absprungY:0, extraFrei:false, extraT:0,
   blick:1, laufPhase:0, squash:1, tot:false, totT:0
 };
 
@@ -291,6 +344,7 @@ function levelNeu(){
   spieler.x=startPos.x+3; spieler.y=startPos.y+2;
   spieler.vx=0; spieler.vy=0; spieler.tot=false; spieler.totT=0;
   spieler.coyote=0; spieler.puffer=0; spieler.squash=1;
+  spieler.extraFrei=false; spieler.extraT=0; spieler.absprungY=spieler.y;
   punkte=0; zeit=0; gewonnen=false; gewonnenT=0; partikel.length=0;
   kamera.x=0; kamera.y=0; kameraSetzen(true);
 }
@@ -321,9 +375,34 @@ function spielerSchritt(){
     spieler.puffer=0; spieler.coyote=0;
     spieler.amBoden=false; spieler.sprungGehalten=true;
     spieler.squash = 0.78;              // Streckung beim Absprung
+    spieler.absprungY = spieler.y;      // Bezugspunkt für den Doppelklick-Sprung
+    spieler.extraFrei = true;           // einmal pro Sprung
     sfx.sprung();
     staub(spieler.x+spieler.b/2, spieler.y+spieler.h, 4, '#CBB89A');
   }
+
+  /* --- Doppelklick-Sprung ---
+     Der erste Klick springt schon los; der zweite gibt den Extraschub.
+     Statt eines festen Impulses rechnen wir die noch fehlende Höhe aus.
+     So ist der Sprung IMMER gleich hoch, egal wie schnell der zweite Klick
+     kommt – nur damit lässt sich ein Level verlässlich entwerfen. */
+  if(eingabe.extraNeu && spieler.extraFrei && !spieler.amBoden){
+    const gestiegen = spieler.absprungY - spieler.y;
+    const rest = T.extraHoehe - gestiegen;
+    if(rest > 4){
+      spieler.vy = -Math.sqrt(2*T.gravAufwaerts*rest);
+      // Bewusst NICHT sprungGehalten setzen: ein Doppelklick ist kurz-kurz,
+      // niemand hält dabei die Taste. Mit sprungGehalten würde der Sprung
+      // beim Loslassen sofort wieder gekappt und bliebe wirkungslos.
+      spieler.sprungGehalten = false;
+      spieler.extraFrei = false;
+      spieler.squash = 0.72;
+      spieler.extraT = 0.45;            // für den Glitzereffekt beim Zeichnen
+      sfx.extra();
+      for(let i=0;i<8;i++) staub(spieler.x+spieler.b/2, spieler.y+spieler.h, 1, '#FFC93C');
+    }
+  }
+  if(spieler.extraT>0) spieler.extraT -= DT;
   // Taste früh loslassen -> kleinerer Sprung (variable Sprunghöhe)
   if(spieler.sprungGehalten && !eingabe.sprung && spieler.vy<0){
     spieler.vy *= T.sprungAbbruch;
@@ -341,6 +420,7 @@ function spielerSchritt(){
   bewegeY(spieler.vy*DT);
 
   if(spieler.amBoden && !spieler.wardAmBoden){
+    spieler.extraFrei = false;
     sfx.landung();
     spieler.squash = 1.32;              // Stauchung bei der Landung
     staub(spieler.x+spieler.b/2, spieler.y+spieler.h, 5, '#CBB89A');
@@ -568,6 +648,14 @@ function zeichneFuchs(kx,ky){
   ctx.save();
   ctx.translate(cxp, bod);
   ctx.scale(f,1);
+
+  // Glitzerring nach einem Doppelklick-Sprung
+  if(s.extraT>0){
+    ctx.globalAlpha = Math.min(1, s.extraT*2.2);
+    ctx.strokeStyle='#FFC93C'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.ellipse(0,-hh*0.4, bb*0.7*(1.6-s.extraT), hh*0.5*(1.6-s.extraT), 0,0,7); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
 
   // Schatten am Boden
   ctx.fillStyle='rgba(44,33,64,.16)';
