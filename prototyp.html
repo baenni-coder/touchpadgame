@@ -719,10 +719,94 @@ function partikelSchritt(){
 }
 
 /* ============================================================
-   ZEICHNEN – alles im Code, keine Bilddateien
+   ZEICHNEN
+   Hintergrund und Landschaft entstehen im Code, Figuren und
+   Kacheln kommen aus dem Sprite-Bild (siehe unten).
    ============================================================ */
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
+
+/* ============================================================
+   SPRITES
+   Alle Figuren und Kacheln kommen aus einem einzigen Bild
+   (16x16 pro Feld). Es steckt als Base64 in dieser Datei –
+   damit bleibt alles eine Datei, die offline läuft.
+
+   Erzeugt von tools/atlas-bauen.mjs.
+
+   FERTIGE SPRITES EINHÄNGEN (z.B. die CC0-Pakete von kenney.nl):
+   Nur ATLAS anpassen – zelle, spalten und die Platznummern.
+   Anleitung: docs/sprites.md
+   ============================================================ */
+const ATLAS = {
+  zelle: 16,
+  spalten: 8,
+  quelle: 'data:image/png;base64,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',
+  // Name -> Feldnummer im Bild, zeilenweise ab 0 gezählt
+  plaetze: {
+    fuchs_steh:0, fuchs_lauf0:1, fuchs_lauf1:2, fuchs_lauf2:3, fuchs_lauf3:4,
+    fuchs_spring:5, fuchs_fall:6, fuchs_aua:7,
+    kaefer0:8, kaefer1:9, kaefer_platt:10, flieger0:11, flieger1:12,
+    muenze0:13, muenze1:14, muenze2:15, muenze3:16,
+    stern0:17, stern1:18, stern2:19, stern3:20,
+    herz_voll:21, herz_leer:22, stachel:23,
+    boden_oben:24, boden_mitte:25, boden_oben_l:26, boden_oben_r:27,
+    boden_l:28, boden_r:29,
+    plattform_l:30, plattform_m:31, plattform_r:32,
+    fahne_aus:33, fahne_an:34, ziel:35, wolke:36, busch:37,
+  }
+};
+
+const atlasBild = new Image();
+let atlasBereit = false;
+atlasBild.onload = ()=>{ atlasBereit = true; };
+atlasBild.src = ATLAS.quelle;
+
+/* Ein Feld aus dem Bild zeichnen. spiegeln=true dreht es waagerecht um. */
+function sprite(name, x, y, spiegeln=false){
+  if(!atlasBereit) return;
+  const nr = ATLAS.plaetze[name];
+  if(nr === undefined) return;
+  const Z = ATLAS.zelle;
+  const sx = (nr % ATLAS.spalten) * Z, sy = Math.floor(nr / ATLAS.spalten) * Z;
+  x = Math.round(x); y = Math.round(y);
+  if(spiegeln){
+    ctx.save();
+    ctx.translate(x + Z, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(atlasBild, sx, sy, Z, Z, 0, 0, Z, Z);
+    ctx.restore();
+  }else{
+    ctx.drawImage(atlasBild, sx, sy, Z, Z, x, y, Z, Z);
+  }
+}
+
+/* Welcher Kachel-Sprite passt hier? Hängt von den Nachbarn ab
+   ("Autotiling") – sonst sieht eine Kante aus wie die Mitte. */
+function kachelName(c, r){
+  const z = karte[r][c];
+  if(z === '='){
+    const l = einweg(c-1,r), re = einweg(c+1,r);
+    return !l ? 'plattform_l' : (!re ? 'plattform_r' : 'plattform_m');
+  }
+  if(z === '^') return 'stachel';
+  if(z !== '#') return null;
+  const oben = fest(c,r-1), links = fest(c-1,r), rechts = fest(c+1,r);
+  if(!oben) return !links ? 'boden_oben_l' : (!rechts ? 'boden_oben_r' : 'boden_oben');
+  if(!links)  return 'boden_l';
+  if(!rechts) return 'boden_r';
+  return 'boden_mitte';
+}
+
+/* Welche Haltung hat der Fuchs gerade? */
+function fuchsBild(){
+  const s = spieler;
+  if(s.schonzeit > 0 && !s.amBoden) return 'fuchs_aua';
+  if(!s.amBoden) return s.vy < 0 ? 'fuchs_spring' : 'fuchs_fall';
+  if(Math.abs(s.vx) > 8) return 'fuchs_lauf' + (Math.floor(s.laufPhase*2) % 4);
+  return 'fuchs_steh';
+}
+
 
 function zeichne(){
   // Bildschirm-Rüttler: verschiebt nur die Darstellung, nicht die Physik
@@ -748,86 +832,36 @@ function zeichne(){
   const c0=Math.max(0,Math.floor(kx/TILE)), c1=Math.min(levelB-1,Math.ceil((kx+SICHT_B)/TILE));
   const r0=Math.max(0,Math.floor(ky/TILE)), r1=Math.min(levelH-1,Math.ceil((ky+SICHT_H)/TILE));
   for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++){
-    const z=karte[r][c]; if(z==='.') continue;
-    const x=c*TILE-kx, y=r*TILE-ky;
-    if(z==='#'){
-      const obenFrei = !fest(c,r-1);
-      ctx.fillStyle = '#8B5E34';  ctx.fillRect(x,y,TILE,TILE);
-      ctx.fillStyle = '#7A5029';  ctx.fillRect(x,y+TILE-3,TILE,3);
-      if(obenFrei){
-        ctx.fillStyle='#5FBF7E'; ctx.fillRect(x,y,TILE,5);
-        ctx.fillStyle='#8CE0A8'; ctx.fillRect(x,y,TILE,2);
-        ctx.fillStyle='#5FBF7E'; ctx.fillRect(x+3,y+5,2,2); ctx.fillRect(x+11,y+5,2,2);
-      }
-      ctx.fillStyle='rgba(0,0,0,.09)';
-      ctx.fillRect(x+((c*7+r*3)%11), y+7+((c*5)%6), 2,2);
-    }else if(z==='='){
-      ctx.fillStyle='#C89A5B'; ctx.fillRect(x,y,TILE,5);
-      ctx.fillStyle='#E0BA80'; ctx.fillRect(x,y,TILE,2);
-      ctx.fillStyle='rgba(0,0,0,.13)'; ctx.fillRect(x,y+5,TILE,1);
-    }else if(z==='^'){
-      // Stacheln: drei Zacken, klar erkennbar rot-grau
-      for(let i=0;i<3;i++){
-        const sx = x + 1 + i*5;
-        ctx.fillStyle='#B8C0CC';
-        ctx.beginPath(); ctx.moveTo(sx,y+TILE); ctx.lineTo(sx+2.5,y+4); ctx.lineTo(sx+5,y+TILE); ctx.fill();
-        ctx.fillStyle='#E8EDF4';
-        ctx.beginPath(); ctx.moveTo(sx+1.4,y+TILE); ctx.lineTo(sx+2.5,y+5); ctx.lineTo(sx+3,y+TILE); ctx.fill();
-      }
-      ctx.fillStyle='#8892A0'; ctx.fillRect(x,y+TILE-2,TILE,2);
-    }
+    const n = kachelName(c,r);
+    if(n) sprite(n, c*TILE-kx, r*TILE-ky);
   }
 
   /* Checkpoints */
   checkpoints.forEach(p=>{
-    const px=p.x-kx, py=p.y-ky;
-    if(px<-20||px>SICHT_B+20) return;
-    ctx.fillStyle='#6B6280'; ctx.fillRect(px+7,py-4,2,20);
-    if(p.aktiv){
-      const w=Math.sin(zeit*5)*1.5;
-      ctx.fillStyle='#2FC79B';
-      ctx.beginPath(); ctx.moveTo(px+9,py-4); ctx.lineTo(px+19+w,py+0); ctx.lineTo(px+9,py+4); ctx.fill();
-    }else{
-      ctx.fillStyle='rgba(107,98,128,.45)';
-      ctx.beginPath(); ctx.moveTo(px+9,py-4); ctx.lineTo(px+16,py+0); ctx.lineTo(px+9,py+4); ctx.fill();
-    }
+    const px2=p.x-kx, py=p.y-ky;
+    if(px2<-20||px2>SICHT_B+20) return;
+    sprite(p.aktiv ? 'fahne_an' : 'fahne_aus', px2, py);
   });
 
   /* Ziel */
   if(zielPos){
-    const zx=zielPos.x-kx, zy=zielPos.y-ky;
-    if(zx>-30&&zx<SICHT_B+30){
-      ctx.fillStyle='#6B6280'; ctx.fillRect(zx+7,zy-2,2,18);
-      const w=Math.sin(zeit*4)*2;
-      ctx.fillStyle='#FF6B6B';
-      ctx.beginPath(); ctx.moveTo(zx+9,zy-2); ctx.lineTo(zx+21+w,zy+3); ctx.lineTo(zx+9,zy+8); ctx.fill();
-    }
+    const zx=zielPos.x-kx;
+    if(zx>-30&&zx<SICHT_B+30) sprite('ziel', zx, zielPos.y-ky);
   }
 
-  /* Münzen */
+  /* Münzen und Bonus-Sterne */
   muenzen.forEach(m=>{
     if(m.weg) return;
-    const mx=m.x-kx, my=m.y-ky+Math.sin(zeit*3+m.t)*1.6;
-    if(mx<-12||mx>SICHT_B+12) return;
-    const br = Math.abs(Math.cos(zeit*3+m.t))*4+1.4;   // Drehung angedeutet
+    const mx=m.x-kx-TILE/2, my=m.y-ky-TILE/2+Math.sin(zeit*3+m.t)*1.6;
+    if(mx<-TILE||mx>SICHT_B+TILE) return;
+    const phase = Math.floor((zeit*6+m.t)%4);
     if(m.bonus){
-      // Bonus-Münze: lila Stern mit Funkeln – nur mit Doppelklick-Sprung erreichbar
-      const f = 0.85+Math.sin(zeit*4+m.t)*0.15;
-      ctx.fillStyle='rgba(151,117,250,.30)';
-      ctx.beginPath(); ctx.arc(mx,my,8*f,0,7); ctx.fill();
-      ctx.fillStyle='#9775FA';
-      ctx.beginPath();
-      for(let i=0;i<10;i++){
-        const a=-Math.PI/2 + i*Math.PI/5, rr=(i%2?2.4:5.6)*f;
-        i? ctx.lineTo(mx+Math.cos(a)*rr, my+Math.sin(a)*rr)
-         : ctx.moveTo(mx+Math.cos(a)*rr, my+Math.sin(a)*rr);
-      }
-      ctx.fill();
-      ctx.fillStyle='#E7DEFF'; ctx.fillRect(mx-1,my-1.6,2,3.2);
+      // sanfter Schein, damit der Bonus auch von weitem auffällt
+      ctx.fillStyle='rgba(151,117,250,.22)';
+      ctx.beginPath(); ctx.arc(mx+TILE/2,my+TILE/2, 9+Math.sin(zeit*4+m.t)*1.5, 0,7); ctx.fill();
+      sprite('stern'+phase, mx, my);
     }else{
-      ctx.fillStyle='#E8A317'; ctx.beginPath(); ctx.ellipse(mx,my,br+0.9,5.2,0,0,7); ctx.fill();
-      ctx.fillStyle='#FFC93C'; ctx.beginPath(); ctx.ellipse(mx,my,br,4.4,0,0,7); ctx.fill();
-      if(br>2.6){ ctx.fillStyle='#FFE9A8'; ctx.fillRect(mx-0.8,my-2.2,1.4,4.4); }
+      sprite('muenze'+phase, mx, my);
     }
   });
 
@@ -878,117 +912,37 @@ function wolken(offX, offY){
 }
 
 function zeichneGegner(g,kx,ky){
-  const x = Math.round(g.x-kx), y = Math.round(g.y-ky);
+  const x = g.x - kx - (TILE-g.b)/2, y = g.y - ky + g.h - TILE;
   if(x<-30||x>SICHT_B+30) return;
-  ctx.save();
-  ctx.translate(x+g.b/2, y+g.h);
-
-  if(g.tot){                               // plattgedrückt und verblassend
+  if(g.tot){
     ctx.globalAlpha = Math.max(0, 1-g.totT/0.7);
-    ctx.fillStyle = g.art==='laeufer' ? '#9775FA' : '#E64980';
-    ctx.beginPath(); ctx.ellipse(0,-1.5, g.b*0.62, 2.2, 0,0,7); ctx.fill();
-    ctx.restore(); ctx.globalAlpha=1; return;
+    sprite(g.art==='laeufer' ? 'kaefer_platt' : 'flieger0', x, y);
+    ctx.globalAlpha = 1;
+    return;
   }
-
-  if(g.art==='laeufer'){
-    // kleiner Käfer: Körper, zwei trippelnde Beine, Fühler
-    const tritt = Math.sin(g.schritt*3)*1.6;
-    ctx.fillStyle='#6B4FC4';
-    ctx.fillRect(-4+tritt,-3,2.4,3); ctx.fillRect(2-tritt,-3,2.4,3);
-    ctx.fillStyle='#9775FA';
-    ctx.beginPath(); ctx.ellipse(0,-6.2, g.b*0.48, 5.0, 0,0,7); ctx.fill();
-    ctx.fillStyle='#7B5BD6';                // Panzerstreifen
-    ctx.fillRect(-1,-10.6,2,8.4);
-    ctx.strokeStyle='#6B4FC4'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(-2,-10.6); ctx.lineTo(-3.4,-13.4);
-    ctx.moveTo(2,-10.6); ctx.lineTo(3.4,-13.4); ctx.stroke();
-    const bx = g.vx<0 ? -2.6 : 2.6;
-    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(bx,-7.4,1.9,0,7); ctx.fill();
-    ctx.fillStyle='#2C2340'; ctx.beginPath(); ctx.arc(bx+(g.vx<0?-0.5:0.5),-7.4,1.0,0,7); ctx.fill();
-
-  }else{
-    // Flieger: Körper mit schlagenden Flügeln
-    const fl = Math.abs(Math.sin(g.schritt))*4+1.5;
-    ctx.fillStyle='rgba(230,73,128,.55)';
-    ctx.beginPath(); ctx.ellipse(-3,-7, 4.2, fl, -0.5, 0,7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse( 3,-7, 4.2, fl,  0.5, 0,7); ctx.fill();
-    ctx.fillStyle='#E64980';
-    ctx.beginPath(); ctx.ellipse(0,-5, g.b*0.42, 4.2, 0,0,7); ctx.fill();
-    ctx.fillStyle='#F783AC'; ctx.fillRect(-1.2,-8.4,2.4,6.6);
-    const bx = g.vx<0 ? -2.4 : 2.4;
-    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(bx,-6.2,1.7,0,7); ctx.fill();
-    ctx.fillStyle='#2C2340'; ctx.beginPath(); ctx.arc(bx+(g.vx<0?-0.4:0.4),-6.2,0.9,0,7); ctx.fill();
-  }
-  ctx.restore();
+  const phase = Math.floor(g.schritt*2)%2;
+  sprite(g.art==='laeufer' ? 'kaefer'+phase : 'flieger'+phase, x, y, g.vx>0);
 }
 
 function zeichneFuchs(kx,ky){
-  const s=spieler;
-  const cxp = Math.round(s.x - kx + s.b/2);
-  const bod = Math.round(s.y - ky + s.h);
-  const q   = s.squash;                     // >1 gestaucht, <1 gestreckt
-  const hh  = s.h/q, bb = (s.b+4)*q;        // Höhe/Breite verzerren, Volumen bleibt
-  const f   = s.blick;
-  const inLuft = !s.amBoden;
+  const s2 = spieler;
+  const x = s2.x - kx - (TILE-s2.b)/2;
+  const y = s2.y - ky + s2.h - TILE;
 
-  ctx.save();
-  ctx.translate(cxp, bod);
-  ctx.scale(f,1);
+  // Schatten auf dem Boden
+  ctx.fillStyle='rgba(44,33,64,.16)';
+  ctx.beginPath(); ctx.ellipse(x+TILE/2, y+TILE-0.5, s2.b*0.5, 1.8, 0,0,7); ctx.fill();
 
   // Glitzerring nach einem Doppelklick-Sprung
-  if(s.extraT>0){
-    ctx.globalAlpha = Math.min(1, s.extraT*2.2);
+  if(s2.extraT>0){
+    ctx.globalAlpha = Math.min(1, s2.extraT*2.2);
     ctx.strokeStyle='#FFC93C'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.ellipse(0,-hh*0.4, bb*0.7*(1.6-s.extraT), hh*0.5*(1.6-s.extraT), 0,0,7); ctx.stroke();
+    const w = 1.6-s2.extraT;
+    ctx.beginPath(); ctx.ellipse(x+TILE/2, y+TILE/2, 11*w, 9*w, 0,0,7); ctx.stroke();
     ctx.globalAlpha=1;
   }
 
-  // Schatten am Boden
-  ctx.fillStyle='rgba(44,33,64,.16)';
-  ctx.beginPath(); ctx.ellipse(0,0.5,bb*0.45,1.8,0,0,7); ctx.fill();
-
-  // Beine
-  const lauf = Math.sin(s.laufPhase*2.2)* (s.amBoden?2.6:0);
-  ctx.fillStyle='#C2611C';
-  if(inLuft){ ctx.fillRect(-4,-4,3,4); ctx.fillRect(1.6,-3,3,3); }
-  else { ctx.fillRect(-4+lauf,-3.5,3,3.5); ctx.fillRect(1.6-lauf,-3.5,3,3.5); }
-
-  // Schwanz
-  const wedel = Math.sin(s.laufPhase*2.2 + 1)*1.6 + (inLuft?-2:0);
-  ctx.fillStyle='#FF922B';
-  ctx.beginPath(); ctx.moveTo(-3,-hh*0.55);
-  ctx.quadraticCurveTo(-10,-hh*0.62+wedel, -9,-hh*0.25+wedel);
-  ctx.quadraticCurveTo(-6,-hh*0.42, -3,-hh*0.42); ctx.fill();
-  ctx.fillStyle='#FFF6EC';
-  ctx.beginPath(); ctx.arc(-8.6,-hh*0.29+wedel,2,0,7); ctx.fill();
-
-  // Körper
-  ctx.fillStyle='#FF922B';
-  ctx.beginPath(); ctx.ellipse(0,-hh*0.42, bb*0.42, hh*0.36, 0,0,7); ctx.fill();
-  ctx.fillStyle='#FFE0C2';
-  ctx.beginPath(); ctx.ellipse(0.8,-hh*0.34, bb*0.27, hh*0.24, 0,0,7); ctx.fill();
-
-  // Kopf
-  const ky2 = -hh*0.78;
-  ctx.fillStyle='#FF922B';
-  ctx.beginPath(); ctx.ellipse(1.2,ky2, bb*0.36, hh*0.28, 0,0,7); ctx.fill();
-  // Ohren
-  ctx.beginPath();
-  ctx.moveTo(-1.5,ky2-2.4); ctx.lineTo(-3.4,ky2-6.4); ctx.lineTo(0.6,ky2-4.2); ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo( 3.2,ky2-2.6); ctx.lineTo( 4.0,ky2-6.6); ctx.lineTo( 5.9,ky2-3.2); ctx.fill();
-  ctx.fillStyle='#2C2340';
-  ctx.beginPath(); ctx.moveTo(-1.4,ky2-3.2); ctx.lineTo(-2.6,ky2-5.4); ctx.lineTo(0.1,ky2-4.3); ctx.fill();
-  // Schnauze
-  ctx.fillStyle='#FFF6EC';
-  ctx.beginPath(); ctx.ellipse(4.4,ky2+1.2, 3.0,2.2,0,0,7); ctx.fill();
-  ctx.fillStyle='#2C2340';
-  ctx.beginPath(); ctx.arc(6.6,ky2+1.0,1.1,0,7); ctx.fill();
-  // Auge
-  const blinzel = (Math.sin(zeit*1.7)>0.985) ? 0.3 : 1;
-  ctx.beginPath(); ctx.ellipse(2.0,ky2-0.6, 1.1, 1.3*blinzel, 0,0,7); ctx.fill();
-
-  ctx.restore();
+  sprite(fuchsBild(), x, y, s2.blick<0);
 }
 
 /* --- Anzeige oben im Bild --- */
@@ -996,11 +950,7 @@ let punkte=0, boni=0, zeit=0, gewonnen=false, gewonnenT=0;
 let gameOver=false, gameOverT=0, pause=false;
 
 function herz(x,y,voll){
-  ctx.fillStyle = voll ? '#FF6B6B' : 'rgba(255,255,255,.25)';
-  ctx.beginPath();
-  ctx.arc(x-2,y-1,2.4,0,7); ctx.arc(x+2,y-1,2.4,0,7);
-  ctx.moveTo(x-4.3,y+0.2); ctx.lineTo(x,y+5); ctx.lineTo(x+4.3,y+0.2);
-  ctx.fill();
+  sprite(voll ? 'herz_voll' : 'herz_leer', x-8, y-8);
 }
 
 function hud(){
@@ -1011,10 +961,10 @@ function hud(){
   ctx.textBaseline='middle';
 
   // Herzen
-  for(let i=0;i<TUNING.leben;i++) herz(10+i*12, 7, i<spieler.leben);
+  for(let i=0;i<TUNING.leben;i++) herz(11+i*13, 8, i<spieler.leben);
 
   const normale = muenzen.filter(m=>!m.bonus).length;
-  ctx.fillText(String(punkte).padStart(2,'0')+'/'+normale, 54, 8);
+  ctx.fillText(String(punkte).padStart(2,'0')+'/'+normale, 58, 8);
   // Bonus-Anzeige nur, wenn es welche gibt
   const bonusZahl = muenzen.filter(m=>m.bonus).length;
   if(bonusZahl){
