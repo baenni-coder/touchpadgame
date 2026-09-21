@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Touchpad-Abenteuer</title>
+<!--
+  ============================================================
+   TOUCHPAD-ABENTEUER  ·  Übungen zum Touchpad für die 3. Klasse
+   Eine einzige HTML-Datei · läuft komplett lokal · kein Internet nötig
+   Keine Daten verlassen den Laptop (revDSG-freundlich).
+
+   ZUM ANPASSEN: Ganz oben im <script> steht das Objekt CONFIG.
+   Dort kannst du Zeiten, Zielzahlen und den Ton verändern.
+  ============================================================
+-->
+<style>
+  :root{
+    /* --- Farben --- */
+    --sky-top:#FFF1DC;
+    --sky-bot:#BFE3FF;
+    --ink:#2C2340;
+    --ink-soft:#6B6280;
+    --card:#FFFFFF;
+    --sun:#FFC93C;
+    --coral:#FF6B6B;
+    --mint:#2FC79B;
+    --sky:#4DABF7;
+    --grape:#9775FA;
+    --tangerine:#FF922B;
+    --teal:#0CA678;
+    --berry:#E64980;
+    --grass:#8CE0A8;
+    --road:#F0D9A8;
+    --shadow:rgba(44,33,64,.16);
+    --font:"SF Pro Rounded",ui-rounded,"Segoe UI Rounded","Nunito","Baloo 2",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bot) 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;
+    -webkit-user-select:none;user-select:none;
+    touch-action:none;
+  }
+  #app{max-width:1100px;margin:0 auto;padding:18px 18px 40px;min-height:100vh;display:flex;flex-direction:column}
+
+  /* --- Kopfzeile --- */
+  header.top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+  .logo{font-size:clamp(26px,4.5vw,44px);font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+  .logo .mascot{font-size:1.2em;filter:drop-shadow(0 4px 6px var(--shadow))}
+  .spacer{flex:1}
+  .starcount{background:var(--card);border-radius:999px;padding:8px 16px 8px 12px;font-weight:800;font-size:clamp(15px,2.4vw,20px);
+    box-shadow:0 6px 16px var(--shadow);display:flex;align-items:center;gap:8px}
+  .starcount .s{font-size:1.15em}
+  .iconbtn{width:46px;height:46px;border:none;border-radius:16px;background:var(--card);cursor:pointer;
+    font-size:22px;box-shadow:0 6px 16px var(--shadow);transition:transform .12s}
+  .iconbtn:hover{transform:translateY(-2px)}
+  .iconbtn:active{transform:translateY(1px)}
+
+  /* --- Startbildschirm --- */
+  .hero{text-align:center;margin:6px 0 18px}
+  .hero p{font-size:clamp(15px,2.6vw,20px);color:var(--ink-soft);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  .station{
+    position:relative;background:var(--card);border-radius:26px;padding:20px 18px 18px;cursor:pointer;
+    box-shadow:0 10px 24px var(--shadow);transition:transform .14s,box-shadow .14s;overflow:hidden;text-align:left;
+    border:none;font-family:inherit;color:inherit;
+  }
+  .station:hover{transform:translateY(-4px);box-shadow:0 16px 30px var(--shadow)}
+  .station:active{transform:translateY(-1px)}
+  .station .blob{position:absolute;width:120px;height:120px;border-radius:50%;top:-40px;right:-30px;opacity:.9}
+  .station .emo{font-size:52px;position:relative;z-index:1;filter:drop-shadow(0 4px 5px var(--shadow))}
+  .station h3{font-size:22px;margin:8px 0 2px;position:relative;z-index:1}
+  .station .skill{font-size:14px;color:var(--ink-soft);font-weight:700;position:relative;z-index:1}
+  .station .levelsdone{margin-top:12px;display:flex;align-items:center;gap:9px;position:relative;z-index:1}
+  .station .lpwrap{display:inline-flex;gap:5px}
+  .station .lp{width:22px;height:10px;border-radius:999px;background:#E7E3F0}
+  .station .lp.on{background:var(--mint)}
+  .station .lpnum{font-size:14px;font-weight:800;color:var(--ink-soft)}
+  .station .go{margin-top:12px;display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;
+    border-radius:999px;padding:8px 16px;font-weight:800;font-size:15px;position:relative;z-index:1}
+
+  /* --- Spielbildschirm --- */
+  .gamewrap{display:none;flex-direction:column;flex:1}
+  .gamewrap.show{display:flex}
+  .gamebar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .backbtn{border:none;background:var(--card);border-radius:16px;padding:10px 16px;font-weight:800;font-size:16px;
+    cursor:pointer;box-shadow:0 6px 16px var(--shadow);font-family:inherit;color:inherit;display:flex;align-items:center;gap:6px}
+  .backbtn:hover{transform:translateY(-2px)}
+  .gtitle{font-size:clamp(18px,3vw,26px);font-weight:800}
+  .pill{background:var(--card);border-radius:999px;padding:7px 15px;font-weight:800;box-shadow:0 6px 14px var(--shadow);font-size:15px}
+  .levels{display:flex;gap:6px}
+  .lvl{width:30px;height:30px;border-radius:10px;background:#fff;display:grid;place-items:center;font-weight:800;
+    box-shadow:0 4px 10px var(--shadow);opacity:.5;font-size:14px}
+  .lvl.on{opacity:1;transform:scale(1.08)}
+  .lvl.done{background:var(--mint);color:#fff;opacity:1}
+
+  .arena{position:relative;flex:1;min-height:56vh;background:rgba(255,255,255,.55);border-radius:28px;
+    overflow:hidden;box-shadow:inset 0 0 0 3px rgba(255,255,255,.8),0 12px 30px var(--shadow)}
+  .arena.grass{background:radial-gradient(circle at 30% 20%,#B6ECC7,#8CE0A8)}
+  .howto{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(44,33,64,.85);color:#fff;
+    padding:9px 18px;border-radius:999px;font-weight:700;font-size:clamp(13px,2.2vw,16px);z-index:40;text-align:center;
+    max-width:90%;box-shadow:0 8px 20px var(--shadow)}
+
+  /* Spielobjekte */
+  .star{position:absolute;font-size:40px;cursor:default;transition:transform .12s;filter:drop-shadow(0 3px 4px var(--shadow))}
+  .star.pop{transform:scale(0)!important;opacity:0;transition:transform .3s,opacity .3s}
+  .balloon{position:absolute;font-size:56px;cursor:pointer;filter:drop-shadow(0 4px 6px var(--shadow));will-change:transform}
+  .balloon.pop{animation:pop .28s forwards}
+  @keyframes pop{to{transform:scale(1.6);opacity:0}}
+  .hole{position:absolute;width:22%;height:26%;display:grid;place-items:end center;overflow:hidden}
+  .hole .dirt{width:100%;height:38%;background:#B07B4B;border-radius:50%/70% 70% 0 0;box-shadow:inset 0 6px 0 rgba(0,0,0,.12)}
+  .mole{position:absolute;bottom:8%;left:50%;transform:translateX(-50%) translateY(120%);font-size:min(9vw,58px);
+    cursor:pointer;transition:transform .18s cubic-bezier(.2,1.4,.5,1)}
+  .mole.up{transform:translateX(-50%) translateY(0)}
+  .mole.bonk{transform:translateX(-50%) translateY(60%) scale(.7);opacity:.5;transition:transform .15s,opacity .15s}
+  .fruit{position:absolute;font-size:46px;cursor:grab;filter:drop-shadow(0 3px 4px var(--shadow));touch-action:none}
+  .fruit.grab{cursor:grabbing;z-index:60;transform:scale(1.12)}
+  .basket{position:absolute;bottom:4%;width:26%;height:30%;background:rgba(255,255,255,.75);border-radius:20px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:min(11vw,64px);
+    box-shadow:inset 0 0 0 3px #fff,0 8px 18px var(--shadow);transition:transform .12s}
+  .basket .lbl{font-size:15px;font-weight:800;color:var(--ink-soft)}
+  .basket.hot{transform:scale(1.06);box-shadow:inset 0 0 0 4px var(--mint),0 8px 18px var(--shadow)}
+  .door{position:absolute;font-size:min(13vw,84px);cursor:pointer;transition:transform .15s;filter:drop-shadow(0 4px 6px var(--shadow))}
+  .door.open{animation:doorpop .4s forwards}
+  @keyframes doorpop{40%{transform:scale(1.2) rotate(-6deg)}100%{transform:scale(1.05)}}
+  .runner{position:absolute;font-size:34px;transform:translate(-50%,-50%);pointer-events:none;z-index:30;
+    transition:left .05s linear,top .05s linear;filter:drop-shadow(0 3px 4px var(--shadow))}
+  .coin{position:absolute;font-size:30px;transform:translate(-50%,-50%);pointer-events:none;z-index:20;transition:transform .2s}
+  .coin.got{transform:translate(-50%,-50%) scale(0);opacity:0}
+  .flag{position:absolute;font-size:40px;transform:translate(-50%,-60%);pointer-events:none;z-index:20}
+  .startpad{position:absolute;width:96px;height:96px;transform:translate(-50%,-50%);border-radius:50%;z-index:33;cursor:pointer;
+    background:radial-gradient(circle,rgba(77,171,247,.32),rgba(77,171,247,0) 70%)}
+  .startlabel{position:absolute;transform:translate(-50%,-100%);z-index:34;background:var(--sky);color:#fff;font-weight:800;
+    font-size:13px;padding:6px 12px;border-radius:999px;box-shadow:0 6px 14px var(--shadow);white-space:nowrap;pointer-events:none}
+  /* Scrollen */
+  .scrollbox{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y}
+  .tall{position:relative;width:100%}
+  .gem{position:absolute;font-size:40px;transform:translateX(-50%);filter:drop-shadow(0 3px 4px var(--shadow));transition:transform .25s,opacity .25s}
+  .gem.got{transform:translateX(-50%) scale(0);opacity:0}
+  .zone{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:78px;z-index:35;pointer-events:none;
+    background:rgba(12,166,120,.14);border-top:3px dashed rgba(12,166,120,.55);border-bottom:3px dashed rgba(12,166,120,.55);
+    display:grid;place-items:center;font-size:32px}
+  .scrollhint{position:absolute;right:16px;bottom:16px;z-index:36;pointer-events:none;opacity:.9;transition:opacity .8s}
+  .scrollhint.fade{opacity:0}
+  .scrollhint .pad{fill:#fff;stroke:#C9D2DE;stroke-width:2}
+  .scrollhint .dot{fill:var(--teal)}
+  .scrollhint .chev{stroke:var(--teal);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+  .edge{position:absolute;left:50%;transform:translateX(-50%);font-size:34px;opacity:.7;pointer-events:none}
+  /* Rechtsklick */
+  .gift{position:absolute;font-size:52px;cursor:pointer;filter:drop-shadow(0 4px 6px var(--shadow));transition:transform .12s}
+  .gift.open{animation:doorpop .4s forwards}
+
+  .floattext{position:absolute;font-weight:800;font-size:26px;pointer-events:none;z-index:70;animation:floatup .8s forwards;color:var(--ink)}
+  @keyframes floatup{to{transform:translateY(-46px);opacity:0}}
+
+  /* --- Gewinn-Overlay --- */
+  .overlay{position:absolute;inset:0;background:rgba(44,33,64,.55);display:none;place-items:center;z-index:100;backdrop-filter:blur(2px)}
+  .overlay.show{display:grid}
+  .panel{background:var(--card);border-radius:30px;padding:30px 34px;text-align:center;max-width:420px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop-in .35s cubic-bezier(.2,1.4,.5,1)}
+  @keyframes pop-in{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  .panel h2{font-size:30px;margin-bottom:6px}
+  .panel .bigstars{font-size:46px;letter-spacing:4px;margin:10px 0}
+  .panel .bigstars .dim{opacity:.22}
+  .panel p{color:var(--ink-soft);font-weight:700;margin-bottom:18px}
+  .btnrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .btn{border:none;border-radius:999px;padding:12px 22px;font-weight:800;font-size:16px;cursor:pointer;font-family:inherit;
+    box-shadow:0 8px 18px var(--shadow);transition:transform .12s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.primary{background:var(--ink);color:#fff}
+  .btn.ghost{background:#EFECF6;color:var(--ink)}
+
+  .foot{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;margin-top:16px;opacity:.8}
+
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.05s!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="logo"><span class="mascot">🦊</span><span>Touchpad-Abenteuer</span></div>
+    <div class="spacer"></div>
+    <div class="starcount"><span class="s">⭐</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+    <button class="iconbtn" id="fsBtn" title="Vollbild">⛶</button>
+  </header>
+
+  <!-- STARTBILDSCHIRM -->
+  <main id="home">
+    <div class="hero">
+      <p>Wähle eine Station und übe das Touchpad – tippen, zeigen, ziehen und mehr!</p>
+    </div>
+    <div class="grid" id="stationGrid"></div>
+    <div class="foot">Läuft ganz ohne Internet · Alles bleibt auf diesem Laptop</div>
+  </main>
+
+  <!-- SPIELBILDSCHIRM -->
+  <section class="gamewrap" id="game">
+    <div class="gamebar">
+      <button class="backbtn" id="backBtn">‹ Karte</button>
+      <div class="gtitle" id="gTitle">Station</div>
+      <div class="spacer"></div>
+      <div class="pill" id="scorePill">0</div>
+      <div class="levels" id="levelDots"></div>
+    </div>
+    <div class="arena" id="arena">
+      <div class="howto" id="howto"></div>
+      <div class="overlay" id="overlay">
+        <div class="panel">
+          <h2 id="ovTitle">Super!</h2>
+          <div class="bigstars" id="ovStars">⭐⭐⭐</div>
+          <p id="ovText">Du hast das Level geschafft!</p>
+          <div class="btnrow" id="ovBtns"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG – hier kannst du alles einstellen
+   ============================================================ */
+const CONFIG = {
+  SOUND_DEFAULT: true,      // Ton beim Start an (true) oder aus (false)
+  LEVELS_PER_STATION: 3,    // Anzahl Level pro Station
+  // Grundwerte pro Station – werden pro Level etwas schwerer:
+  sterne:   { ziel:[6,9,12], speed:[0,25,55] },        // wie viele Sterne, wie schnell sie schweben
+  ballons:  { ziel:[8,12,16], speed:[1.0,1.5,2.1], spawn:[900,700,520] },
+  maulwurf: { ziel:[8,12,16], upTime:[1200,950,750], bomben:[false,false,true] },
+  aufraeumen:{ ziel:[4,6,8] },
+  tueren:   { ziel:[4,6,8] },
+  weg:      { muenzen:[5,7,9], breite:[78,64,52], wellen:[1.5,2.5,3.5] }, // Bahnbreite + Anzahl sanfter Wellen je Level
+  scrollen: { ziel:[5,7,9], hoehe:[1600,2400,3400] },   // Anzahl Edelsteine, Höhe des Turms in px
+  rechtsklick:{ ziel:[4,6,8], move:[false,false,true] } // Anzahl Geschenke; ab Level 3 wandern sie
+};
+
+/* ============================================================
+   Stationen-Beschreibung
+   ============================================================ */
+const STATIONS = [
+  { id:'sterne',    emo:'⭐', color:'var(--sun)',      titel:'Sterne sammeln', skill:'Zeiger bewegen',
+    howto:'Fahre mit dem Zeiger über die Sterne – ohne zu klicken!' },
+  { id:'ballons',   emo:'🎈', color:'var(--coral)',    titel:'Ballons tippen', skill:'Tippen / Klicken',
+    howto:'Tippe auf die Ballons, bevor sie oben verschwinden!' },
+  { id:'maulwurf',  emo:'🐹', color:'var(--tangerine)',titel:'Maulwurf-Klopfen', skill:'Zielen & schnell klicken',
+    howto:'Tippe die Maulwürfe an, sobald sie herausschauen!' },
+  { id:'aufraeumen',emo:'🧺', color:'var(--mint)',     titel:'Aufräumen', skill:'Ziehen (Drag & Drop)',
+    howto:'Halte gedrückt und ziehe jedes Ding in den richtigen Korb.' },
+  { id:'tueren',    emo:'🚪', color:'var(--grape)',    titel:'Türchen öffnen', skill:'Doppelklick',
+    howto:'Tippe zweimal schnell auf eine Tür, um sie zu öffnen!' },
+  { id:'weg',       emo:'🚩', color:'var(--sky)',      titel:'Weg finden', skill:'Ruhig steuern',
+    howto:'Fahre zuerst zur Maus 🐭 – dann führe sie ruhig über den Weg und sammle alle Münzen.' },
+  { id:'scrollen',  emo:'🛗', color:'var(--teal)',     titel:'Hoch und runter', skill:'Mit zwei Fingern scrollen',
+    howto:'Scrolle mit zwei Fingern nach unten und oben – bring jedes 💎 in die Lupe.' },
+  { id:'rechtsklick',emo:'🖱️', color:'var(--berry)',   titel:'Geschenke auspacken', skill:'Rechtsklick / Zwei-Finger-Tipp',
+    howto:'Tippe mit ZWEI Fingern gleichzeitig auf ein Geschenk, um es zu öffnen!' }
+];
+
+/* ============================================================
+   Zustand
+   ============================================================ */
+const state = {
+  sound: CONFIG.SOUND_DEFAULT,
+  totalStars: 0,       // Gesamtsumme (darf durch Wiederholen weiter wachsen -> Easteregg)
+  levelsDone: {}       // levelsDone[stationId] = Set der gelösten Level-Nummern
+};
+STATIONS.forEach(s=>state.levelsDone[s.id]=new Set());
+
+/* --- kurze Helfer --- */
+const $ = sel => document.querySelector(sel);
+const rand = (a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ============================================================
+   Ton (synthetisch, keine Dateien – nichts wird geladen)
+   ============================================================ */
+let AC=null;
+function beep(freq=600,dur=.09,type='sine',vol=.2){
+  if(!state.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.value=vol; o.connect(g); g.connect(AC.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+const sfx={
+  ding:()=>beep(880,.08,'triangle',.18),
+  pop:()=>{beep(500,.06,'square',.16);setTimeout(()=>beep(760,.06,'square',.14),40);},
+  coin:()=>{beep(660,.05,'square',.15);setTimeout(()=>beep(990,.07,'square',.15),50);},
+  bonk:()=>beep(200,.12,'sawtooth',.18),
+  wrong:()=>beep(160,.18,'sawtooth',.15),
+  win:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.14,'triangle',.2),i*110));}
+};
+
+/* ============================================================
+   Startbildschirm aufbauen
+   ============================================================ */
+function renderHome(){
+  const g=$('#stationGrid'); g.innerHTML='';
+  const total=CONFIG.LEVELS_PER_STATION;
+  STATIONS.forEach(s=>{
+    const done=state.levelsDone[s.id].size;
+    const pips=Array.from({length:total},(_,i)=>`<span class="lp${i<done?' on':''}"></span>`).join('');
+    const card=document.createElement('button');
+    card.className='station';
+    card.innerHTML=`
+      <div class="blob" style="background:${s.color};opacity:.22"></div>
+      <div class="emo">${s.emo}</div>
+      <h3>${s.titel}</h3>
+      <div class="skill">${s.skill}</div>
+      <div class="levelsdone"><span class="lpwrap">${pips}</span><span class="lpnum">${done}/${total} Level</span></div>
+      <div class="go">Los! ›</div>`;
+    card.onclick=()=>openStation(s.id);
+    g.appendChild(card);
+  });
+  $('#totalStars').textContent=state.totalStars;
+}
+
+/* ============================================================
+   Spiel-Rahmen
+   ============================================================ */
+let current=null;   // aktuelle Station
+let level=1;        // 1..LEVELS_PER_STATION
+let score=0;
+let cleanup=null;   // Aufräumfunktion des laufenden Spiels
+
+function showScreen(which){
+  $('#home').style.display = which==='home'?'block':'none';
+  $('#game').classList.toggle('show', which==='game');
+}
+function openStation(id){
+  current=STATIONS.find(s=>s.id===id);
+  level=1;
+  buildLevelDots();
+  showScreen('game');
+  startLevel();
+}
+function buildLevelDots(){
+  const d=$('#levelDots'); d.innerHTML='';
+  for(let i=1;i<=CONFIG.LEVELS_PER_STATION;i++){
+    const dot=document.createElement('div');
+    dot.className='lvl'+(i===level?' on':'');
+    dot.textContent=i; dot.dataset.i=i;
+    d.appendChild(dot);
+  }
+}
+function markLevelDone(){
+  const dot=$('#levelDots').querySelector(`.lvl[data-i="${level}"]`);
+  if(dot){dot.classList.add('done');dot.classList.remove('on');}
+}
+function setScore(v){score=v;$('#scorePill').textContent=score;}
+function updateDots(){
+  $('#levelDots').querySelectorAll('.lvl').forEach(d=>{
+    d.classList.toggle('on', +d.dataset.i===level);
+  });
+}
+
+function startLevel(){
+  if(cleanup){cleanup();cleanup=null;}
+  const arena=$('#arena');
+  // Arena leeren (Overlay + Howto behalten)
+  [...arena.children].forEach(c=>{ if(c.id!=='overlay'&&c.id!=='howto') c.remove(); });
+  $('#overlay').classList.remove('show');
+  $('#gTitle').textContent=current.titel;
+  $('#howto').textContent=current.howto;
+  $('#howto').style.display='block';
+  setScore(0);
+  updateDots();
+  arena.classList.toggle('grass', current.id==='maulwurf'||current.id==='weg');
+  // passendes Spiel starten
+  cleanup = GAMES[current.id](arena, level, winLevel);
+}
+
+function floatText(x,y,txt){
+  const arena=$('#arena');
+  const f=document.createElement('div');
+  f.className='floattext'; f.textContent=txt;
+  f.style.left=x+'px'; f.style.top=y+'px';
+  arena.appendChild(f);
+  setTimeout(()=>f.remove(),800);
+}
+
+/* Level gewonnen -> Sterne berechnen, Overlay zeigen */
+function winLevel(starsEarned=3){
+  if(cleanup){cleanup();cleanup=null;}
+  sfx.win();
+  markLevelDone();
+  // Gesamtsterne wachsen weiter (auch bei Wiederholung -> Easteregg); gelöstes Level merken
+  state.totalStars += starsEarned;
+  state.levelsDone[current.id].add(level);
+  $('#totalStars').textContent=state.totalStars;
+
+  const full='⭐'.repeat(starsEarned);
+  const dim=`<span class="dim">⭐</span>`.repeat(3-starsEarned);
+  $('#ovStars').innerHTML=full+dim;
+
+  const last = level>=CONFIG.LEVELS_PER_STATION;
+  $('#ovTitle').textContent = last ? 'Station geschafft! 🎉' : 'Super gemacht!';
+  $('#ovText').textContent  = last ? 'Du hast alle Level dieser Station geschafft.'
+                                   : `Weiter geht es mit Level ${level+1}.`;
+  const btns=$('#ovBtns'); btns.innerHTML='';
+  const add=(txt,cls,fn)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=txt;b.onclick=fn;btns.appendChild(b);};
+  add('Nochmal','ghost',()=>{ $('#overlay').classList.remove('show'); startLevel(); });
+  if(!last) add('Nächstes Level ›','primary',()=>{ level++; updateDots(); $('#overlay').classList.remove('show'); startLevel(); });
+  add('Zur Karte','ghost',()=>goHome());
+  $('#overlay').classList.add('show');
+}
+
+function goHome(){
+  if(cleanup){cleanup();cleanup=null;}
+  renderHome();
+  showScreen('home');
+}
+
+/* Hilfsfunktion: verstecke Howto nach erster Aktion */
+function hideHowtoSoon(){ setTimeout(()=>{$('#howto').style.display='none';},2600); }
+
+/* ============================================================
+   DIE SPIELE
+   Jedes Spiel: fn(arena, level, onWin) und gibt eine
+   Aufräumfunktion zurück (stoppt Timer/Events).
+   ============================================================ */
+const GAMES={};
+
+/* ---------- 1) STERNE SAMMELN (Zeiger bewegen, kein Klick) ---------- */
+GAMES.sterne=(arena,lvl,onWin)=>{
+  const cfg=CONFIG.sterne, ziel=cfg.ziel[lvl-1], speed=cfg.speed[lvl-1];
+  let collected=0, raf=null, stars=[];
+  const R=arena.getBoundingClientRect();
+  const emojis=['⭐','🌟','✨','💫'];
+  function place(){
+    for(let i=0;i<ziel;i++){
+      const el=document.createElement('div');
+      el.className='star'; el.textContent=emojis[i%emojis.length];
+      const x=rand(40,R.width-70), y=rand(70,R.height-70);
+      el.style.left=x+'px'; el.style.top=y+'px';
+      el._x=x; el._y=y; el._vx=rand(-1,1); el._vy=rand(-1,1); el._got=false;
+      el.addEventListener('pointerenter',()=>collect(el));
+      arena.appendChild(el); stars.push(el);
+    }
+  }
+  function collect(el){
+    if(el._got) return; el._got=true;
+    el.classList.add('pop'); sfx.ding();
+    collected++; setScore(collected);
+    floatText(el._x, el._y, '+1');
+    setTimeout(()=>el.remove(),300);
+    if(collected>=ziel) finish();
+  }
+  function finish(){ cancelAnimationFrame(raf); onWin(3); }
+  function loop(){
+    if(speed>0){
+      const b=arena.getBoundingClientRect();
+      stars.forEach(el=>{
+        if(el._got) return;
+        el._x+=el._vx*speed/30; el._y+=el._vy*speed/30;
+        if(el._x<30||el._x>b.width-60) el._vx*=-1;
+        if(el._y<60||el._y>b.height-60) el._vy*=-1;
+        el.style.left=el._x+'px'; el.style.top=el._y+'px';
+      });
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  place(); hideHowtoSoon(); loop();
+  return ()=>cancelAnimationFrame(raf);
+};
+
+/* ---------- 2) BALLONS TIPPEN (Klick) ---------- */
+GAMES.ballons=(arena,lvl,onWin)=>{
+  const cfg=CONFIG.ballons, ziel=cfg.ziel[lvl-1], speed=cfg.speed[lvl-1], spawnMs=cfg.spawn[lvl-1];
+  const colors=['🎈','🎈','🎈'], skins=['🎈','🟣','🟠','🟢','🔵','🔴'];
+  let popped=0, live=[], raf=null, spawner=null, running=true;
+  function spawn(){
+    const R=arena.getBoundingClientRect();
+    const el=document.createElement('div');
+    el.className='balloon';
+    el.textContent='🎈';
+    el.style.color=`hsl(${Math.floor(rand(0,360))},80%,60%)`;
+    const x=rand(20,R.width-70);
+    el._x=x; el._y=R.height+40; el._sway=rand(-1,1); el._t=Math.random()*6;
+    el.style.left=x+'px'; el.style.top=el._y+'px';
+    el.addEventListener('pointerdown',e=>{e.preventDefault();pop(el);});
+    arena.appendChild(el); live.push(el);
+  }
+  function pop(el){
+    if(el._dead) return; el._dead=true;
+    el.classList.add('pop'); sfx.pop();
+    popped++; setScore(popped);
+    floatText(el._x, el._y-20, '+1');
+    setTimeout(()=>el.remove(),280);
+    live=live.filter(b=>b!==el);
+    if(popped>=ziel){running=false;finish();}
+  }
+  function finish(){cancelAnimationFrame(raf);clearInterval(spawner);onWin(3);}
+  function loop(){
+    const R=arena.getBoundingClientRect();
+    live.forEach(el=>{
+      if(el._dead)return;
+      el._t+=0.05; el._y-=speed*2;
+      el._x+=Math.sin(el._t)*el._sway;
+      el.style.top=el._y+'px'; el.style.left=el._x+'px';
+      if(el._y<-70){ el.remove(); live=live.filter(b=>b!==el); }
+    });
+    if(running) raf=requestAnimationFrame(loop);
+  }
+  spawn(); hideHowtoSoon();
+  spawner=setInterval(()=>{ if(running) spawn(); }, spawnMs);
+  loop();
+  return ()=>{running=false;cancelAnimationFrame(raf);clearInterval(spawner);};
+};
+
+/* ---------- 3) MAULWURF-KLOPFEN (Zielen + Tempo) ---------- */
+GAMES.maulwurf=(arena,lvl,onWin)=>{
+  const cfg=CONFIG.maulwurf, ziel=cfg.ziel[lvl-1], upTime=cfg.upTime[lvl-1], bomben=cfg.bomben[lvl-1];
+  const cols=3, rows=2, holes=[];
+  let hits=0, running=true, timer=null;
+  // Löcher anordnen
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const h=document.createElement('div'); h.className='hole';
+    h.style.left=(6+c*30)+'%'; h.style.top=(14+r*40)+'%';
+    h.innerHTML='<div class="dirt"></div>';
+    const m=document.createElement('div'); m.className='mole'; m.textContent='🐹';
+    m._busy=false; m._bomb=false;
+    m.addEventListener('pointerdown',e=>{e.preventDefault();hit(m);});
+    h.appendChild(m); arena.appendChild(h); holes.push(m);
+  }
+  function hit(m){
+    if(!m._busy) return;
+    if(m._bomb){ sfx.bonk(); running=false; // Bombe getroffen -> Level neu, 1 Stern
+      clearTimeout(timer);
+      floatText(20,20,'💥'); setTimeout(()=>onWin(1),400); return; }
+    m._busy=false; m.classList.remove('up'); m.classList.add('bonk');
+    sfx.pop(); hits++; setScore(hits);
+    const r=arena.getBoundingClientRect();
+    floatText(rand(40,r.width-60),rand(40,r.height-60),'+1');
+    setTimeout(()=>{m.classList.remove('bonk');},160);
+    if(hits>=ziel){running=false;clearTimeout(timer);onWin(3);}
+  }
+  function pokeLoop(){
+    if(!running) return;
+    const free=holes.filter(m=>!m._busy);
+    if(free.length){
+      const m=free[Math.floor(Math.random()*free.length)];
+      const isBomb = bomben && Math.random()<0.22;
+      m._bomb=isBomb; m.textContent=isBomb?'💣':'🐹';
+      m._busy=true; m.classList.add('up');
+      setTimeout(()=>{ if(m._busy){m._busy=false;m.classList.remove('up');} }, upTime);
+    }
+    timer=setTimeout(pokeLoop, Math.max(350,upTime*0.6));
+  }
+  hideHowtoSoon(); pokeLoop();
+  return ()=>{running=false;clearTimeout(timer);};
+};
+
+/* ---------- 4) AUFRÄUMEN (Ziehen / Drag & Drop) ---------- */
+GAMES.aufraeumen=(arena,lvl,onWin)=>{
+  const ziel=CONFIG.aufraeumen.ziel[lvl-1];
+  // Zwei Sorten: Obst -> Obstkorb, Spielzeug -> Kiste
+  const kinds=[
+    {tag:'obst', items:['🍎','🍌','🍇','🍓','🍊','🍐'], basket:'🧺', lbl:'Obst'},
+    {tag:'spiel',items:['🧸','🚗','⚽','🪁','🎨','🧩'], basket:'📦', lbl:'Spielzeug'}
+  ];
+  let done=0, dragging=null, offx=0, offy=0;
+  const R=arena.getBoundingClientRect();
+  // Körbe
+  const baskets=[];
+  kinds.forEach((k,i)=>{
+    const b=document.createElement('div'); b.className='basket';
+    b.style.left=(i===0?8:66)+'%';
+    b.innerHTML=`${k.basket}<div class="lbl">${k.lbl}</div>`;
+    b._tag=k.tag; arena.appendChild(b); baskets.push(b);
+  });
+  // Dinge verteilen (obere Hälfte)
+  const items=[];
+  for(let i=0;i<ziel;i++){
+    const k=kinds[i%2];
+    const el=document.createElement('div'); el.className='fruit';
+    el.textContent=k.items[Math.floor(Math.random()*k.items.length)];
+    el._tag=k.tag;
+    const x=rand(30,R.width-80), y=rand(50,R.height*0.5);
+    el.style.left=x+'px'; el.style.top=y+'px';
+    el.addEventListener('pointerdown',startDrag);
+    arena.appendChild(el); items.push(el);
+  }
+  function startDrag(e){
+    e.preventDefault();
+    dragging=e.currentTarget; dragging.classList.add('grab');
+    dragging.setPointerCapture(e.pointerId);
+    const r=dragging.getBoundingClientRect();
+    offx=e.clientX-r.left-r.width/2; offy=e.clientY-r.top-r.height/2;
+    dragging.addEventListener('pointermove',onMove);
+    dragging.addEventListener('pointerup',endDrag);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const a=arena.getBoundingClientRect();
+    const x=e.clientX-a.left-offx, y=e.clientY-a.top-offy;
+    dragging.style.left=x+'px'; dragging.style.top=y+'px';
+    // Korb hervorheben
+    baskets.forEach(b=>b.classList.toggle('hot', over(b,e)));
+  }
+  function over(b,e){
+    const r=b.getBoundingClientRect();
+    return e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom;
+  }
+  function endDrag(e){
+    if(!dragging) return;
+    const el=dragging; el.classList.remove('grab');
+    el.removeEventListener('pointermove',onMove);
+    el.removeEventListener('pointerup',endDrag);
+    dragging=null;
+    baskets.forEach(b=>b.classList.remove('hot'));
+    const target=baskets.find(b=>over(b,e));
+    if(target && target._tag===el._tag){
+      sfx.coin(); done++; setScore(done);
+      el.style.transition='transform .2s,opacity .2s';
+      el.style.transform='scale(0)'; el.style.opacity='0';
+      setTimeout(()=>el.remove(),200);
+      if(done>=ziel) onWin(3);
+    }else if(target){
+      // falscher Korb -> zurück in die obere Hälfte
+      sfx.wrong();
+      const a=arena.getBoundingClientRect();
+      el.style.transition='left .25s,top .25s';
+      el.style.left=rand(30,a.width-80)+'px';
+      el.style.top=rand(50,a.height*0.45)+'px';
+      setTimeout(()=>el.style.transition='',260);
+    }
+  }
+  hideHowtoSoon();
+  return ()=>{ /* Events hängen an entfernten Elementen -> nichts weiter nötig */ };
+};
+
+/* ---------- 5) TÜRCHEN ÖFFNEN (Doppelklick / Doppel-Tipp) ---------- */
+GAMES.tueren=(arena,lvl,onWin)=>{
+  const ziel=CONFIG.tueren.ziel[lvl-1];
+  const surprises=['🐰','🐱','🎁','🌈','🦄','🐸','🍭','⭐','🐥','🌸'];
+  let opened=0;
+  const R=arena.getBoundingClientRect();
+  const perRow=Math.min(ziel,4);
+  const rows=Math.ceil(ziel/perRow);
+  for(let i=0;i<ziel;i++){
+    const row=Math.floor(i/perRow), col=i%perRow;
+    const inRow=Math.min(perRow, ziel-row*perRow);
+    const el=document.createElement('div'); el.className='door'; el.textContent='🚪';
+    const gapx=R.width/(inRow+1);
+    const gapy=R.height/(rows+1);
+    el.style.left=(gapx*(col+1)-40)+'px';
+    el.style.top=(gapy*(row+1)-40)+'px';
+    el._open=false; el._surprise=surprises[Math.floor(Math.random()*surprises.length)];
+    el._last=0;
+    // Doppelklick (Maus/Touchpad) UND Doppel-Tipp (Finger) unterstützen
+    el.addEventListener('dblclick',()=>openDoor(el));
+    el.addEventListener('pointerdown',e=>{
+      const now=Date.now();
+      if(now-el._last<400) openDoor(el);
+      el._last=now;
+    });
+    arena.appendChild(el);
+  }
+  function openDoor(el){
+    if(el._open) return; el._open=true;
+    el.classList.add('open'); el.textContent=el._surprise; sfx.coin();
+    opened++; setScore(opened);
+    if(opened>=ziel) setTimeout(()=>onWin(3),450);
+  }
+  hideHowtoSoon();
+  return ()=>{};
+};
+
+/* ---------- 6) WEG FINDEN (ruhig steuern, auf dem Weg bleiben) ---------- */
+GAMES.weg=(arena,lvl,onWin)=>{
+  const cfg=CONFIG.weg, nCoins=cfg.muenzen[lvl-1], width=cfg.breite[lvl-1];
+  const R=arena.getBoundingClientRect();
+  const W=R.width, H=R.height;
+  // Geschwungener Weg als SVG
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+  svg.style.position='absolute'; svg.style.inset='0';
+  // Sanfter Wellen-Weg: wenige weiche Wellen (mehr erst in höheren Leveln)
+  const wellen=cfg.wellen[lvl-1];
+  const amp=H*0.19, midY=H*0.52;
+  const N=Math.ceil(wellen*4)+2;
+  const pts=[];
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    pts.push([ W*(0.09+0.82*t), midY - amp*Math.sin(Math.PI*wellen*t) ]);
+  }
+  // Catmull-Rom-Glättung -> weiche Bézier-Kurve ohne enge Kehren
+  let d=`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
+    const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+    const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  const path=document.createElementNS(svgNS,'path');
+  path.setAttribute('d',d); path.setAttribute('fill','none');
+  path.setAttribute('stroke','var(--road)'); path.setAttribute('stroke-width',width);
+  path.setAttribute('stroke-linecap','round'); path.setAttribute('stroke-linejoin','round');
+  svg.appendChild(path); arena.appendChild(svg);
+  const L=path.getTotalLength();
+
+  // Münzen entlang des Weges (in Reihenfolge, jede kennt ihre Weglänge)
+  const coins=[];
+  for(let i=0;i<nCoins;i++){
+    const atLen=L*(i+1)/(nCoins+1);
+    const p=path.getPointAtLength(atLen);
+    const c=document.createElement('div'); c.className='coin'; c.textContent='🪙';
+    c.style.left=p.x+'px'; c.style.top=p.y+'px'; c._got=false; c._len=atLen;
+    arena.appendChild(c); coins.push(c);
+  }
+  // Läufer am START + Zielfahne am Ende
+  const start=path.getPointAtLength(0), end=path.getPointAtLength(L);
+  const runner=document.createElement('div'); runner.className='runner'; runner.textContent='🐭';
+  runner.style.left=start.x+'px'; runner.style.top=start.y+'px'; arena.appendChild(runner);
+  const flag=document.createElement('div'); flag.className='flag'; flag.textContent='🚩';
+  flag.style.left=end.x+'px'; flag.style.top=end.y+'px'; arena.appendChild(flag);
+
+  // Startfläche: erst berühren/anklicken -> dann startet das Level
+  const pad=document.createElement('div'); pad.className='startpad';
+  pad.style.left=start.x+'px'; pad.style.top=start.y+'px'; arena.appendChild(pad);
+  const label=document.createElement('div'); label.className='startlabel'; label.textContent='Hier starten';
+  label.style.left=start.x+'px'; label.style.top=(start.y-28)+'px'; arena.appendChild(label);
+
+  let started=false, cur=0, got=0, done=false;
+
+  function setRunner(len){ const p=path.getPointAtLength(len); runner.style.left=p.x+'px'; runner.style.top=p.y+'px'; }
+
+  function begin(){
+    if(started) return; started=true;
+    pad.remove(); label.remove();
+    document.querySelector('#howto').style.display='none';
+  }
+  pad.addEventListener('pointerenter',begin);
+  pad.addEventListener('pointerdown',begin);
+
+  function move(e){
+    if(!started||done) return;
+    const a=arena.getBoundingClientRect();
+    const x=e.clientX-a.left, y=e.clientY-a.top;
+    // NUR ein kleines Fenster rund um die aktuelle Position absuchen:
+    // -> ruckelfrei, verhakt sich nicht an Bögen, und Abkürzen ans Ziel ist unmöglich
+    const back=48, fwd=120, K=26;
+    const lo=Math.max(0,cur-back), hi=Math.min(L,cur+fwd);
+    let best=1e9, bl=cur;
+    for(let i=0;i<=K;i++){
+      const pl=lo+(hi-lo)*i/K, p=path.getPointAtLength(pl);
+      const dd=(p.x-x)**2+(p.y-y)**2;
+      if(dd<best){best=dd;bl=pl;}
+    }
+    if(Math.sqrt(best) > width/2 + 18){ runner.textContent='😵'; return; } // deutlich neben der Bahn -> stoppt
+    cur=bl; setRunner(cur); runner.textContent='🐭';
+    coins.forEach(c=>{
+      if(!c._got && cur>=c._len-8){ c._got=true; c.classList.add('got'); sfx.coin(); got++; setScore(got); }
+    });
+    if(got>=nCoins && cur>=L-10){ done=true; sfx.win(); onWin(3); }
+  }
+  arena.addEventListener('pointermove',move);
+  hideHowtoSoon();
+  return ()=>arena.removeEventListener('pointermove',move);
+};
+
+/* ---------- 7) HOCH UND RUNTER (Scrollen mit zwei Fingern) ---------- */
+GAMES.scrollen=(arena,lvl,onWin)=>{
+  const cfg=CONFIG.scrollen, ziel=cfg.ziel[lvl-1]; let hoehe=cfg.hoehe[lvl-1];
+  // Scroll-Behälter mit hohem Inhalt
+  const box=document.createElement('div'); box.className='scrollbox';
+  const tall=document.createElement('div'); tall.className='tall';
+  box.appendChild(tall); arena.appendChild(box);
+  // feste Sammelzone (Lupe) in der Mitte + kleiner Pfeil-Hinweis
+  const zone=document.createElement('div'); zone.className='zone'; zone.textContent='🔍';
+  arena.appendChild(zone);
+  const hint=document.createElement('div'); hint.className='scrollhint';
+  hint.innerHTML=`<svg width="40" height="54" viewBox="0 0 40 54" aria-hidden="true">
+    <path class="chev up" d="M12 12 L20 5 L28 12"/>
+    <rect class="pad" x="9" y="17" width="22" height="20" rx="6"/>
+    <circle class="dot" cx="16" cy="27" r="2.4"/><circle class="dot" cx="24" cy="27" r="2.4"/>
+    <path class="chev dn" d="M12 42 L20 49 L28 42"/></svg>`;
+  arena.appendChild(hint);
+  const fadeT=setTimeout(()=>hint.classList.add('fade'),6000);  // Hinweis nach 6 s ausblenden
+  // Turmhöhe notfalls vergrössern, damit über UND unter der Lupe genug Platz bleibt
+  const H = box.clientHeight || arena.getBoundingClientRect().height || 480;
+  hoehe = Math.max(hoehe, H*2 + 600);
+  tall.style.height = hoehe+'px';
+  const mid = hoehe/2;
+  // Nur dort platzieren, wo ein Diamant auch wirklich in die Lupe gescrollt werden kann:
+  // erreichbar ist die Zone zwischen H/2 und hoehe-H/2 (sonst kommt man nicht hin)
+  const topLimit = H/2 + 60;             // höchste erreichbare Stelle
+  const botLimit = hoehe - H/2 - 60;     // tiefste erreichbare Stelle
+  const gems=[];
+  function streuen(count, lo, hi){
+    for(let i=0;i<count;i++){
+      const g=document.createElement('div'); g.className='gem'; g.textContent='💎';
+      let top = lo + (hi-lo)*(i+0.5)/Math.max(count,1) + rand(-14,14);
+      top = clamp(top, lo, hi);            // nie ausserhalb der erreichbaren Zone
+      g.style.top=top+'px'; g.style.left=rand(20,74)+'%';
+      g._got=false; tall.appendChild(g); gems.push(g);
+    }
+  }
+  const nOben=Math.ceil(ziel/2), nUnten=ziel-nOben;
+  streuen(nOben, topLimit, mid-90);        // oberhalb der Lupe  -> hochscrollen
+  streuen(nUnten, mid+90, botLimit);       // unterhalb der Lupe -> runterscrollen
+  // Kulisse oben (Himmel) und unten (Boden), damit klar ist: es geht in beide Richtungen
+  const oben=document.createElement('div'); oben.className='edge'; oben.textContent='☁️';
+  oben.style.top='40px'; tall.appendChild(oben);
+  const unten=document.createElement('div'); unten.className='edge'; unten.textContent='🌳';
+  unten.style.top=(hoehe-60)+'px'; tall.appendChild(unten);
+  // Ansicht in der Mitte starten -> Diamanten liegen jetzt ober- und unterhalb
+  function mitteZeigen(){ const h=box.clientHeight||arena.getBoundingClientRect().height; box.scrollTop=mid-h/2; }
+  mitteZeigen(); requestAnimationFrame(mitteZeigen);
+  let got=0;
+  function check(){
+    const a=arena.getBoundingClientRect();
+    const cy=a.top+a.height/2;              // Mittellinie der Lupe
+    gems.forEach(g=>{
+      if(g._got) return;
+      const r=g.getBoundingClientRect();
+      if(Math.abs((r.top+r.height/2)-cy) < 40){
+        g._got=true; g.classList.add('got'); sfx.coin();
+        got++; setScore(got);
+        if(got>=ziel) setTimeout(()=>onWin(3),300);
+      }
+    });
+  }
+  box.addEventListener('scroll',check);
+  hideHowtoSoon();
+  return ()=>{ box.removeEventListener('scroll',check); clearTimeout(fadeT); };
+};
+
+/* ---------- 8) GESCHENKE AUSPACKEN (Rechtsklick / Zwei-Finger-Tipp) ---------- */
+GAMES.rechtsklick=(arena,lvl,onWin)=>{
+  const cfg=CONFIG.rechtsklick, ziel=cfg.ziel[lvl-1], move=cfg.move[lvl-1];
+  const surprises=['🎉','⭐','🍬','💎','🌟','🎈','🦋','🍭','🐣','🌈'];
+  let opened=0, movers=[], raf=null;
+  // echtes Browser-Kontextmenü im Spielfeld abschalten
+  const noMenu=e=>e.preventDefault();
+  arena.addEventListener('contextmenu',noMenu);
+  const R=arena.getBoundingClientRect();
+  for(let i=0;i<ziel;i++){
+    const el=document.createElement('div'); el.className='gift'; el.textContent='🎁';
+    const x=rand(30,R.width-90), y=rand(70,R.height-100);
+    el.style.left=x+'px'; el.style.top=y+'px';
+    el._open=false; el._surprise=surprises[Math.floor(Math.random()*surprises.length)];
+    if(move){ el._x=x; el._y=y; el._vx=rand(-1.1,1.1); el._vy=rand(-1.1,1.1); movers.push(el); }
+    // Rechtsklick bzw. Zwei-Finger-Tipp -> auspacken
+    el.addEventListener('contextmenu',e=>{ e.preventDefault(); openGift(el); });
+    // normaler Klick -> freundlicher Hinweis
+    el.addEventListener('pointerdown',e=>{ if(e.button===0 && !el._open) hintTwoFingers(el); });
+    arena.appendChild(el);
+  }
+  function hintTwoFingers(el){
+    const r=el.getBoundingClientRect(), a=arena.getBoundingClientRect();
+    floatText(r.left-a.left, r.top-a.top-6, '2 Finger!');
+  }
+  function openGift(el){
+    if(el._open) return; el._open=true;
+    movers=movers.filter(m=>m!==el);
+    el.classList.add('open'); el.textContent=el._surprise; sfx.coin();
+    opened++; setScore(opened);
+    if(opened>=ziel) setTimeout(()=>onWin(3),450);
+  }
+  function loop(){
+    const b=arena.getBoundingClientRect();
+    movers.forEach(el=>{
+      el._x+=el._vx; el._y+=el._vy;
+      if(el._x<20||el._x>b.width-80) el._vx*=-1;
+      if(el._y<60||el._y>b.height-90) el._vy*=-1;
+      el.style.left=el._x+'px'; el.style.top=el._y+'px';
+    });
+    raf=requestAnimationFrame(loop);
+  }
+  if(move) loop();
+  hideHowtoSoon();
+  return ()=>{ arena.removeEventListener('contextmenu',noMenu); cancelAnimationFrame(raf); };
+};
+
+/* ============================================================
+   Kopfzeilen-Knöpfe
+   ============================================================ */
+$('#backBtn').onclick=goHome;
+$('#soundBtn').onclick=()=>{
+  state.sound=!state.sound;
+  $('#soundBtn').textContent=state.sound?'🔊':'🔇';
+  if(state.sound) beep(700,.06,'triangle',.15);
+};
+$('#soundBtn').textContent=state.sound?'🔊':'🔇';
+$('#fsBtn').onclick=()=>{
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+};
+
+/* Start */
+renderHome();
+showScreen('home');
+</script>
+</body>
+</html>
