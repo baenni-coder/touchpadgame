@@ -6,16 +6,23 @@
 <title>Fuchs-Sprung · Prototyp</title>
 <!--
   ============================================================
-   FUCHS-SPRUNG  ·  Phase-1-Prototyp
+   FUCHS-SPRUNG  ·  Prototyp, Stand Phase 2
    Arcade-Jump-&-Run für das Touchpad-Abenteuer
 
    ZWECK DIESER DATEI:
-   Nicht das fertige Spiel, sondern der Test des SPIELGEFÜHLS.
-   Die Grafik ist absichtlich einfach (alles im Code gezeichnet,
-   keine Bilddateien) – hier geht es nur um die Frage:
-   "Macht es Spass, den Fuchs zu steuern?"
+   Noch nicht das fertige Spiel. Die Grafik ist absichtlich einfach
+   und entsteht komplett im Code – es wird keine Bilddatei geladen.
+
+   Drin ist: Laufen und Springen mit allen Nachsicht-Mechaniken,
+   Gegner, Stacheln, drei Herzen, Checkpoints, Bonus-Sterne,
+   Pause und Spielende.
 
    Probiere alle drei Steuerungen aus (Tasten 1 / 2 / 3).
+   Der Doppelklick-Sprung ist die eigentliche Touchpad-Übung:
+   zweimal schnell klicken springt 4.2 statt 2.9 Kacheln hoch –
+   nur so kommst du an die lila Bonus-Sterne.
+
+   Esc = Pause · R = neu starten · M = Ton an/aus
 
    Läuft komplett lokal · kein Internet · keine Daten verlassen den Laptop.
    Einfach doppelklicken.
@@ -76,7 +83,7 @@
 
 <header>
   <div class="logo">🦊 <span>Fuchs-Sprung</span></div>
-  <span class="tag">Phase-1-Prototyp · Spielgefühl</span>
+  <span class="tag">Prototyp · Phase 2</span>
   <div class="spacer"></div>
   <div class="profiles" id="profiles"></div>
 </header>
@@ -117,6 +124,15 @@ const TUNING = {
   doppelZeit:     420,   // Millisekunden, in denen der zweite Klick zählt
   extraHoehe:     70,    // Gesamthöhe des Doppelklick-Sprungs in Pixel (~4.4 Kacheln)
 
+  // --- Gegner und Treffer ---
+  leben:          3,     // Herzen zu Beginn
+  gegnerTempo:    34,    // Lauftempo der Gegner am Boden
+  fliegerTempo:   26,    // waagerechtes Tempo der Flieger
+  fliegerAmplitude:26,   // wie weit sie auf und ab schweben (Pixel)
+  abprall:        190,   // Schub nach oben, wenn man einen Gegner plättet
+  rueckstoss:     120,   // Schub weg vom Gegner bei einem Treffer
+  unverwundbar:   1.4,   // Sekunden Schonzeit nach einem Treffer
+
   // --- Touchpad-Profil ---
   totzone:        7,     // Pixel um den Fuchs herum, in denen er stehen bleibt
   randzone:       14,    // am Bildrand läuft der Fuchs weiter (siehe leseEingabe)
@@ -131,24 +147,29 @@ const DT   = 1/60;               // fester Physik-Zeitschritt
    1) Laufen  2) kleine Stufen  3) Lücken  4) hohe Sprünge
    5) Einweg-Plattformen  6) Abgrund + Ziel
 
-   Zeichen:  # Boden   = Plattform (von unten durchspringbar)
-             o Münze   P Start     F Ziel     . Luft
+   Zeichen:  # Boden       = Plattform (von unten durchspringbar)
+             ^ Stacheln    o Münze
+             B Bonus-Münze (nur mit dem Doppelklick-Sprung erreichbar)
+             L Läufer      V Flieger   C Checkpoint
+             P Start       F Ziel      . Luft
    ============================================================ */
 const LEVEL = [
-  '........................................................................',
-  '........................................................................',
-  '........................................................................',
-  '........................................................................',
-  '........................................................................',
-  '........................................................................',
-  '........................................................................',
-  '...........................................oo.........oo................',
-  '....................o.....................====......======..............',
-  '................o..###................o..............o..................',
-  '.............o..##........o.....o....====..........======.......o.......',
-  '.P...o...o...##.........o............................................F..',
-  '##########################..###...#############################...######',
-  '##########################..###...#############################...######',
+  '................................................................................................',
+  '................................................................................................',
+  '................................................................................................',
+  '................................................................................................',
+  '................................................................................................',
+  '..............................................B.................................................',
+  '................................................................................................',
+  '.....................................................................................B..........',
+  '....................................................V...........................................',
+  '..............................................oo...........oo.............................V.....',
+  '....................oL.......................====........======.................................',
+  '................o..###.........o.........o................o..........................o..........',
+  '.............o..##........o........o....====............======.........o........o...===.o.......',
+  '.P...o...o...##.........o......^..................o....C...........C.......L.o...^^......^.C.F..',
+  '##########################..######...#################################...#######################',
+  '##########################..######...#################################...#######################',
 ];
 
 /* ============================================================
@@ -174,7 +195,12 @@ const sfx={
   landung:()=>beep(150,.06,'triangle',.09,.7),
   muenze: ()=>{beep(880,.05,'square',.11);setTimeout(()=>beep(1320,.08,'square',.10),45);},
   sterben:()=>beep(300,.35,'sawtooth',.12,.2),
-  ziel:   ()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15,'triangle',.13),i*95))
+  ziel:   ()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15,'triangle',.13),i*95)),
+  aua:    ()=>{beep(220,.16,'sawtooth',.14,.5);setTimeout(()=>beep(165,.20,'sawtooth',.12,.6),90);},
+  platt:  ()=>{beep(180,.07,'square',.13);setTimeout(()=>beep(420,.09,'square',.11),55);},
+  checkpoint:()=>[660,880,1100].forEach((f,i)=>setTimeout(()=>beep(f,.11,'triangle',.12),i*70)),
+  ende:   ()=>[440,392,330,262].forEach((f,i)=>setTimeout(()=>beep(f,.24,'sawtooth',.13),i*170)),
+  bonus:  ()=>[880,1100,1320,1760].forEach((f,i)=>setTimeout(()=>beep(f,.10,'square',.12),i*55))
 };
 
 /* ============================================================
@@ -205,6 +231,8 @@ addEventListener('keydown', e=>{
   const p = PROFILE.find(p=>p.taste===e.key);
   if(p){ setzeProfil(p.id); return; }
   if(e.key==='r'||e.key==='R'){ levelNeu(); return; }
+  if(e.key==='Escape'||e.key==='p'||e.key==='P'){ if(!gewonnen&&!gameOver) pause=!pause; return; }
+  if(gameOver && (e.key===' '||e.key==='Enter')){ levelNeu(); return; }
   if(e.key==='m'||e.key==='M'){ tonAn=!tonAn; zeichneHilfe(); return; }
   if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key)) e.preventDefault();
   // Zweimal schnell springen = Doppeltipp. e.repeat aussortieren, sonst
@@ -311,22 +339,40 @@ function leseEingabe(){
    LEVEL EINLESEN
    ============================================================ */
 let karte=[], levelB=0, levelH=0, muenzen=[], startPos={x:0,y:0}, zielPos={x:0,y:0};
+let gegner=[], checkpoints=[], startVorlage=[];
 
 function levelLaden(){
   levelB = Math.max(...LEVEL.map(z=>z.length));
   levelH = LEVEL.length;
   karte = LEVEL.map(z => z.padEnd(levelB,'.').split(''));
-  muenzen=[];
+  muenzen=[]; checkpoints=[]; startVorlage=[];
   for(let r=0;r<levelH;r++) for(let c=0;c<levelB;c++){
     const z = karte[r][c];
-    if(z==='o'){ muenzen.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2, weg:false, t:Math.random()*6}); karte[r][c]='.'; }
+    const mx = c*TILE+TILE/2, my = r*TILE+TILE/2;
+    if(z==='o'){ muenzen.push({x:mx,y:my,weg:false,t:Math.random()*6,bonus:false}); karte[r][c]='.'; }
+    if(z==='B'){ muenzen.push({x:mx,y:my,weg:false,t:Math.random()*6,bonus:true }); karte[r][c]='.'; }
     if(z==='P'){ startPos={x:c*TILE, y:r*TILE}; karte[r][c]='.'; }
     if(z==='F'){ zielPos={x:c*TILE, y:r*TILE}; karte[r][c]='.'; }
+    if(z==='C'){ checkpoints.push({x:c*TILE, y:r*TILE, aktiv:false}); karte[r][c]='.'; }
+    if(z==='L'){ startVorlage.push({art:'laeufer', x:c*TILE+3, y:r*TILE+2}); karte[r][c]='.'; }
+    if(z==='V'){ startVorlage.push({art:'flieger', x:c*TILE+2, y:r*TILE+2}); karte[r][c]='.'; }
   }
+  gegnerSetzen();
+}
+
+/* Gegner aus der Vorlage neu aufstellen – nach jedem Tod von vorn */
+function gegnerSetzen(){
+  gegner = startVorlage.map(v=>({
+    art:v.art, x:v.x, y:v.y, heimY:v.y,
+    b: v.art==='laeufer'?12:13, h: v.art==='laeufer'?11:10,
+    vx: v.art==='laeufer' ? -TUNING.gegnerTempo : -TUNING.fliegerTempo,
+    t: Math.random()*6, tot:false, totT:0, schritt:0
+  }));
 }
 
 const fest    = (c,r)=> (r<0||c<0||c>=levelB) ? false : (r>=levelH ? false : karte[r][c]==='#');
 const einweg  = (c,r)=> (r<0||c<0||c>=levelB||r>=levelH) ? false : karte[r][c]==='=';
+const stachel = (c,r)=> (r<0||c<0||c>=levelB||r>=levelH) ? false : karte[r][c]==='^';
 
 /* ============================================================
    DER SPIELER
@@ -336,7 +382,8 @@ const spieler = {
   vx:0, vy:0,
   amBoden:false, wardAmBoden:false,
   coyote:0, puffer:0, sprungGehalten:false, absprungY:0, extraFrei:false, extraT:0,
-  blick:1, laufPhase:0, squash:1, tot:false, totT:0
+  blick:1, laufPhase:0, squash:1, tot:false, totT:0,
+  leben:3, schonzeit:0, respawnX:0, respawnY:0
 };
 
 function levelNeu(){
@@ -345,7 +392,11 @@ function levelNeu(){
   spieler.vx=0; spieler.vy=0; spieler.tot=false; spieler.totT=0;
   spieler.coyote=0; spieler.puffer=0; spieler.squash=1;
   spieler.extraFrei=false; spieler.extraT=0; spieler.absprungY=spieler.y;
-  punkte=0; zeit=0; gewonnen=false; gewonnenT=0; partikel.length=0;
+  spieler.leben = TUNING.leben; spieler.schonzeit = 0;
+  spieler.respawnX = spieler.x; spieler.respawnY = spieler.y;
+  punkte=0; boni=0; zeit=0; partikel.length=0;
+  gewonnen=false; gewonnenT=0; gameOver=false; gameOverT=0; pause=false;
+  ruettelStaerke=0;
   kamera.x=0; kamera.y=0; kameraSetzen(true);
 }
 
@@ -426,6 +477,7 @@ function spielerSchritt(){
     staub(spieler.x+spieler.b/2, spieler.y+spieler.h, 5, '#CBB89A');
   }
   spieler.squash += (1-spieler.squash)*0.22;
+  if(spieler.schonzeit>0) spieler.schonzeit -= DT;
 
   // Laufanimation
   if(spieler.amBoden) spieler.laufPhase += Math.abs(spieler.vx)*DT*0.42;
@@ -488,10 +540,146 @@ function bewegeY(d){
   }
 }
 
-function sterben(){
-  if(spieler.tot) return;
-  spieler.tot=true; spieler.totT=0; sfx.sterben();
+/* ============================================================
+   TREFFER, LEBEN UND CHECKPOINTS
+   Für 8-Jährige bewusst nachsichtig: ein Treffer kostet ein Herz,
+   danach gibt es eine Schonzeit. Wer alle Herzen verliert, fängt
+   am letzten Checkpoint wieder an – nicht am Levelanfang.
+   ============================================================ */
+function treffer(vonX){
+  if(spieler.schonzeit>0 || spieler.tot || gameOver || gewonnen) return;
+  spieler.leben--;
+  spieler.schonzeit = TUNING.unverwundbar;
+  // Rückstoss weg von der Gefahr, plus ein kleiner Hüpfer
+  spieler.vx = (spieler.x+spieler.b/2 < vonX ? -1 : 1) * TUNING.rueckstoss;
+  spieler.vy = -140;
+  spieler.amBoden = false;
+  ruetteln(5);
+  sfx.aua();
+  for(let i=0;i<7;i++) staub(spieler.x+spieler.b/2, spieler.y+spieler.h/2, 1, '#FF6B6B');
+  if(spieler.leben<=0) zuEnde();
 }
+
+function sterben(){                      // Sturz in den Abgrund
+  if(spieler.tot || gameOver) return;
+  spieler.tot=true; spieler.totT=0;
+  spieler.leben--;
+  ruetteln(4);
+  sfx.sterben();
+  if(spieler.leben<=0) zuEnde();
+}
+
+function zuEnde(){
+  gameOver = true; gameOverT = 0;
+  spieler.leben = 0;
+  sfx.ende();
+}
+
+/* Am letzten erreichten Checkpoint neu anfangen */
+function beimCheckpointStarten(){
+  spieler.x = spieler.respawnX; spieler.y = spieler.respawnY;
+  spieler.vx=0; spieler.vy=0; spieler.tot=false; spieler.totT=0;
+  spieler.schonzeit = TUNING.unverwundbar;
+  spieler.extraFrei=false; spieler.extraT=0; spieler.absprungY=spieler.y;
+  gegnerSetzen();                        // Gegner wieder aufstellen
+  kameraSetzen(true);
+}
+
+/* ============================================================
+   GEGNER
+   Zwei Sorten, bewusst einfach und berechenbar – Kinder sollen
+   ihr Verhalten nach zwei Sekunden Zuschauen verstehen.
+   ============================================================ */
+function gegnerSchritt(){
+  gegner.forEach(g=>{
+    if(g.tot){ g.totT += DT; return; }
+    g.t += DT;
+
+    if(g.art==='laeufer'){
+      // läuft hin und her, dreht an Wänden UND an Abgründen um
+      g.x += g.vx*DT;
+      const vorne = g.vx<0 ? g.x-1 : g.x+g.b+1;
+      const cV = Math.floor(vorne/TILE);
+      const rMitte = Math.floor((g.y+g.h/2)/TILE);
+      const rUnten = Math.floor((g.y+g.h+2)/TILE);
+      const wand    = fest(cV,rMitte) || stachel(cV,rMitte);
+      const abgrund = !fest(cV,rUnten) && !einweg(cV,rUnten);
+      if(wand || abgrund){
+        g.vx *= -1;
+        g.x += g.vx*DT*2;                // aus der Wand herausschieben
+      }
+      // auf dem Boden halten
+      const rBoden = Math.floor((g.y+g.h)/TILE);
+      const cM = Math.floor((g.x+g.b/2)/TILE);
+      if(fest(cM,rBoden)||einweg(cM,rBoden)) g.y = rBoden*TILE - g.h;
+      else g.y += 120*DT;
+      g.schritt += Math.abs(g.vx)*DT*0.5;
+
+    }else{                               // Flieger: waagerecht plus Sinuswelle
+      g.x += g.vx*DT;
+      const cV = Math.floor((g.vx<0 ? g.x-1 : g.x+g.b+1)/TILE);
+      const rM = Math.floor((g.y+g.h/2)/TILE);
+      if(fest(cV,rM) || g.x<8 || g.x>levelB*TILE-g.b-8) g.vx *= -1;
+      g.y = g.heimY + Math.sin(g.t*2.0)*TUNING.fliegerAmplitude;
+      g.schritt += DT*9;                 // Flügelschlag
+    }
+  });
+  // besiegte Gegner nach kurzer Zeit entfernen
+  gegner = gegner.filter(g=>!g.tot || g.totT<0.7);
+}
+
+/* Berührung Spieler <-> Gegner */
+function gegnerPruefen(){
+  gegner.forEach(g=>{
+    if(g.tot) return;
+    const ueberlappt = spieler.x < g.x+g.b && spieler.x+spieler.b > g.x &&
+                       spieler.y < g.y+g.h && spieler.y+spieler.h > g.y;
+    if(!ueberlappt) return;
+
+    // Von oben draufgesprungen? Dann ist der Gegner erledigt.
+    const vonOben = spieler.vy > 40 && (spieler.y+spieler.h) < g.y + g.h*0.7;
+    if(vonOben){
+      g.tot=true; g.totT=0;
+      spieler.vy = -TUNING.abprall;      // Abprall, damit man weiterhüpfen kann
+      spieler.extraFrei = true;          // nach dem Abprall darf man wieder doppeln
+      spieler.absprungY = spieler.y;
+      spieler.squash = 0.8;
+      punkte += 0;                       // Gegner geben keine Münzen
+      sfx.platt();
+      for(let i=0;i<8;i++) staub(g.x+g.b/2, g.y+g.h/2, 1, '#9775FA');
+      ruetteln(2);
+    }else{
+      treffer(g.x+g.b/2);
+    }
+  });
+}
+
+/* Stacheln: die Kacheln unter und neben dem Fuchs prüfen */
+function stachelnPruefen(){
+  if(spieler.schonzeit>0) return;
+  const c0=Math.floor(spieler.x/TILE), c1=Math.floor((spieler.x+spieler.b-1)/TILE);
+  const r0=Math.floor(spieler.y/TILE),  r1=Math.floor((spieler.y+spieler.h-1)/TILE);
+  for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++){
+    if(stachel(c,r)){ treffer(c*TILE+TILE/2); return; }
+  }
+}
+
+/* Checkpoints einsammeln */
+function checkpointsPruefen(){
+  checkpoints.forEach(p=>{
+    if(p.aktiv) return;
+    if(Math.abs(p.x+8-(spieler.x+spieler.b/2))<14 && Math.abs(p.y+8-(spieler.y+spieler.h/2))<18){
+      p.aktiv=true;
+      spieler.respawnX = p.x+3; spieler.respawnY = p.y+2;
+      sfx.checkpoint();
+      for(let i=0;i<10;i++) staub(p.x+8,p.y+4,1,'#2FC79B');
+    }
+  });
+}
+
+/* Bildschirm-Rüttler */
+let ruettelStaerke = 0;
+function ruetteln(n){ ruettelStaerke = Math.max(ruettelStaerke, n); }
 
 /* ============================================================
    KAMERA – mit Totzone, damit sie nicht am Fuchs klebt
@@ -501,12 +689,15 @@ const SICHT_B = 320, SICHT_H = 180;
 
 function kameraSetzen(sofort=false){
   const zielX = spieler.x + spieler.b/2 - SICHT_B/2 + spieler.blick*26;  // Vorausschau
-  const zielY = spieler.y + spieler.h/2 - SICHT_H/2 + 14;
+  // Der Fuchs sitzt bewusst etwas tiefer im Bild: bei einem Plattformer
+  // schaut man nach oben (wohin man springt), nicht nach unten. Ausserdem
+  // rutschten Sprungziele sonst hinter die Anzeigeleiste.
+  const zielY = spieler.y + spieler.h/2 - SICHT_H/2 - 10;
   const t = sofort ? 1 : 0.11;
   kamera.x += (zielX-kamera.x)*t;
   kamera.y += (zielY-kamera.y)*t;
   kamera.x = Math.max(0, Math.min(kamera.x, levelB*TILE - SICHT_B));
-  kamera.y = Math.max(-20, Math.min(kamera.y, levelH*TILE - SICHT_H));
+  kamera.y = Math.max(-26, Math.min(kamera.y, levelH*TILE - SICHT_H));
 }
 
 /* ============================================================
@@ -534,7 +725,11 @@ const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 
 function zeichne(){
-  const kx = Math.round(kamera.x), ky = Math.round(kamera.y);
+  // Bildschirm-Rüttler: verschiebt nur die Darstellung, nicht die Physik
+  const rt = ruettelStaerke;
+  const rx = rt>0 ? (Math.random()-.5)*rt*2 : 0;
+  const ry = rt>0 ? (Math.random()-.5)*rt*2 : 0;
+  const kx = Math.round(kamera.x + rx), ky = Math.round(kamera.y + ry);
 
   /* Himmel */
   const g = ctx.createLinearGradient(0,0,0,SICHT_H);
@@ -570,8 +765,33 @@ function zeichne(){
       ctx.fillStyle='#C89A5B'; ctx.fillRect(x,y,TILE,5);
       ctx.fillStyle='#E0BA80'; ctx.fillRect(x,y,TILE,2);
       ctx.fillStyle='rgba(0,0,0,.13)'; ctx.fillRect(x,y+5,TILE,1);
+    }else if(z==='^'){
+      // Stacheln: drei Zacken, klar erkennbar rot-grau
+      for(let i=0;i<3;i++){
+        const sx = x + 1 + i*5;
+        ctx.fillStyle='#B8C0CC';
+        ctx.beginPath(); ctx.moveTo(sx,y+TILE); ctx.lineTo(sx+2.5,y+4); ctx.lineTo(sx+5,y+TILE); ctx.fill();
+        ctx.fillStyle='#E8EDF4';
+        ctx.beginPath(); ctx.moveTo(sx+1.4,y+TILE); ctx.lineTo(sx+2.5,y+5); ctx.lineTo(sx+3,y+TILE); ctx.fill();
+      }
+      ctx.fillStyle='#8892A0'; ctx.fillRect(x,y+TILE-2,TILE,2);
     }
   }
+
+  /* Checkpoints */
+  checkpoints.forEach(p=>{
+    const px=p.x-kx, py=p.y-ky;
+    if(px<-20||px>SICHT_B+20) return;
+    ctx.fillStyle='#6B6280'; ctx.fillRect(px+7,py-4,2,20);
+    if(p.aktiv){
+      const w=Math.sin(zeit*5)*1.5;
+      ctx.fillStyle='#2FC79B';
+      ctx.beginPath(); ctx.moveTo(px+9,py-4); ctx.lineTo(px+19+w,py+0); ctx.lineTo(px+9,py+4); ctx.fill();
+    }else{
+      ctx.fillStyle='rgba(107,98,128,.45)';
+      ctx.beginPath(); ctx.moveTo(px+9,py-4); ctx.lineTo(px+16,py+0); ctx.lineTo(px+9,py+4); ctx.fill();
+    }
+  });
 
   /* Ziel */
   if(zielPos){
@@ -590,9 +810,25 @@ function zeichne(){
     const mx=m.x-kx, my=m.y-ky+Math.sin(zeit*3+m.t)*1.6;
     if(mx<-12||mx>SICHT_B+12) return;
     const br = Math.abs(Math.cos(zeit*3+m.t))*4+1.4;   // Drehung angedeutet
-    ctx.fillStyle='#E8A317'; ctx.beginPath(); ctx.ellipse(mx,my,br+0.9,5.2,0,0,7); ctx.fill();
-    ctx.fillStyle='#FFC93C'; ctx.beginPath(); ctx.ellipse(mx,my,br,4.4,0,0,7); ctx.fill();
-    if(br>2.6){ ctx.fillStyle='#FFE9A8'; ctx.fillRect(mx-0.8,my-2.2,1.4,4.4); }
+    if(m.bonus){
+      // Bonus-Münze: lila Stern mit Funkeln – nur mit Doppelklick-Sprung erreichbar
+      const f = 0.85+Math.sin(zeit*4+m.t)*0.15;
+      ctx.fillStyle='rgba(151,117,250,.30)';
+      ctx.beginPath(); ctx.arc(mx,my,8*f,0,7); ctx.fill();
+      ctx.fillStyle='#9775FA';
+      ctx.beginPath();
+      for(let i=0;i<10;i++){
+        const a=-Math.PI/2 + i*Math.PI/5, rr=(i%2?2.4:5.6)*f;
+        i? ctx.lineTo(mx+Math.cos(a)*rr, my+Math.sin(a)*rr)
+         : ctx.moveTo(mx+Math.cos(a)*rr, my+Math.sin(a)*rr);
+      }
+      ctx.fill();
+      ctx.fillStyle='#E7DEFF'; ctx.fillRect(mx-1,my-1.6,2,3.2);
+    }else{
+      ctx.fillStyle='#E8A317'; ctx.beginPath(); ctx.ellipse(mx,my,br+0.9,5.2,0,0,7); ctx.fill();
+      ctx.fillStyle='#FFC93C'; ctx.beginPath(); ctx.ellipse(mx,my,br,4.4,0,0,7); ctx.fill();
+      if(br>2.6){ ctx.fillStyle='#FFE9A8'; ctx.fillRect(mx-0.8,my-2.2,1.4,4.4); }
+    }
   });
 
   /* Partikel */
@@ -603,8 +839,13 @@ function zeichne(){
   });
   ctx.globalAlpha=1;
 
-  /* Der Fuchs */
-  if(!spieler.tot || Math.floor(spieler.totT*14)%2===0) zeichneFuchs(kx,ky);
+  /* Gegner */
+  gegner.forEach(g=>zeichneGegner(g,kx,ky));
+
+  /* Der Fuchs – blinkt beim Sterben und während der Schonzeit */
+  const blinktTot  = spieler.tot && Math.floor(spieler.totT*14)%2!==0;
+  const blinktSchon= spieler.schonzeit>0 && Math.floor(spieler.schonzeit*16)%2!==0;
+  if(!blinktTot && !blinktSchon) zeichneFuchs(kx,ky);
 
   /* Touchpad-Profil: Zeiger sichtbar machen (der echte ist ausgeblendet) */
   if(profil==='touchpad' && maus.imBild){
@@ -634,6 +875,51 @@ function wolken(offX, offY){
     const px=((x-offX)%420+420)%420-50, py=y-offY;
     ctx.beginPath(); ctx.arc(px,py,r,0,7); ctx.arc(px+r,py+2,r*0.8,0,7); ctx.arc(px-r,py+2,r*0.7,0,7); ctx.fill();
   });
+}
+
+function zeichneGegner(g,kx,ky){
+  const x = Math.round(g.x-kx), y = Math.round(g.y-ky);
+  if(x<-30||x>SICHT_B+30) return;
+  ctx.save();
+  ctx.translate(x+g.b/2, y+g.h);
+
+  if(g.tot){                               // plattgedrückt und verblassend
+    ctx.globalAlpha = Math.max(0, 1-g.totT/0.7);
+    ctx.fillStyle = g.art==='laeufer' ? '#9775FA' : '#E64980';
+    ctx.beginPath(); ctx.ellipse(0,-1.5, g.b*0.62, 2.2, 0,0,7); ctx.fill();
+    ctx.restore(); ctx.globalAlpha=1; return;
+  }
+
+  if(g.art==='laeufer'){
+    // kleiner Käfer: Körper, zwei trippelnde Beine, Fühler
+    const tritt = Math.sin(g.schritt*3)*1.6;
+    ctx.fillStyle='#6B4FC4';
+    ctx.fillRect(-4+tritt,-3,2.4,3); ctx.fillRect(2-tritt,-3,2.4,3);
+    ctx.fillStyle='#9775FA';
+    ctx.beginPath(); ctx.ellipse(0,-6.2, g.b*0.48, 5.0, 0,0,7); ctx.fill();
+    ctx.fillStyle='#7B5BD6';                // Panzerstreifen
+    ctx.fillRect(-1,-10.6,2,8.4);
+    ctx.strokeStyle='#6B4FC4'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(-2,-10.6); ctx.lineTo(-3.4,-13.4);
+    ctx.moveTo(2,-10.6); ctx.lineTo(3.4,-13.4); ctx.stroke();
+    const bx = g.vx<0 ? -2.6 : 2.6;
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(bx,-7.4,1.9,0,7); ctx.fill();
+    ctx.fillStyle='#2C2340'; ctx.beginPath(); ctx.arc(bx+(g.vx<0?-0.5:0.5),-7.4,1.0,0,7); ctx.fill();
+
+  }else{
+    // Flieger: Körper mit schlagenden Flügeln
+    const fl = Math.abs(Math.sin(g.schritt))*4+1.5;
+    ctx.fillStyle='rgba(230,73,128,.55)';
+    ctx.beginPath(); ctx.ellipse(-3,-7, 4.2, fl, -0.5, 0,7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 3,-7, 4.2, fl,  0.5, 0,7); ctx.fill();
+    ctx.fillStyle='#E64980';
+    ctx.beginPath(); ctx.ellipse(0,-5, g.b*0.42, 4.2, 0,0,7); ctx.fill();
+    ctx.fillStyle='#F783AC'; ctx.fillRect(-1.2,-8.4,2.4,6.6);
+    const bx = g.vx<0 ? -2.4 : 2.4;
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(bx,-6.2,1.7,0,7); ctx.fill();
+    ctx.fillStyle='#2C2340'; ctx.beginPath(); ctx.arc(bx+(g.vx<0?-0.4:0.4),-6.2,0.9,0,7); ctx.fill();
+  }
+  ctx.restore();
 }
 
 function zeichneFuchs(kx,ky){
@@ -706,7 +992,16 @@ function zeichneFuchs(kx,ky){
 }
 
 /* --- Anzeige oben im Bild --- */
-let punkte=0, zeit=0, gewonnen=false, gewonnenT=0;
+let punkte=0, boni=0, zeit=0, gewonnen=false, gewonnenT=0;
+let gameOver=false, gameOverT=0, pause=false;
+
+function herz(x,y,voll){
+  ctx.fillStyle = voll ? '#FF6B6B' : 'rgba(255,255,255,.25)';
+  ctx.beginPath();
+  ctx.arc(x-2,y-1,2.4,0,7); ctx.arc(x+2,y-1,2.4,0,7);
+  ctx.moveTo(x-4.3,y+0.2); ctx.lineTo(x,y+5); ctx.lineTo(x+4.3,y+0.2);
+  ctx.fill();
+}
 
 function hud(){
   ctx.fillStyle='rgba(44,33,64,.55)';
@@ -714,24 +1009,64 @@ function hud(){
   ctx.fillStyle='#fff';
   ctx.font='bold 9px ui-rounded, system-ui, sans-serif';
   ctx.textBaseline='middle';
-  ctx.fillText('MÜNZEN  '+String(punkte).padStart(2,'0')+' / '+muenzen.length, 6, 8);
+
+  // Herzen
+  for(let i=0;i<TUNING.leben;i++) herz(10+i*12, 7, i<spieler.leben);
+
+  const normale = muenzen.filter(m=>!m.bonus).length;
+  ctx.fillText(String(punkte).padStart(2,'0')+'/'+normale, 54, 8);
+  // Bonus-Anzeige nur, wenn es welche gibt
+  const bonusZahl = muenzen.filter(m=>m.bonus).length;
+  if(bonusZahl){
+    ctx.fillStyle='#C9B6FF';
+    ctx.fillText('★ '+boni+'/'+bonusZahl, 92, 8);
+    ctx.fillStyle='#fff';
+  }
   const p = PROFILE.find(p=>p.id===profil);
-  ctx.fillText(p.emo+'  '+p.name.toUpperCase(), 120, 8);
-  ctx.fillText('ZEIT  '+zeit.toFixed(1)+'s', 236, 8);
+  ctx.fillText(p.emo+' '+p.name.toUpperCase(), 140, 8);
+  ctx.fillText('ZEIT '+zeit.toFixed(1)+'s', 244, 8);
+
+  if(spieler.tot && !gameOver){
+    ctx.fillStyle='rgba(230,73,128,.30)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+  }
 
   if(gewonnen){
     ctx.fillStyle='rgba(44,33,64,.72)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
     ctx.textAlign='center';
     ctx.fillStyle='#FFC93C'; ctx.font='bold 22px ui-rounded, system-ui, sans-serif';
-    ctx.fillText('GESCHAFFT!', SICHT_B/2, 74);
+    ctx.fillText('GESCHAFFT!', SICHT_B/2, 66);
     ctx.fillStyle='#fff'; ctx.font='bold 10px ui-rounded, system-ui, sans-serif';
-    ctx.fillText(punkte+' von '+muenzen.length+' Münzen  ·  '+zeit.toFixed(1)+' Sekunden', SICHT_B/2, 98);
+    ctx.fillText(punkte+' von '+normale+' Münzen  ·  '+zeit.toFixed(1)+' Sekunden', SICHT_B/2, 90);
+    if(bonusZahl){
+      ctx.fillStyle = boni===bonusZahl ? '#C9B6FF' : 'rgba(255,255,255,.65)';
+      ctx.fillText('★ '+boni+' von '+bonusZahl+' Bonus-Sternen', SICHT_B/2, 106);
+      ctx.fillStyle='#fff';
+    }
     if(Math.floor(gewonnenT*2)%2===0)
-      ctx.fillText('R drücken für nochmal', SICHT_B/2, 118);
+      ctx.fillText('R drücken für nochmal', SICHT_B/2, 128);
     ctx.textAlign='left';
   }
-  if(spieler.tot){
-    ctx.fillStyle='rgba(230,73,128,.30)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+
+  if(gameOver){
+    ctx.fillStyle='rgba(44,33,64,.78)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+    ctx.textAlign='center';
+    ctx.fillStyle='#FF6B6B'; ctx.font='bold 20px ui-rounded, system-ui, sans-serif';
+    ctx.fillText('ALLE HERZEN WEG', SICHT_B/2, 74);
+    ctx.fillStyle='#fff'; ctx.font='bold 10px ui-rounded, system-ui, sans-serif';
+    ctx.fillText('Du hast '+punkte+' Münzen gesammelt.', SICHT_B/2, 98);
+    if(Math.floor(gameOverT*2)%2===0)
+      ctx.fillText('Leertaste oder R für einen neuen Versuch', SICHT_B/2, 118);
+    ctx.textAlign='left';
+  }
+
+  if(pause){
+    ctx.fillStyle='rgba(44,33,64,.70)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
+    ctx.textAlign='center';
+    ctx.fillStyle='#fff'; ctx.font='bold 20px ui-rounded, system-ui, sans-serif';
+    ctx.fillText('PAUSE', SICHT_B/2, 80);
+    ctx.font='bold 10px ui-rounded, system-ui, sans-serif';
+    ctx.fillText('Esc drücken zum Weiterspielen', SICHT_B/2, 104);
+    ctx.textAlign='left';
   }
 }
 
@@ -745,17 +1080,30 @@ let letzte=performance.now(), speicher=0;
 
 function schritt(){
   leseEingabe();
+  if(ruettelStaerke>0) ruettelStaerke = Math.max(0, ruettelStaerke-DT*22);
+
+  if(pause){ return; }
   if(gewonnen){ gewonnenT+=DT; partikelSchritt(); kameraSetzen(); return; }
+
+  if(gameOver){
+    gameOverT+=DT;
+    partikelSchritt();
+    return;
+  }
 
   if(spieler.tot){
     spieler.totT+=DT;
-    if(spieler.totT>0.85) levelNeu();
+    if(spieler.totT>0.85) beimCheckpointStarten();
     partikelSchritt();
     return;
   }
 
   zeit+=DT;
   spielerSchritt();
+  gegnerSchritt();
+  gegnerPruefen();
+  stachelnPruefen();
+  checkpointsPruefen();
   partikelSchritt();
   kameraSetzen();
 
@@ -763,8 +1111,9 @@ function schritt(){
   muenzen.forEach(m=>{
     if(m.weg) return;
     if(Math.abs(m.x-(spieler.x+spieler.b/2))<10 && Math.abs(m.y-(spieler.y+spieler.h/2))<11){
-      m.weg=true; punkte++; sfx.muenze();
-      staub(m.x,m.y,5,'#FFC93C');
+      m.weg=true;
+      if(m.bonus){ boni++; sfx.bonus(); staub(m.x,m.y,10,'#9775FA'); }
+      else       { punkte++; sfx.muenze(); staub(m.x,m.y,5,'#FFC93C'); }
     }
   });
 
