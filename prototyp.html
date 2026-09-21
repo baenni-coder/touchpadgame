@@ -6,16 +6,17 @@
 <title>Fuchs-Sprung · Prototyp</title>
 <!--
   ============================================================
-   FUCHS-SPRUNG  ·  Prototyp, Stand Phase 2
+   FUCHS-SPRUNG  ·  Prototyp, Stand Phase 3
    Arcade-Jump-&-Run für das Touchpad-Abenteuer
 
    ZWECK DIESER DATEI:
    Noch nicht das fertige Spiel. Die Grafik ist absichtlich einfach
    und entsteht komplett im Code – es wird keine Bilddatei geladen.
 
-   Drin ist: Laufen und Springen mit allen Nachsicht-Mechaniken,
-   Gegner, Stacheln, drei Herzen, Checkpoints, Bonus-Sterne,
-   Pause und Spielende.
+   Drin ist: drei Levels, Laufen und Springen mit allen
+   Nachsicht-Mechaniken, Gegner, Stacheln, drei Herzen,
+   Checkpoints, Bonus-Sterne, Pause und Spielende.
+   Der Fortschritt bleibt auf diesem Gerät gespeichert.
 
    Probiere alle drei Steuerungen aus (Tasten 1 / 2 / 3).
    Der Doppelklick-Sprung ist die eigentliche Touchpad-Übung:
@@ -65,6 +66,11 @@
   .pbtn.on{background:var(--ink);color:#fff}
   .pbtn .key{font-size:11px;opacity:.55;font-weight:700}
   .pbtn.on .key{opacity:.7}
+  .pbtn.zu{opacity:.45;cursor:not-allowed}
+  .pbtn.zu:hover{transform:none}
+  .pbtn .hak{color:var(--mint);font-size:12px}
+  .pbtn.on .hak{color:#8CE0A8}
+  .trenn{width:1px;height:26px;background:rgba(44,33,64,.14);margin:0 4px}
 
   /* Spielfläche */
   #stage{position:relative;line-height:0;border-radius:16px;overflow:hidden;
@@ -83,8 +89,9 @@
 
 <header>
   <div class="logo">🦊 <span>Fuchs-Sprung</span></div>
-  <span class="tag">Prototyp · Phase 2</span>
+  <span class="tag">Prototyp · Phase 3</span>
   <div class="spacer"></div>
+  <div class="profiles" id="levels"></div>
   <div class="profiles" id="profiles"></div>
 </header>
 
@@ -142,10 +149,11 @@ const TILE = 16;                 // Kachelgrösse
 const DT   = 1/60;               // fester Physik-Zeitschritt
 
 /* ============================================================
-   DAS TESTLEVEL
-   Jeder Abschnitt prüft etwas anderes:
-   1) Laufen  2) kleine Stufen  3) Lücken  4) hohe Sprünge
-   5) Einweg-Plattformen  6) Abgrund + Ziel
+   DIE LEVELS
+   Erzeugt und auf Erreichbarkeit geprüft von den Werkzeugen in
+   tools/ – nicht von Hand tippen, sondern dort ändern:
+     node tools/level-bauen.mjs     baut die Karten
+     node tools/level-pruefen.mjs   prüft, ob alles erreichbar ist
 
    Zeichen:  # Boden       = Plattform (von unten durchspringbar)
              ^ Stacheln    o Münze
@@ -153,7 +161,26 @@ const DT   = 1/60;               // fester Physik-Zeitschritt
              L Läufer      V Flieger   C Checkpoint
              P Start       F Ziel      . Luft
    ============================================================ */
-const LEVEL = [
+const LEVELS = [
+  { name:'Erste Schritte', karte:[
+  '....................................................',
+  '....................................................',
+  '....................................................',
+  '....................................................',
+  '....................................................',
+  '....................................................',
+  '....................................................',
+  '.........................B..........................',
+  '....................................................',
+  '....................................................',
+  '....................................................',
+  '..................o.....oo..........o...............',
+  '.............o...###...====...o....====.............',
+  '.P...o..o...###..........................C..o.o..F..',
+  '##############################..####################',
+  '##############################..####################',
+  ]},
+  { name:'Waldweg', karte:[
   '................................................................................................',
   '................................................................................................',
   '................................................................................................',
@@ -170,6 +197,29 @@ const LEVEL = [
   '.P...o...o...##.........o......^..................o....C...........C.......L.o...^^......^.C.F..',
   '##########################..######...#################################...#######################',
   '##########################..######...#################################...#######################',
+  ]},
+  { name:'Hoch hinaus', karte:[
+  '........................................................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '.........................B..............................................................................',
+  '........................................................................................................',
+  '........................................................................................................',
+  '..........................................................................B.............................',
+  '........................oo....o.....oo..V...............................................................',
+  '.......................====..====..====.....................................................V...........',
+  '...................o.........V............o.............................................................',
+  '..................====...................====................oo..........oo.............oo..............',
+  '..........o....o.....................................o......====........====.......o...====.............',
+  '.P..o..o..^...###................^^...........C...........L......L...^^.......^^.C.............L..o.C.F.',
+  '####################################################...###########################...###################',
+  '####################################################...###########################...###################',
+  ]},
 ];
 
 /* ============================================================
@@ -233,6 +283,7 @@ addEventListener('keydown', e=>{
   if(e.key==='r'||e.key==='R'){ levelNeu(); return; }
   if(e.key==='Escape'||e.key==='p'||e.key==='P'){ if(!gewonnen&&!gameOver) pause=!pause; return; }
   if(gameOver && (e.key===' '||e.key==='Enter')){ levelNeu(); return; }
+  if(gewonnen && (e.key===' '||e.key==='Enter')){ naechstesLevel(); return; }
   if(e.key==='m'||e.key==='M'){ tonAn=!tonAn; zeichneHilfe(); return; }
   if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key)) e.preventDefault();
   // Zweimal schnell springen = Doppeltipp. e.repeat aussortieren, sonst
@@ -342,9 +393,10 @@ let karte=[], levelB=0, levelH=0, muenzen=[], startPos={x:0,y:0}, zielPos={x:0,y
 let gegner=[], checkpoints=[], startVorlage=[];
 
 function levelLaden(){
-  levelB = Math.max(...LEVEL.map(z=>z.length));
-  levelH = LEVEL.length;
-  karte = LEVEL.map(z => z.padEnd(levelB,'.').split(''));
+  const L = LEVELS[levelNr].karte;
+  levelB = Math.max(...L.map(z=>z.length));
+  levelH = L.length;
+  karte = L.map(z => z.padEnd(levelB,'.').split(''));
   muenzen=[]; checkpoints=[]; startVorlage=[];
   for(let r=0;r<levelH;r++) for(let c=0;c<levelB;c++){
     const z = karte[r][c];
@@ -385,6 +437,17 @@ const spieler = {
   blick:1, laufPhase:0, squash:1, tot:false, totT:0,
   leben:3, schonzeit:0, respawnX:0, respawnY:0
 };
+
+function levelWechseln(nr){
+  if(nr<0 || nr>=LEVELS.length) return;
+  levelNr = nr;
+  levelNeu();
+  baueLevelKnoepfe();
+}
+function naechstesLevel(){
+  if(levelNr+1 < LEVELS.length) levelWechseln(levelNr+1);
+  else levelWechseln(0);                 // nach dem letzten wieder von vorn
+}
 
 function levelNeu(){
   levelLaden();
@@ -947,6 +1010,40 @@ function zeichneFuchs(kx,ky){
 
 /* --- Anzeige oben im Bild --- */
 let punkte=0, boni=0, zeit=0, gewonnen=false, gewonnenT=0;
+let levelNr = 0;
+
+/* ============================================================
+   FORTSCHRITT
+   Bleibt auf diesem Gerät. Gespeichert werden nur Zahlen –
+   keine Namen, nichts Persönliches, und es wird nichts gesendet.
+   ============================================================ */
+const SPEICHER = 'fuchssprung';
+let fortschritt = { frei:0, best:{} };   // frei = höchstes freigeschaltetes Level
+
+function fortschrittLaden(){
+  try{
+    const roh = localStorage.getItem(SPEICHER);
+    if(roh){
+      const f = JSON.parse(roh);
+      if(typeof f.frei === 'number') fortschritt.frei = Math.min(f.frei, LEVELS.length-1);
+      if(f.best && typeof f.best === 'object') fortschritt.best = f.best;
+    }
+  }catch(e){ /* privates Fenster o.ä. – dann eben ohne Speicherstand */ }
+}
+function fortschrittSichern(){
+  try{ localStorage.setItem(SPEICHER, JSON.stringify(fortschritt)); }catch(e){}
+}
+function fortschrittMerken(){
+  const alt = fortschritt.best[levelNr] || { muenzen:0, boni:0, zeit:null };
+  fortschritt.best[levelNr] = {
+    muenzen: Math.max(alt.muenzen, punkte),
+    boni:    Math.max(alt.boni, boni),
+    zeit:    alt.zeit===null ? zeit : Math.min(alt.zeit, zeit),
+  };
+  if(levelNr+1 < LEVELS.length) fortschritt.frei = Math.max(fortschritt.frei, levelNr+1);
+  fortschrittSichern();
+  baueLevelKnoepfe();
+}
 let gameOver=false, gameOverT=0, pause=false;
 
 function herz(x,y,voll){
@@ -972,8 +1069,7 @@ function hud(){
     ctx.fillText('★ '+boni+'/'+bonusZahl, 92, 8);
     ctx.fillStyle='#fff';
   }
-  const p = PROFILE.find(p=>p.id===profil);
-  ctx.fillText(p.emo+' '+p.name.toUpperCase(), 140, 8);
+  ctx.fillText((levelNr+1)+'. '+LEVELS[levelNr].name.toUpperCase(), 132, 8);
   ctx.fillText('ZEIT '+zeit.toFixed(1)+'s', 244, 8);
 
   if(spieler.tot && !gameOver){
@@ -984,7 +1080,7 @@ function hud(){
     ctx.fillStyle='rgba(44,33,64,.72)'; ctx.fillRect(0,0,SICHT_B,SICHT_H);
     ctx.textAlign='center';
     ctx.fillStyle='#FFC93C'; ctx.font='bold 22px ui-rounded, system-ui, sans-serif';
-    ctx.fillText('GESCHAFFT!', SICHT_B/2, 66);
+    ctx.fillText('GESCHAFFT!', SICHT_B/2, 60);
     ctx.fillStyle='#fff'; ctx.font='bold 10px ui-rounded, system-ui, sans-serif';
     ctx.fillText(punkte+' von '+normale+' Münzen  ·  '+zeit.toFixed(1)+' Sekunden', SICHT_B/2, 90);
     if(bonusZahl){
@@ -992,8 +1088,12 @@ function hud(){
       ctx.fillText('★ '+boni+' von '+bonusZahl+' Bonus-Sternen', SICHT_B/2, 106);
       ctx.fillStyle='#fff';
     }
-    if(Math.floor(gewonnenT*2)%2===0)
-      ctx.fillText('R drücken für nochmal', SICHT_B/2, 128);
+    if(Math.floor(gewonnenT*2)%2===0){
+      const letzte = levelNr+1 >= LEVELS.length;
+      ctx.fillText(letzte ? 'Leertaste: noch einmal von vorn'
+                          : 'Leertaste: weiter zu "'+LEVELS[levelNr+1].name+'"',
+                   SICHT_B/2, 128);
+    }
     ctx.textAlign='left';
   }
 
@@ -1071,6 +1171,7 @@ function schritt(){
   if(!gewonnen && Math.abs(zielPos.x+8-(spieler.x+spieler.b/2))<11
               && Math.abs(zielPos.y+8-(spieler.y+spieler.h/2))<14){
     gewonnen=true; gewonnenT=0; sfx.ziel();
+    fortschrittMerken();
     for(let i=0;i<24;i++) staub(zielPos.x+8, zielPos.y+8, 1, ['#FFC93C','#FF6B6B','#2FC79B','#4DABF7'][i%4]);
   }
 }
@@ -1100,6 +1201,22 @@ function zeichneHilfe(){
   document.getElementById('hint').innerHTML =
     p.hilfe + ' &nbsp;·&nbsp; <kbd>R</kbd> neu starten &nbsp;·&nbsp; <kbd>M</kbd> Ton ' + (tonAn?'aus':'an');
 }
+function baueLevelKnoepfe(){
+  const box=document.getElementById('levels'); box.innerHTML='';
+  LEVELS.forEach((L,i)=>{
+    const offen = i<=fortschritt.frei;
+    const best = fortschritt.best[i];
+    const b=document.createElement('button');
+    b.className='pbtn'+(i===levelNr?' on':'')+(offen?'':' zu');
+    b.title = offen ? L.name : 'Erst das Level davor schaffen';
+    b.innerHTML = `<span>${offen ? (i+1) : '🔒'}</span><span>${L.name}</span>` +
+                  (best ? '<span class="hak">✔</span>' : '');
+    if(offen) b.onclick=()=>levelWechseln(i);
+    box.appendChild(b);
+  });
+  const t=document.createElement('div'); t.className='trenn'; box.appendChild(t);
+}
+
 (function baueKnoepfe(){
   const box=document.getElementById('profiles');
   PROFILE.forEach(p=>{
@@ -1122,7 +1239,9 @@ function skalieren(){
 addEventListener('resize', skalieren);
 
 /* Start */
+fortschrittLaden();
 levelNeu();
+baueLevelKnoepfe();
 setzeProfil('tastatur');
 skalieren();
 requestAnimationFrame(bild);

@@ -121,7 +121,7 @@ pruefe('Bonus-Stern zählt getrennt von den Münzen',
 
 // 7) Sturz in den Abgrund -> kostet ein Herz, Neustart am Checkpoint
 const vorSturz = await page.evaluate(() => {
-  levelNeu();
+  levelWechseln(1);
   // einen Checkpoint aktivieren und den Fuchs dann abstürzen lassen
   const cp = checkpoints[0];
   cp.aktiv = true; spieler.respawnX = cp.x + 3; spieler.respawnY = cp.y + 2;
@@ -256,11 +256,15 @@ pruefe('Zu langsamer zweiter Tipp löst keinen Extrasprung aus',
        zuSpaet < normal + 0.5, zuSpaet + ' Kacheln');
 
 // ============ Phase 2: Gegner, Gefahren, Leben ============
+// Level 1 ist das Tutorial – dort gibt es bewusst weder Gegner noch
+// Stacheln. Diese Tests laufen deshalb auf Level 2.
 await page.click('.pbtn[data-id="tastatur"]');
+await page.evaluate(() => levelWechseln(1));
+await page.waitForTimeout(250);
 
 // 13) Von oben auf einen Gegner springen -> Gegner platt, Fuchs prallt ab
 const platt = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
     g.x = 5 * 16; g.y = (levelH-2) * 16 - g.h; g.vx = 0;   // flacher Boden, stillgestellt
@@ -279,7 +283,7 @@ pruefe('Draufspringen kostet kein Herz', platt.leben === platt.leben0);
 //     Gegner und Fuchs auf eine ruhige, flache Bodenstelle setzen: auf einer
 //     schmalen Stufe wandert der Gegner weg und die beiden verfehlen sich.
 const seitlich = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
     g.x = 5 * 16; g.y = (levelH-2) * 16 - g.h; g.vx = 0;     // flacher Boden, Abschnitt A
@@ -302,7 +306,7 @@ pruefe('Der Treffer stösst den Fuchs weg', seitlich.vx < 0, 'vx = ' + seitlich.
 
 // 15) Die Schonzeit verhindert, dass man sofort noch ein Herz verliert
 const doppelt = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
     g.x = 5 * 16; g.y = (levelH-2) * 16 - g.h; g.vx = 0;
@@ -317,7 +321,7 @@ pruefe('Zwei Berührungen in Folge kosten nur ein Herz',
 
 // 16) Stacheln kosten ein Herz
 const stachel = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     let ziel = null;
     for (let r = 0; r < levelH && !ziel; r++)
@@ -335,7 +339,7 @@ pruefe('Stacheln kosten ein Herz',
 
 // 17) Langzeitlauf: Gegner müssen sich dauerhaft vernünftig verhalten
 const dauer = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     const start = gegner.map(g => ({ art: g.art, y: g.y }));
     const anfangs = gegner.length;
@@ -365,7 +369,7 @@ pruefe('Kein Gegner bleibt in einer Wand stecken', dauer.steckt === 0, dauer.ste
 
 // 18) Alle Herzen weg -> Game Over
 const ende = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     spieler.leben = 1;
     spieler.schonzeit = 0;
@@ -384,7 +388,7 @@ pruefe('Leertaste startet einen neuen Versuch',
 
 // 19) Pause hält das Spiel wirklich an
 const angehalten = await page.evaluate(() => new Promise(res => {
-  levelNeu();
+  levelWechseln(1);
   setTimeout(() => {
     spieler.x = 8 * 16; spieler.y = (levelH-2) * 16 - 14; spieler.vx = 60;
     pause = true;
@@ -396,6 +400,77 @@ pruefe('In der Pause bewegt sich nichts mehr',
        angehalten.bewegt < 0.5 && angehalten.zeitLief < 0.01,
        `${angehalten.bewegt.toFixed(1)} px bewegt`);
 await page.evaluate(() => { pause = false; });
+
+// ============ Phase 3: Levels und Fortschritt ============
+
+// 20) Alle Levels lassen sich laden und haben Start, Ziel und Karte
+const levels = await page.evaluate(() => {
+  const raus = [];
+  for(let i=0;i<LEVELS.length;i++){
+    levelWechseln(i);
+    raus.push({ nr:i, name:LEVELS[i].name, breite:levelB, hoehe:levelH,
+                muenzen:muenzen.length, gegner:gegner.length,
+                checkpoints:checkpoints.length,
+                startX:startPos.x, zielX:zielPos.x });
+  }
+  levelWechseln(0);
+  return raus;
+});
+pruefe('Alle drei Levels laden', levels.length === 3, levels.map(l=>l.name).join(', '));
+levels.forEach(l => pruefe(`Level ${l.nr+1} hat Start, Ziel und Inhalt`,
+  l.zielX > l.startX && l.muenzen > 0 && l.breite > 20,
+  `${l.breite} Kacheln, ${l.muenzen} Sammelobjekte, ${l.gegner} Gegner`));
+pruefe('Level 1 ist ein Tutorial ohne Gegner', levels[0].gegner === 0);
+pruefe('Die späteren Levels haben Gegner', levels[1].gegner > 0 && levels[2].gegner > 0);
+
+// 21) Fortschritt wird gespeichert und übersteht einen Neuladen
+await page.evaluate(() => {
+  localStorage.removeItem('fuchssprung');
+  fortschritt = { frei:0, best:{} };
+  levelWechseln(0);
+});
+const vorher = await page.evaluate(() => ({ frei: fortschritt.frei }));
+pruefe('Zu Beginn ist nur Level 1 frei', vorher.frei === 0);
+
+// Level 1 gewinnen
+await page.evaluate(() => new Promise(res => {
+  spieler.x = zielPos.x + 4; spieler.y = zielPos.y + 2;
+  setTimeout(res, 250);
+}));
+const nachSieg = await page.evaluate(() => ({
+  gewonnen, frei: fortschritt.frei, best: fortschritt.best[0],
+  gespeichert: localStorage.getItem('fuchssprung'),
+}));
+pruefe('Ziel schaltet das nächste Level frei', nachSieg.gewonnen && nachSieg.frei === 1,
+       'frei bis Level ' + (nachSieg.frei+1));
+pruefe('Der Bestwert wird gemerkt', !!nachSieg.best && nachSieg.best.zeit !== null,
+       JSON.stringify(nachSieg.best));
+pruefe('Der Fortschritt landet im Speicher des Geräts', !!nachSieg.gespeichert);
+
+// Leertaste führt zum nächsten Level
+await page.keyboard.press(' ');
+await page.waitForTimeout(300);
+const weiter = await page.evaluate(() => ({ nr: levelNr, gewonnen }));
+pruefe('Leertaste führt ins nächste Level', weiter.nr === 1 && !weiter.gewonnen,
+       'jetzt Level ' + (weiter.nr+1));
+
+// Nach dem Neuladen ist der Fortschritt noch da
+await page.reload();
+await page.waitForTimeout(700);
+const nachReload = await page.evaluate(() => ({ frei: fortschritt.frei, best: fortschritt.best[0] }));
+pruefe('Fortschritt übersteht das Neuladen',
+       nachReload.frei === 1 && !!nachReload.best, 'frei bis Level ' + (nachReload.frei+1));
+
+// 22) Gesperrte Levels sind nicht anklickbar
+const knoepfe = await page.evaluate(() =>
+  [...document.querySelectorAll('#levels .pbtn')].map(b => ({
+    zu: b.classList.contains('zu'), text: b.textContent })));
+pruefe('Für jedes Level gibt es einen Knopf', knoepfe.length === 3);
+pruefe('Level 3 ist noch gesperrt', knoepfe[2].zu === true);
+pruefe('Die freigeschalteten Levels sind offen', !knoepfe[0].zu && !knoepfe[1].zu);
+
+// Aufräumen, damit der nächste Lauf sauber startet
+await page.evaluate(() => { try{ localStorage.removeItem('fuchssprung'); }catch(e){} });
 
 pruefe('Keine JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));
 

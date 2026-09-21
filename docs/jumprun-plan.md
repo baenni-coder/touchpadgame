@@ -1,6 +1,6 @@
 # Vom Touchpad-Abenteuer zum echten Arcade-Jump-&-Run
 
-**Stand:** 21.09.2026 · **Phase 1 und 2 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
+**Stand:** 21.09.2026 · **Phase 1 bis 3 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
 
 ---
 
@@ -204,9 +204,18 @@ die Bonus-Sterne; das Level bleibt ohne ihn durchspielbar.
 96 Kacheln breit, 21 Münzen, 2 Bonus-Sterne, 3 Checkpoints, 4 Gegner.
 43 Browsertests, alle grün.
 
-### Phase 3 · Inhalt (~2–3 Sitzungen)
-Level-Format finalisieren, Tiled-Importer, Sprites einbauen, 8–12 Levels bauen, Schwierigkeitskurve legen, Tutorial-Level.
-**Ergebnis:** Ein Spiel mit Welt und Fortschritt.
+### Phase 3 · Inhalt — ✅ **erledigt**
+Spritesheet statt gezeichneter Formen (38 Sprites, Autotiling an Kanten), drei Levels mit Schwierigkeitskurve, Levelauswahl, Fortschritt in `localStorage`, Tiled-Austausch in beide Richtungen.
+
+**Nicht wie geplant:** Die Kenney-Sprites liessen sich hier nicht
+beschaffen – `kenney.nl` ist durch die Netzwerkrichtlinie der
+Entwicklungsumgebung gesperrt, und auf npm liegt nur ein Hexagon-Paket.
+Das Spritesheet wird deshalb vorerst von `tools/atlas-bauen.mjs` erzeugt.
+Das Sprite-System ist aber so gebaut, dass ein fremdes Sheet nur noch
+eingehängt werden muss; `docs/sprites.md` beschreibt die Schritte samt der
+Werte für *Pixel Platformer*. Rechnen mit etwa zehn Minuten Handarbeit.
+
+**Ergebnis:** Ein Spiel mit Welt und Fortschritt. 65 Browsertests, alle grün.
 
 ### Phase 4 · Arcade-Politur (~1–2 Sitzungen)
 Partikel, Bildschirm-Rüttler, Kombo-Punkte, Chiptune-Musik, Titelbildschirm, Attract Mode, CRT-Optik, Übergänge.

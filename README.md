@@ -20,10 +20,21 @@ Es werden keine Daten übertragen; alles bleibt auf dem Gerät (revDSG-freundlic
 `prototyp.html` doppelklicken. Die Grafik ist bewusst schlicht und entsteht
 komplett im Code – es wird keine einzige Datei nachgeladen.
 
-Drin ist: Laufen und Springen mit Coyote Time, Sprungpuffer und variabler
-Sprunghöhe · Gegner (Läufer und Flieger) · Stacheln · drei Herzen mit
-Schonzeit nach einem Treffer · Checkpoints · Bonus-Sterne · Pause ·
-Spielende mit neuem Versuch.
+Drin ist: **drei Levels** mit steigender Schwierigkeit · Laufen und Springen
+mit Coyote Time, Sprungpuffer und variabler Sprunghöhe · Gegner (Läufer und
+Flieger) · Stacheln · drei Herzen mit Schonzeit nach einem Treffer ·
+Checkpoints · Bonus-Sterne · Pause · Spielende mit neuem Versuch ·
+gespeicherter Fortschritt.
+
+| Level | Was neu dazukommt |
+|---|---|
+| 1 · Erste Schritte | Nur laufen, springen, sammeln. Keine Gegner, keine Stacheln. |
+| 2 · Waldweg | Gegner, Stacheln, Abgründe, Einweg-Plattformen. |
+| 3 · Hoch hinaus | Mehr in die Höhe, Flieger auf dem Weg, Stacheln unter den Sprüngen. |
+
+Ein Level wird erst freigeschaltet, wenn das davor geschafft ist. Der
+Fortschritt liegt in `localStorage` – **auf dem Gerät**, nur Zahlen, keine
+Namen, und er wird nirgendwohin gesendet.
 
 Drei Steuerungen zum Vergleichen, umschaltbar mit <kbd>1</kbd> <kbd>2</kbd>
 <kbd>3</kbd> oder per Knopf:
@@ -47,10 +58,12 @@ den Ton um.
 Brauchen Node.js und laufen alle lokal:
 
 ```
-node tools/test.mjs           # 43 Browsertests
+node tools/test.mjs           # 65 Browsertests
 node tools/messen.mjs         # misst Sprunghöhe und -weite
 node tools/level-pruefen.mjs  # prüft, ob Ziel und Münzen erreichbar sind
-node tools/level-bauen.mjs    # erzeugt die Kachelkarte
+node tools/level-bauen.mjs    # erzeugt die Kachelkarten
+node tools/atlas-bauen.mjs    # erzeugt das Spritesheet
+node tools/tiled.mjs rundlauf # prüft den Tiled-Austausch
 ```
 
 `tools/level-pruefen.mjs` ist der wichtigste davon: er sucht mit einer
@@ -59,7 +72,31 @@ nicht erreichbar ist – bevor ein Kind daran verzweifelt. Er prüft zwei
 Dinge getrennt: das Level muss **ohne** Doppelklick-Sprung durchspielbar
 sein, und die Bonus-Sterne müssen **nur mit** ihm erreichbar sein.
 
+## Levels selbst bauen
+
+Zwei Wege:
+
+**In Tiled** (gratis, läuft lokal, lädt nichts hoch):
+
+```
+node tools/tiled.mjs export              # schreibt tiled/level1..3.json
+# in Tiled öffnen, ändern, als CSV speichern
+node tools/tiled.mjs import tiled/level1.json
+```
+
+**Im Code**: die Abschnitte in `tools/level-bauen.mjs` ändern. Danach
+**immer** `node tools/level-pruefen.mjs` laufen lassen – sonst landet
+schnell eine Plattform im Level, die eine Kachel zu hoch hängt.
+
+## Sprites austauschen
+
+Siehe `docs/sprites.md`. Alle Figuren und Kacheln kommen aus einem
+Spritesheet; fertige Pakete (z.B. die CC0-Sprites von kenney.nl) lassen
+sich einhängen, indem man Feldgrösse, Spaltenzahl und die Zuordnung
+Name → Feldnummer anpasst.
+
 ## Nächster Schritt
 
-Siehe `docs/jumprun-plan.md`. Phase 1 und 2 sind gebaut; als Nächstes
-kommen richtige Sprites, mehrere Levels und der Tiled-Import.
+Siehe `docs/jumprun-plan.md`. Phase 1 bis 3 sind gebaut; als Nächstes
+kommt der Arcade-Anstrich (Phase 4): Titelbildschirm, Chiptune-Musik,
+Punktezähler, Übergänge.
