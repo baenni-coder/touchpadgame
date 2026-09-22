@@ -164,6 +164,39 @@ await page.setViewportSize({ width: 1280, height: 820 });
 await page.evaluate(() => window.scrollTo(0,0));
 await page.waitForTimeout(300);
 
+// 7c) Urheberangabe und Lizenz müssen in der Datei stehen – sie wird
+//     an andere Schulen weitergegeben.
+const nennung = await page.evaluate(() => {
+  const fuss = document.querySelector('#teil-stationen .foot');
+  return {
+    fusszeile: fuss ? fuss.textContent : '',
+    imQuelltext: document.documentElement.outerHTML.includes('PICTS BeLoSe'),
+  };
+});
+pruefe('Die Stationskarte nennt den Urheber',
+       nennung.fusszeile.includes('Andreas Bänninger'), nennung.fusszeile.trim().slice(0,70));
+pruefe('Die Lizenz steht dabei', nennung.fusszeile.includes('CC BY-SA'));
+
+// Auch im Lehrer-Bereich
+await page.keyboard.press('l');
+await page.waitForTimeout(300);
+const imLehrer = await page.evaluate(() => {
+  const k = document.querySelector('.lehrer-hg');
+  const t = k ? k.textContent : '';
+  return { urheber: t.includes('Andreas Bänninger'), lizenz: t.includes('BY-SA'),
+           kenney: t.includes('Kenney') };
+});
+pruefe('Der Lehrer-Bereich nennt Urheber und Lizenz',
+       imLehrer.urheber && imLehrer.lizenz);
+pruefe('Die Herkunft der Grafik ist genannt', imLehrer.kenney);
+await page.evaluate(() => document.querySelector('[data-tu="zu"]').click());
+await page.waitForTimeout(200);
+
+// Keine Kontaktadresse in der Datei – so war es gewünscht
+const keineAdresse = await page.evaluate(() =>
+  !/[\w.]+@[\w.]+\.\w+/.test(document.documentElement.outerHTML));
+pruefe('Keine E-Mail-Adresse in der Spieldatei', keineAdresse);
+
 // 8) Kein Nachladen aus dem Netz
 pruefe('Die Datei lädt nichts nach', netz.length === 0,
        netz.length ? netz.slice(0,3).join(', ') : 'keine externen Anfragen');

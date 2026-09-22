@@ -1,5 +1,10 @@
 # Herkunft und Lizenzen
 
+## Das Werk
+
+**Touchpad-Abenteuer** · erstellt von **Andreas Bänninger, PICTS BeLoSe**
+Lizenz: **CC BY-SA 4.0** (siehe `LICENSE`)
+
 ## Bilder
 
 | Was | Herkunft | Lizenz |

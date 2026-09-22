@@ -13,6 +13,9 @@
    aus src/stationen.html, prototyp.html und src/bruecke.js.
    NICHT von Hand ändern – Änderungen gehören in die Quellen.
 
+   Erstellt von Andreas Bänninger, PICTS BeLoSe
+   Lizenz: CC BY-SA 4.0 – Weitergabe und Bearbeitung erlaubt unter Namensnennung und gleichen Bedingungen
+
    Eine einzige Datei · läuft komplett lokal · kein Internet nötig.
    Es werden keine Daten übertragen; alles bleibt auf dem Gerät.
    Bilder von kenney.nl (CC0), Klänge und Musik entstehen im Code.
@@ -203,6 +206,7 @@ body{
   #teil-stationen .btn.ghost{background:#EFECF6;color:var(--ink)}
 
   #teil-stationen .foot{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;margin-top:16px;opacity:.8}
+  #teil-stationen .foot .urheber{font-size:12px;opacity:.75;display:inline-block;margin-top:3px}
 
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.05s!important}}
 
@@ -305,7 +309,7 @@ body{
       <p>Wähle eine Station und übe das Touchpad – tippen, zeigen, ziehen und mehr!</p>
     </div>
     <div class="grid" id="stationGrid"></div>
-    <div class="foot">Läuft ganz ohne Internet · Alles bleibt auf diesem Laptop</div>
+    <div class="foot">Läuft ganz ohne Internet · Alles bleibt auf diesem Laptop<br><span class="urheber">Andreas Bänninger, PICTS BeLoSe · CC BY-SA 4.0</span></div>
   </main>
 
   <!-- SPIELBILDSCHIRM -->
@@ -442,6 +446,12 @@ window.BRUECKE = (function(){
           Alles bleibt auf diesem Gerät und wird nirgendwohin gesendet.
           Mit „Ganzen Fortschritt löschen“ ist der Speicher wieder leer,
           etwa bevor das Gerät an ein anderes Kind geht.
+        </p>
+        <p class="hinweis" style="border-top:none;padding-top:4px">
+          <strong>Touchpad-Abenteuer</strong> · Andreas Bänninger, PICTS BeLoSe<br>
+          Weitergabe und Bearbeitung erlaubt unter Namensnennung und gleichen Bedingungen (Creative Commons BY-SA 4.0).<br>
+          Grafik: Kenney (kenney.nl), gemeinfrei (CC0). Figur, Münzen,
+          Klänge und Musik eigens erstellt.
         </p>
         <div class="reihe" style="justify-content:flex-end;margin-top:12px">
           <button data-tu="zu" class="stark">Schliessen</button>
@@ -2793,7 +2803,11 @@ function titelbild(){
   }
   ctx.font='bold 9px ui-rounded, system-ui, sans-serif';
   ctx.fillStyle='rgba(255,255,255,.8)';
-  ctx.fillText('Level oben auswählen  ·  M Ton  ·  N Musik  ·  C Bildröhre', SICHT_B/2, 170);
+  ctx.fillText('Level oben auswählen  ·  M Ton  ·  N Musik  ·  C Bildröhre', SICHT_B/2, 168);
+  // Dezente Nennung – das Spiel wird an andere Schulen weitergegeben
+  ctx.font='bold 7px ui-rounded, system-ui, sans-serif';
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.fillText('Andreas Bänninger, PICTS BeLoSe · CC BY-SA 4.0', SICHT_B/2, 180);
   ctx.textAlign='left';
 }
 

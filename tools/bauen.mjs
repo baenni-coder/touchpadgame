@@ -16,7 +16,14 @@
 
    Aufruf:  node tools/bauen.mjs
    ============================================================ */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+
+/* Urheber und Lizenz stehen ausserdem – bewusst sichtbar – in
+   src/stationen.html (Fusszeile), src/bruecke.js (Lehrer-Bereich),
+   prototyp.html (Titelbild) und src/anleitung.html. Wer sie ändert,
+   ändert sie an diesen Stellen. */
+const URHEBER = 'Andreas Bänninger, PICTS BeLoSe';
+const LIZENZ  = 'CC BY-SA 4.0 – Weitergabe und Bearbeitung erlaubt unter Namensnennung und gleichen Bedingungen';
 
 /* ---------- Teile aus einer HTML-Datei holen ---------- */
 function zerlegen(datei){
@@ -113,6 +120,9 @@ const html = `<!DOCTYPE html>
    aus src/stationen.html, prototyp.html und src/bruecke.js.
    NICHT von Hand ändern – Änderungen gehören in die Quellen.
 
+   Erstellt von ${URHEBER}
+   Lizenz: ${LIZENZ}
+
    Eine einzige Datei · läuft komplett lokal · kein Internet nötig.
    Es werden keine Daten übertragen; alles bleibt auf dem Gerät.
    Bilder von kenney.nl (CC0), Klänge und Musik entstehen im Code.
@@ -207,3 +217,7 @@ mkdirSync('dist', { recursive:true });
 writeFileSync('dist/touchpad-abenteuer.html', html);
 const kb = (html.length/1024).toFixed(0);
 console.log(`dist/touchpad-abenteuer.html gebaut – ${kb} KB, eine Datei, keine Nebendateien.`);
+
+// Die Anleitung liegt daneben, damit man beides zusammen weitergeben kann.
+copyFileSync('src/anleitung.html', 'dist/anleitung.html');
+console.log('dist/anleitung.html mitkopiert – die Anleitung für Lehrpersonen.');

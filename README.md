@@ -11,11 +11,13 @@ Es werden keine Daten übertragen; alles bleibt auf dem Gerät (revDSG-freundlic
 | Pfad | Beschreibung |
 |---|---|
 | **`dist/touchpad-abenteuer.html`** | **Das fertige Spiel – diese Datei verteilst du.** Übungen und Jump-&-Run in einem. |
+| **`dist/anleitung.html`** | **Die Anleitung für Lehrpersonen** – druckbar, zum Mitgeben. |
 | `src/stationen.html` | Quelle: die acht Touchpad-Übungen |
 | `prototyp.html` | Quelle: das Jump-&-Run (läuft auch allein) |
 | `src/bruecke.js` | Quelle: verbindet beide Teile, Speicherstand, Lehrer-Bereich |
 | `original/touchpad-abenteuer.html` | Die ursprüngliche Übungs-App, unverändert als Referenz |
-| `docs/unterricht.md` | **Anleitung für die Lehrperson** |
+| `src/anleitung.html` | Quelle der Lehrpersonen-Anleitung |
+| `docs/unterricht.md` | Kurzfassung fürs Repository |
 | `docs/jumprun-plan.md` | Plan und Übersicht für den Ausbau |
 | `docs/sprites.md` | Wie sich Grafik austauschen lässt |
 | `tools/` | Werkzeuge: bauen, Level prüfen, Physik messen, Tests |
@@ -23,7 +25,7 @@ Es werden keine Daten übertragen; alles bleibt auf dem Gerät (revDSG-freundlic
 ## Bauen
 
 ```
-node tools/bauen.mjs        # erzeugt dist/touchpad-abenteuer.html
+node tools/bauen.mjs        # erzeugt dist/touchpad-abenteuer.html + dist/anleitung.html
 node tools/test-dist.mjs    # prüft die fertige Datei
 ```
 
@@ -113,7 +115,7 @@ deshalb beim ersten Tastendruck oder Klick.
 Brauchen Node.js und laufen alle lokal:
 
 ```
-node tools/test.mjs           # 100 Browsertests
+node tools/test.mjs           # 102 Browsertests
 node tools/messen.mjs         # misst Sprunghöhe und -weite
 node tools/level-pruefen.mjs  # prüft, ob Ziel und Münzen erreichbar sind
 node tools/level-bauen.mjs    # erzeugt die Kachelkarten
@@ -155,8 +157,9 @@ Sprites beschreibt `docs/sprites.md`.
 
 ## Für den Unterricht
 
-Alles Wichtige steht in **`docs/unterricht.md`**: verteilen, Lehrer-Bereich,
-Steuerung differenzieren, Datenschutz.
+Die vollständige Anleitung ist **`dist/anleitung.html`** – druckbar und
+eigenständig, zum Weitergeben an andere Schulen. `docs/unterricht.md` ist
+die Kurzfassung fürs Repository.
 
 Kurz: Die acht Übungen geben Sterne, ab **12 Sternen** öffnet sich das
 Jump-&-Run. Die Schwelle lässt sich im Lehrer-Bereich ändern (Taste **L**
@@ -166,3 +169,11 @@ oder langer Druck auf den Sternezähler).
 
 Siehe `docs/jumprun-plan.md`. Phase 1 bis 5 sind gebaut. Offen bleibt
 Phase 6: Spieltest mit der Klasse und Feinschliff an der Schwierigkeit.
+
+## Urheber und Lizenz
+
+Erstellt von **Andreas Bänninger, PICTS BeLoSe**.
+
+Lizenz: **CC BY-SA 4.0** – kopieren, verändern und weitergeben ist erlaubt,
+unter Namensnennung und unter derselben Lizenz. Vollständiger Text in
+`LICENSE`, Herkunft der Inhalte in `CREDITS.md`.

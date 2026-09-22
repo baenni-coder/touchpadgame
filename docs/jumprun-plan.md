@@ -290,6 +290,19 @@ sah beim Durchklicken richtig aus, war es aber nicht.
 ### Phase 6 · Test & Feinschliff (laufend)
 Browser-Tests, Spieltest mit der Klasse, Balance nachziehen, Lehrer-Anleitung.
 
+**Anleitung: ✅ erledigt** – `dist/anleitung.html`, eigenständig und
+druckbar, zum Weitergeben an andere Schulen. Enthält die acht Stationen
+mit Hinweisen, worauf bei jeder zu achten ist, einen Vorschlag für den
+Lektionsablauf, den Lehrer-Bereich, Datenschutz und Problemlösungen.
+
+**Urheberangabe: ✅ erledigt** – Andreas Bänninger, PICTS BeLoSe, unter
+CC BY-SA 4.0. Dezent an vier Stellen: Fusszeile der Stationskarte,
+Lehrer-Bereich, Titelbild des Jump-&-Run und Anleitung. Bewusst **ohne**
+Kontaktadresse – die Datei wird weitergereicht und lässt sich nicht
+zurückholen; ein Test prüft, dass keine E-Mail-Adresse darin steht.
+
+**Offen:** der Spieltest mit der Klasse selbst.
+
 ---
 
 ## 7. Mein Vorschlag für den Einstieg

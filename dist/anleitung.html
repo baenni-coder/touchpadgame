@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Touchpad-Abenteuer · Anleitung für Lehrpersonen</title>
+<style>
+  :root{
+    --ink:#2C2340; --soft:#6B6280; --linie:#E7E3F0;
+    --sun:#FFC93C; --mint:#2FC79B; --coral:#FF6B6B; --grape:#9775FA;
+    --font:"SF Pro Rounded",ui-rounded,"Segoe UI Rounded","Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);line-height:1.65;background:#FAF8FD}
+  .blatt{max-width:820px;margin:0 auto;padding:44px 30px 80px;background:#fff;
+    box-shadow:0 0 60px rgba(44,33,64,.07);min-height:100vh}
+  h1{font-size:34px;line-height:1.2;margin-bottom:6px}
+  .unter{color:var(--soft);font-weight:600;font-size:17px;margin-bottom:26px}
+  h2{font-size:23px;margin:38px 0 10px;padding-top:18px;border-top:2px solid var(--linie)}
+  h2:first-of-type{border-top:none;padding-top:0}
+  h3{font-size:17px;margin:22px 0 6px}
+  p,li{font-size:15.5px;margin-bottom:9px}
+  ul,ol{padding-left:22px}
+  li{margin-bottom:5px}
+  table{border-collapse:collapse;width:100%;margin:12px 0 18px;font-size:14.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--linie);vertical-align:top}
+  th{background:#F7F5FC;font-weight:800}
+  code,kbd{background:#F1EEF9;border-radius:5px;padding:2px 7px;font-family:inherit;
+    font-weight:700;font-size:13.5px}
+  .kasten{border-radius:14px;padding:16px 20px;margin:18px 0;font-size:14.5px}
+  .tipp{background:#EAF9F3;border-left:5px solid var(--mint)}
+  .achtung{background:#FFF4E6;border-left:5px solid var(--sun)}
+  .daten{background:#F3EFFE;border-left:5px solid var(--grape)}
+  .kasten p:last-child{margin-bottom:0}
+  .gross{font-size:19px;font-weight:800;margin-bottom:10px}
+  .fuss{margin-top:44px;padding-top:18px;border-top:2px solid var(--linie);
+    color:var(--soft);font-size:13.5px}
+  .fuss strong{color:var(--ink)}
+  .schritt{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+  .nr{flex:0 0 30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;
+    display:grid;place-items:center;font-weight:800;font-size:15px}
+  @media print{
+    body{background:#fff}
+    .blatt{box-shadow:none;max-width:none;padding:0 12mm}
+    h2{page-break-after:avoid}
+    .kasten,table{page-break-inside:avoid}
+    a{text-decoration:none;color:inherit}
+  }
+</style>
+</head>
+<body>
+<div class="blatt">
+
+<h1>🦊 Touchpad-Abenteuer</h1>
+<p class="unter">Anleitung für Lehrpersonen · Acht Übungen am Touchpad und ein Jump-&amp;-Run</p>
+
+<div class="kasten tipp">
+<p class="gross">In zwei Minuten startklar</p>
+<p>Die Datei <code>touchpad-abenteuer.html</code> auf den Laptop kopieren und
+doppelklicken. Das war alles – keine Installation, kein Internet, keine
+Anmeldung. Sie läuft in jedem heutigen Browser.</p>
+</div>
+
+<h2>Worum es geht</h2>
+<p>Viele Kinder bedienen das Touchpad zu Beginn unsicher: Der Zeiger rutscht
+weg, der Doppelklick kommt nicht an, beim Ziehen lassen sie zu früh los.
+Diese App übt genau diese Handgriffe – einzeln, in kleinen Spielen, mit
+sofortiger Rückmeldung.</p>
+<p>Gedacht ist sie für die <strong>3. Klasse</strong>, sie funktioniert aber
+von der 2. bis zur 4. Klasse gut. Eine Lektion reicht für einen ersten
+Durchgang; als wiederkehrende Viertelstunde über mehrere Wochen bringt sie
+mehr.</p>
+
+<h2>Die acht Übungen</h2>
+<table>
+  <tr><th>Station</th><th>Was geübt wird</th><th>Worauf achten</th></tr>
+  <tr><td>⭐ Sterne sammeln</td><td>Den Zeiger führen, <em>ohne</em> zu klicken</td>
+      <td>Manche klicken aus Gewohnheit. Kurz zeigen: nur drüberfahren genügt.</td></tr>
+  <tr><td>🎈 Ballons tippen</td><td>Tippen und klicken</td>
+      <td>Tippen auf dem Feld und die Taste unten sind beides richtig.</td></tr>
+  <tr><td>🐹 Maulwurf-Klopfen</td><td>Zielen und schnell klicken</td>
+      <td>Ab Level 3 kommen Bomben dazu – nicht draufklicken.</td></tr>
+  <tr><td>🧺 Aufräumen</td><td>Ziehen und ablegen</td>
+      <td>Die häufigste Hürde: zu früh loslassen. „Halten, fahren, dann erst loslassen.“</td></tr>
+  <tr><td>🚪 Türchen öffnen</td><td>Doppelklick</td>
+      <td>Zweimal <em>schnell</em>, ohne die Hand zu bewegen.</td></tr>
+  <tr><td>🚩 Weg finden</td><td>Ruhig und genau steuern</td>
+      <td>Zuerst die Maus 🐭 berühren, dann langsam dem Weg folgen.</td></tr>
+  <tr><td>🛗 Hoch und runter</td><td>Mit zwei Fingern scrollen</td>
+      <td>Zwei Finger nebeneinander aufs Feld legen und gemeinsam schieben.</td></tr>
+  <tr><td>🖱️ Geschenke auspacken</td><td>Rechtsklick / Zwei-Finger-Tipp</td>
+      <td>Mit zwei Fingern <em>gleichzeitig</em> tippen, nicht nacheinander.</td></tr>
+</table>
+<p>Jede Station hat drei Level und gibt bis zu drei Sterne. Die Sterne
+sammeln sich oben rechts.</p>
+
+<h2>Das Jump-&amp;-Run: Fuchs-Sprung</h2>
+<p>Ab <strong>12 Sternen</strong> öffnet sich die neunte Kachel. Vorher zeigt
+sie, wie viele Sterne noch fehlen – das motiviert zum Üben. Die Schwelle
+lässt sich verändern (siehe Lehrer-Bereich).</p>
+
+<table>
+  <tr><th>Level</th><th>Was neu dazukommt</th></tr>
+  <tr><td>1 · Erste Schritte</td><td>Nur laufen, springen, sammeln. Keine Gegner, keine Stacheln.</td></tr>
+  <tr><td>2 · Waldweg</td><td>Gegner, Stacheln, Abgründe.</td></tr>
+  <tr><td>3 · Hoch hinaus</td><td>Mehr in die Höhe, fliegende Gegner.</td></tr>
+  <tr><td>4 · Der Lift</td><td>Plattformen, die man mit zwei Fingern hoch- und runterfährt.</td></tr>
+</table>
+
+<h3>Drei Steuerungen – zum Differenzieren</h3>
+<p>Oben im Spiel lässt sich die Steuerung umschalten. Alle vier Level
+funktionieren mit allen dreien, jedes Kind spielt also dasselbe Spiel:</p>
+<table>
+  <tr><th>Steuerung</th><th>Bedienung</th><th>Für wen</th></tr>
+  <tr><td><strong>Touchpad</strong><br>(Standard)</td>
+      <td>Zeiger neben den Fuchs → er läuft dorthin<br>
+          Klicken und halten → springen<br>
+          <strong>Doppelklick</strong> → Extrasprung<br>
+          <strong>Zwei Finger</strong> → Lift bewegen</td>
+      <td>Wer das Touchpad noch übt</td></tr>
+  <tr><td><strong>Tastatur</strong></td>
+      <td>Pfeiltasten, <kbd>Leertaste</kbd> springen<br>
+          <kbd>Bild↑</kbd> <kbd>Bild↓</kbd> für den Lift</td>
+      <td>Wer es schon kann</td></tr>
+  <tr><td><strong>Gamepad</strong></td>
+      <td>Stick und A-Taste, rechter Stick für den Lift</td>
+      <td>Falls vorhanden</td></tr>
+</table>
+
+<div class="kasten tipp">
+<p><strong>Der Doppelklick-Sprung</strong> springt höher als der normale und ist
+der einzige Weg zu den blauen Diamanten. Die Level lassen sich aber auch
+ohne ihn durchspielen – niemand bleibt stecken, wer ihn noch nicht
+beherrscht.</p>
+</div>
+
+<h3>Weitere Tasten</h3>
+<p><kbd>Esc</kbd> Pause (zweimal: zurück zum Titelbild) · <kbd>R</kbd> Level neu
+starten · <kbd>M</kbd> Ton · <kbd>N</kbd> Musik · <kbd>C</kbd> Bildröhren-Optik.
+Dieselben drei Schalter gibt es auch als Knöpfe.</p>
+
+<h2>Der Lehrer-Bereich</h2>
+<p>Zu öffnen mit der Taste <kbd>L</kbd> oder einem <strong>langen Druck auf den
+Sternezähler</strong> oben rechts. Beides trifft ein Kind nicht zufällig.</p>
+<ul>
+  <li><strong>Ab wie vielen Sternen</strong> sich der Fuchs-Sprung öffnet</li>
+  <li><strong>Alle Level öffnen</strong> – etwa für eine Vorführung an der Wand</li>
+  <li><strong>Sterne vergeben oder zurücksetzen</strong></li>
+  <li><strong>Ganzen Fortschritt löschen</strong> – bevor das Gerät an ein anderes Kind geht</li>
+</ul>
+
+<h2>Vorschlag für eine Lektion</h2>
+<div class="schritt"><div class="nr">1</div><div>
+  <strong>Gemeinsam beginnen (5 Min.)</strong> – Die erste Station an der Wand
+  zeigen. Erklären, dass man mit dem Zeiger nur darüberfahren muss.
+</div></div>
+<div class="schritt"><div class="nr">2</div><div>
+  <strong>Frei üben (20 Min.)</strong> – Die Kinder wählen selbst. Wer irgendwo
+  hängt, wechselt einfach die Station und kommt später zurück.
+</div></div>
+<div class="schritt"><div class="nr">3</div><div>
+  <strong>Fuchs-Sprung (15 Min.)</strong> – Wer 12 Sterne hat, darf ins
+  Jump-&amp;-Run. Die anderen üben weiter – das ist der Anreiz.
+</div></div>
+<div class="schritt"><div class="nr">4</div><div>
+  <strong>Abschluss (5 Min.)</strong> – Kurz sammeln: Was war schwierig? Der
+  Doppelklick und das Ziehen sind erfahrungsgemäss die grössten Hürden.
+</div></div>
+
+<div class="kasten achtung">
+<p><strong>Wenn ein Kind nicht weiterkommt:</strong> Fast immer liegt es an der
+Handhaltung. Der Zeigefinger führt, der Daumen bleibt auf der Taste – oder
+ganz weg vom Feld. Viele Kinder bewegen die ganze Hand mit und verlieren
+dadurch die Genauigkeit.</p>
+</div>
+
+<h2>Datenschutz</h2>
+<div class="kasten daten">
+<p><strong>Die Datei sendet nichts und lädt nichts nach.</strong> Alle Bilder und
+Klänge stecken in ihr drin oder entstehen im Code. Sie funktioniert
+vollständig ohne Internet – man kann den Laptop während des Spielens vom
+Netz nehmen.</p>
+<p>Gespeichert werden ausschliesslich <strong>Zahlen</strong>: Sterne, erledigte
+Level, Punktestände. <strong>Keine Namen</strong>, nichts Persönliches. Alles
+liegt im Speicher des Browsers auf genau diesem Gerät.</p>
+<p>Auf geteilten Geräten empfiehlt es sich, am Ende der Lektion im
+Lehrer-Bereich „Ganzen Fortschritt löschen“ zu wählen – oder ihn bewusst
+stehen zu lassen, wenn dasselbe Kind weitermacht.</p>
+</div>
+
+<h2>Wenn etwas klemmt</h2>
+<table>
+  <tr><th>Beobachtung</th><th>Ursache und Abhilfe</th></tr>
+  <tr><td>Kein Ton</td>
+      <td>Browser lassen Ton erst nach der ersten Eingabe zu. Einmal klicken
+          oder eine Taste drücken – dann kommt auch die Musik.</td></tr>
+  <tr><td>Fortschritt ist weg</td>
+      <td>Privates Fenster oder gelöschte Browserdaten. Der Speicher hängt am
+          Browser, nicht an der Datei.</td></tr>
+  <tr><td>Es ruckelt</td>
+      <td>Vollbild (Knopf oben rechts) läuft ruhiger. Die Bildröhren-Optik
+          lässt sich mit <kbd>C</kbd> abschalten.</td></tr>
+  <tr><td>Untere Kacheln nicht sichtbar</td>
+      <td>Die Seite lässt sich scrollen – mit zwei Fingern nach unten. Bei
+          kleinen Bildschirmen hilft auch der Vollbild-Knopf.</td></tr>
+  <tr><td>Der Fuchs reagiert nicht</td>
+      <td>Einmal ins Spielfeld klicken. Beim Touchpad muss der Zeiger über
+          dem Spielfeld sein.</td></tr>
+</table>
+
+<h2>Weitergeben</h2>
+<p>Die Datei darf frei kopiert und an andere Schulen weitergegeben werden.
+Sie ist in sich abgeschlossen – es genügt, genau diese eine Datei zu
+verschicken.</p>
+
+<div class="fuss">
+<p><strong>Touchpad-Abenteuer</strong> · Erstellt von <strong>Andreas Bänninger, PICTS BeLoSe</strong></p>
+<p>Weitergabe und Bearbeitung erlaubt unter Namensnennung und gleichen Bedingungen (Creative Commons BY-SA 4.0). Kurz: <strong>CC BY-SA 4.0</strong></p>
+<p style="margin-top:10px">Die Grafik stammt aus dem Paket „Pixel Platformer“
+von <strong>Kenney</strong> (kenney.nl) und ist gemeinfrei (CC0). Die Spielfigur,
+die Münzen sowie sämtliche Klänge und die Musik sind eigens für dieses
+Projekt entstanden.</p>
+</div>
+
+</div>
+</body>
+</html>

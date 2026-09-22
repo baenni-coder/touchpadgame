@@ -1,94 +1,45 @@
 # Für die Lehrperson
 
+> **Die vollständige Anleitung ist `dist/anleitung.html`** – eine
+> eigenständige, druckbare Seite, die du zusammen mit dem Spiel an andere
+> Schulen weitergeben kannst. Dort stehen die acht Stationen im Detail,
+> ein Vorschlag für den Lektionsablauf, der Lehrer-Bereich und die
+> Problemlösungen.
+>
+> Diese Datei hier fasst nur das Nötigste für das Repository zusammen.
+
 ## Verteilen
 
-Eine einzige Datei: `dist/touchpad-abenteuer.html`.
+Zwei Dateien, beide eigenständig:
 
-Auf den USB-Stick oder ins Netzlaufwerk legen, auf dem Schul-Notebook
-doppelklicken – fertig. Kein Internet, keine Installation, keine
-Nebendateien.
-
-## Was die Kinder sehen
-
-Neun Kacheln: die acht Touchpad-Übungen und – sobald genug Sterne
-gesammelt sind – das Jump-&-Run **Fuchs-Sprung**.
-
-| Station | Was geübt wird |
+| Datei | wofür |
 |---|---|
-| Sterne sammeln | den Zeiger führen, ohne zu klicken |
-| Ballons tippen | tippen und klicken |
-| Maulwurf-Klopfen | zielen und schnell klicken |
-| Aufräumen | ziehen und ablegen |
-| Türchen öffnen | Doppelklick |
-| Weg finden | ruhig und genau steuern |
-| Hoch und runter | mit zwei Fingern scrollen |
-| Geschenke auspacken | Rechtsklick / Zwei-Finger-Tipp |
-| **Fuchs-Sprung** | alles zusammen, in einer Spielwelt |
+| `dist/touchpad-abenteuer.html` | das Spiel – doppelklicken, fertig |
+| `dist/anleitung.html` | die Anleitung – zum Lesen und Ausdrucken |
 
-Im Fuchs-Sprung selbst gibt es vier Level. Das vierte, **Der Lift**, greift
-die Station „Hoch und runter" wieder auf: Plattformen fahren mit zwei
-Fingern auf dem Touchpad hoch und runter, und der Fuchs fährt mit.
+Beide entstehen mit `node tools/bauen.mjs`.
 
-Jede Station hat drei Level und gibt bis zu drei Sterne. Das Jump-&-Run
-öffnet sich standardmässig **ab 12 Sternen** – das entspricht etwa vier
-geschafften Übungsleveln.
+## Das Wichtigste in Kürze
 
-## Der Lehrer-Bereich
-
-Erreichbar über die **Taste L** oder einen langen Druck auf den
-Sternezähler oben rechts. Beides ist nichts, was ein Kind zufällig trifft.
-
-Dort lässt sich einstellen:
-
-- **ab wie vielen Sternen** sich der Fuchs-Sprung öffnet (in Dreierschritten)
-- **alle Jump-&-Run-Level öffnen** – etwa für eine Vorführung
-- **Sterne vergeben oder zurücksetzen**
-- **den ganzen Fortschritt löschen** – bevor das Gerät an ein anderes Kind geht
-
-## Steuerung im Fuchs-Sprung
-
-Oben lässt sich zwischen drei Steuerungen umschalten:
-
-| | Bedienung | wofür |
-|---|---|---|
-| **Touchpad** *(Standard)* | Zeiger neben den Fuchs, klicken zum Springen, **Doppelklick = Extrasprung**, **zwei Finger = Lift** | wer das Touchpad noch übt |
-| **Tastatur** | Pfeiltasten und Leertaste, Bild↑/Bild↓ für den Lift | wer es schon kann |
-| **Gamepad** | Stick und A-Taste, rechter Stick für den Lift | falls vorhanden |
-
-So lässt sich in derselben Klasse differenzieren: Alle spielen dieselben
-Level, jedes Kind mit der Steuerung, die gerade dran ist.
-
-Weitere Tasten: **Esc** pausiert (zweimal: zurück zum Titelbild),
-**R** startet das Level neu, **M** schaltet den Ton, **N** die Musik,
-**C** die Bildröhren-Optik.
-
-## Schwierigkeit
-
-Das Spiel ist bewusst nachsichtig gebaut: Man darf noch kurz nach der
-Plattformkante springen, ein zu früh gedrückter Sprung wird gemerkt, ein
-knapp verfehlter Sprung an der Kante wird korrigiert. Wer alle drei
-Herzen verliert, beginnt am letzten Checkpoint – nie am Levelanfang.
-
-Level 1 ist ein reines Tutorial ohne Gegner, Stacheln und Abgründe.
+- **Acht Übungen** zum Touchpad, je drei Level, bis zu drei Sterne.
+- **Ab 12 Sternen** öffnet sich das Jump-&-Run *Fuchs-Sprung* mit vier Leveln.
+- **Lehrer-Bereich**: Taste <kbd>L</kbd> oder langer Druck auf den Sternezähler.
+  Dort: Schwelle ändern, alle Level öffnen, Sterne vergeben, Fortschritt löschen.
+- **Drei Steuerungen** (Touchpad, Tastatur, Gamepad) – zum Differenzieren in
+  derselben Klasse. Touchpad ist die Standardeinstellung.
 
 ## Datenschutz
 
-- Die Datei **lädt zur Laufzeit nichts nach** und **sendet nichts**.
-  Ein Test prüft das bei jedem Bauen mit.
-- Gespeichert werden ausschliesslich **Zahlen**: Sterne, erledigte Level,
-  Punktestände. **Keine Namen**, nichts Persönliches.
-- Alles liegt im lokalen Speicher des Browsers auf **diesem einen Gerät**.
-- Mit „Ganzen Fortschritt löschen“ im Lehrer-Bereich ist der Speicher
-  wieder leer.
+Die Datei lädt zur Laufzeit **nichts nach** und **sendet nichts** – ein Test
+prüft das bei jedem Bauen mit. Gespeichert werden nur Zahlen (Sterne,
+erledigte Level, Punktestände), **keine Namen**. Alles liegt im Browser
+dieses einen Geräts und lässt sich im Lehrer-Bereich löschen.
 
-Bei geteilten Geräten empfiehlt es sich, den Fortschritt am Ende der
-Lektion zu löschen – oder ihn bewusst stehen zu lassen, wenn dasselbe Kind
-in der nächsten Stunde weitermacht.
+## Urheber und Lizenz
 
-## Wenn etwas klemmt
+Erstellt von **Andreas Bänninger, PICTS BeLoSe**.
+Lizenz: **CC BY-SA 4.0** – Weitergabe und Bearbeitung erlaubt unter
+Namensnennung und gleichen Bedingungen. Siehe `LICENSE`.
 
-| Problem | Ursache |
-|---|---|
-| Kein Ton | Browser lassen Ton erst nach der ersten Eingabe zu – einmal klicken oder eine Taste drücken |
-| Fortschritt weg | privates Fenster oder gelöschte Browserdaten; der Speicher hängt am Browser, nicht an der Datei |
-| Spiel ruckelt | im Vollbild (Knopf oben rechts) läuft es ruhiger; die Bildröhren-Optik lässt sich mit **C** abschalten |
+Die Grafik stammt aus dem Paket *Pixel Platformer* von Kenney (kenney.nl,
+CC0). Spielfigur, Münzen, Klänge und Musik sind eigens entstanden.

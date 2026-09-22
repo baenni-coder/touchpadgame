@@ -87,6 +87,12 @@ window.BRUECKE = (function(){
           Mit „Ganzen Fortschritt löschen“ ist der Speicher wieder leer,
           etwa bevor das Gerät an ein anderes Kind geht.
         </p>
+        <p class="hinweis" style="border-top:none;padding-top:4px">
+          <strong>Touchpad-Abenteuer</strong> · Andreas Bänninger, PICTS BeLoSe<br>
+          Weitergabe und Bearbeitung erlaubt unter Namensnennung und gleichen Bedingungen (Creative Commons BY-SA 4.0).<br>
+          Grafik: Kenney (kenney.nl), gemeinfrei (CC0). Figur, Münzen,
+          Klänge und Musik eigens erstellt.
+        </p>
         <div class="reihe" style="justify-content:flex-end;margin-top:12px">
           <button data-tu="zu" class="stark">Schliessen</button>
         </div>
