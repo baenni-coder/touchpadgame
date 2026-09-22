@@ -9,6 +9,7 @@
      ^  Stacheln       o  Münze
      B  Bonus-Münze (nur mit dem Doppelklick-Sprung erreichbar)
      L  Läufer (Gegner am Boden)      V  Flieger (Gegner in der Luft)
+     A  Liftplattform (fährt per Scrollen hoch und runter)
      C  Checkpoint     P  Start       F  Ziel        .  Luft
 
    Grenzen aus der Messung (tools/messen.mjs):
@@ -19,7 +20,12 @@
    Aufruf:  node tools/level-bauen.mjs [nummer]
    ============================================================ */
 
-const LUFT_OBEN = 2;   // Leerzeilen über dem Level, damit Sprungziele ins Bild passen
+const LUFT_OBEN = 2;    // Leerzeilen über dem Level, damit Sprungziele ins Bild passen
+const AUSLAUF  = 10;    // Kacheln hinter dem Ziel.
+// Ohne diesen Auslauf klemmt die Kamera schon lange vor dem Ziel am
+// Levelrand. Der Fuchs wandert dann ins rechte Bilddrittel, und beim
+// Touchpad muss der Zeiger in einen immer schmaleren Streifen am Rand –
+// das fühlt sich an, als bliebe er hängen.
 
 function gitter(breite, hoehe, boden){
   const k = Array.from({length:hoehe}, ()=> Array(breite).fill('.'));
@@ -40,7 +46,7 @@ function gitter(breite, hoehe, boden){
    Bonus-Diamant zum Üben des Doppelklicks.
    ============================================================ */
 function levelEins(){
-  const B=52, H=14, BODEN=12;
+  const B=52+AUSLAUF, H=14, BODEN=12;
   const {box,set,fertig} = gitter(B,H,BODEN);
 
   set(11,1,'P');
@@ -71,7 +77,7 @@ function levelEins(){
    Jetzt kommen Gegner, Stacheln und echte Abgründe dazu.
    ============================================================ */
 function levelZwei(){
-  const B=96, H=14, BODEN=12;
+  const B=96+AUSLAUF, H=14, BODEN=12;
   const {box,set,fertig} = gitter(B,H,BODEN);
 
   // A: Laufen (0-11)
@@ -133,7 +139,7 @@ function levelZwei(){
    dass man den Doppelklick-Sprung sicher beherrschen muss.
    ============================================================ */
 function levelDrei(){
-  const B=104, H=18, BODEN=16;
+  const B=104+AUSLAUF, H=18, BODEN=16;
   const {box,set,fertig} = gitter(B,H,BODEN);
 
   // A: Auftakt (0-13)
@@ -190,10 +196,74 @@ function levelDrei(){
   return fertig();
 }
 
+/* ============================================================
+   LEVEL 4 · Der Lift
+   Dreht sich ganz um die Liftplattformen: mit zwei Fingern auf
+   dem Touchpad fahren sie hoch und runter. Ein Lift hält da, wo
+   sein Schacht endet – also formen die Wände seinen Fahrweg.
+   ============================================================ */
+function levelVier(){
+  const B=88+AUSLAUF, H=18, BODEN=16;
+  const {box,set,fertig} = gitter(B,H,BODEN);
+
+  // ---- A: Ankommen (0-13) ----
+  set(15,1,'P');
+  set(15,5,'o'); set(15,9,'o');
+
+  // ---- B: der erste Lift, ganz ohne Gefahr (14-26) ----
+  // Schacht: Wände links und rechts, oben offen bis Zeile 9
+  box(9,13,15,13,'#');                       // linke Wand
+  box(9,17,15,17,'#');                       // rechte Wand
+  set(15,14,'A');                            // Lift am Schachtboden
+  box(9,18,9,22,'=');                        // oben hinaus auf eine Plattform
+  set(8,19,'o'); set(8,20,'o'); set(8,21,'o');
+
+  // ---- C: hinunter und weiter (27-40) ----
+  box(11,26,11,29,'=');
+  set(10,27,'o');
+  box(BODEN,31,H-1,33,'.');                  // Abgrund
+  set(14,32,'o');
+
+  // ---- D: Lift über dem Abgrund (36-52) ----
+  // Wichtig: Der Lift ist 3 Kacheln breit und braucht die Führungswände
+  // direkt daneben – also bei Lift-Spalte-1 und Lift-Spalte+3.
+  box(8,36,15,36,'#');                       // linke Führung
+  box(8,40,15,40,'#');                       // rechte Führung
+  box(BODEN,37,H-1,39,'.');                  // Abgrund im Schacht
+  set(14,37,'A');                            // Lift darüber
+  set(13,38,'o');
+  box(8,41,8,45,'=');                        // Ausstieg oben rechts
+  set(7,42,'o'); set(7,43,'o');
+  set(3,43,'B');                             // Bonus über dem Ausstieg
+  set(15,47,'C');
+
+  // ---- E: zwei Lifte hintereinander (53-72) ----
+  box(7,53,15,53,'#');
+  box(7,57,15,57,'#');
+  set(15,54,'A');
+  box(7,58,7,62,'=');
+  set(6,59,'o'); set(6,60,'o');
+
+  box(5,64,13,64,'#');
+  box(5,68,13,68,'#');
+  set(13,65,'A');
+  box(5,69,5,73,'=');
+  set(4,70,'o'); set(4,71,'o');
+  set(0,71,'B');                             // zweiter Bonus: 4 über dem Ausstieg
+
+  // ---- F: Abstieg und Ziel (73-87) ----
+  set(15,76,'L');
+  set(15,79,'o');
+  set(15,82,'C');
+  set(15,85,'F');
+  return fertig();
+}
+
 export const LEVELS = [
   { name:'Erste Schritte', baue: levelEins },
   { name:'Waldweg',        baue: levelZwei },
   { name:'Hoch hinaus',    baue: levelDrei },
+  { name:'Der Lift',       baue: levelVier },
 ];
 
 /* Rückwärtskompatibel: baue() ohne Argument liefert Level 1 */

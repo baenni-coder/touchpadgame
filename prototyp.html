@@ -159,6 +159,11 @@ const TUNING = {
   bereitZeit:     1.1,   // wie lange "BEREIT?" steht
   losZeit:        0.6,   // wie lange "LOS!" steht
 
+  // --- Liftplattformen (die Scroll-Übung) ---
+  liftTempo:     78,     // Pixel pro Sekunde bei vollem Scrollen
+  scrollAbklang: 0.86,   // wie schnell der Schwung nachlässt (0..1)
+  scrollProRad:  0.55,   // wie stark eine Rastung des Rads zählt
+
   // --- Touchpad-Profil ---
   totzone:        8,     // Pixel um den Fuchs herum, in denen er stehen bleibt
   randzone:      16,    // am Bildrand läuft der Fuchs weiter (siehe leseEingabe)
@@ -182,62 +187,84 @@ const DT   = 1/60;               // fester Physik-Zeitschritt
    ============================================================ */
 const LEVELS = [
   { name:'Erste Schritte', karte:[
-  '....................................................',
-  '....................................................',
-  '....................................................',
-  '....................................................',
-  '....................................................',
-  '....................................................',
-  '....................................................',
-  '.........................B..........................',
-  '....................................................',
-  '....................................................',
-  '....................................................',
-  '..................o.....oo..........o...............',
-  '.............o...###...====...o....====.............',
-  '.P...o..o...###..........................C..o.o..F..',
-  '##############################..####################',
-  '##############################..####################',
+  '..............................................................',
+  '..............................................................',
+  '..............................................................',
+  '..............................................................',
+  '..............................................................',
+  '..............................................................',
+  '..............................................................',
+  '.........................B....................................',
+  '..............................................................',
+  '..............................................................',
+  '..............................................................',
+  '..................o.....oo..........o.........................',
+  '.............o...###...====...o....====.......................',
+  '.P...o..o...###..........................C..o.o..F............',
+  '##############################..##############################',
+  '##############################..##############################',
   ]},
   { name:'Waldweg', karte:[
-  '................................................................................................',
-  '................................................................................................',
-  '................................................................................................',
-  '................................................................................................',
-  '................................................................................................',
-  '..............................................B.................................................',
-  '................................................................................................',
-  '.....................................................................................B..........',
-  '....................................................V...........................................',
-  '..............................................oo...........oo.............................V.....',
-  '....................oL.......................====........======.................................',
-  '................o..###.........o.........o................o..........................o..........',
-  '.............o..##........o........o....====............======.........o........o...===.o.......',
-  '.P...o...o...##.........o......^..................o....C...........C.......L.o...^^......^.C.F..',
-  '##########################..######...#################################...#######################',
-  '##########################..######...#################################...#######################',
+  '..........................................................................................................',
+  '..........................................................................................................',
+  '..........................................................................................................',
+  '..........................................................................................................',
+  '..........................................................................................................',
+  '..............................................B...........................................................',
+  '..........................................................................................................',
+  '.....................................................................................B....................',
+  '....................................................V.....................................................',
+  '..............................................oo...........oo.............................V...............',
+  '....................oL.......................====........======...........................................',
+  '................o..###.........o.........o................o..........................o....................',
+  '.............o..##........o........o....====............======.........o........o...===.o.................',
+  '.P...o...o...##.........o......^..................o....C...........C.......L.o...^^......^.C.F............',
+  '##########################..######...#################################...#################################',
+  '##########################..######...#################################...#################################',
   ]},
   { name:'Hoch hinaus', karte:[
-  '........................................................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '.........................B..............................................................................',
-  '........................................................................................................',
-  '........................................................................................................',
-  '..........................................................................B.............................',
-  '........................oo....o.....oo..V...............................................................',
-  '.......................====..====..====.....................................................V...........',
-  '...................o.........V............o.............................................................',
-  '..................====...................====................oo..........oo.............oo..............',
-  '..........o....o.....................................o......====........====.......o...====.............',
-  '.P..o..o..^...###................^^...........C...........L......L...^^.......^^.C.............L..o.C.F.',
-  '####################################################...###########################...###################',
-  '####################################################...###########################...###################',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '.........................B........................................................................................',
+  '..................................................................................................................',
+  '..................................................................................................................',
+  '..........................................................................B.......................................',
+  '........................oo....o.....oo..V.........................................................................',
+  '.......................====..====..====.....................................................V.....................',
+  '...................o.........V............o.......................................................................',
+  '..................====...................====................oo..........oo.............oo........................',
+  '..........o....o.....................................o......====........====.......o...====.......................',
+  '.P..o..o..^...###................^^...........C...........L......L...^^.......^^.C.............L..o.C.F...........',
+  '####################################################...###########################...#############################',
+  '####################################################...###########################...#############################',
+  ]},
+  { name:'Der Lift', karte:[
+  '..................................................................................................',
+  '..................................................................................................',
+  '.......................................................................B..........................',
+  '..................................................................................................',
+  '..................................................................................................',
+  '...........................................B......................................................',
+  '......................................................................oo..........................',
+  '................................................................#...#=====........................',
+  '...........................................................oo...#...#.............................',
+  '..........................................oo.........#...#=====.#...#.............................',
+  '...................ooo..............#...#=====.......#...#......#...#.............................',
+  '.............#...#=====.............#...#............#...#......#...#.............................',
+  '.............#...#.........o........#...#............#...#......#...#.............................',
+  '.............#...#........====......#...#............#...#......#...#.............................',
+  '.............#...#..................#...#............#...#......#...#.............................',
+  '.............#...#..................#.o.#............#...#......#A..#.............................',
+  '.............#...#..............o...#A..#............#...#........................................',
+  '.P...o...o...#A..#..................#...#......C.....#A..#..................L..o..C..F............',
+  '###############################...###...##########################################################',
+  '###############################...###...##########################################################',
   ]},
 ];
 
@@ -414,21 +441,23 @@ function musikUmschalten(){
    Egal welches Gerät: das Spiel sieht nur diese vier Werte.
    Dadurch laufen alle Levels mit allen Steuerungen.
    ============================================================ */
-const eingabe = { x:0, sprung:false, sprungNeu:false, extraNeu:false, aktion:false };
+const eingabe = { x:0, y:0, sprung:false, sprungNeu:false, extraNeu:false, aktion:false };
+// eingabe.y: -1 = hoch, +1 = runter. Kommt vom Scrollen (Touchpad),
+// von Bild hoch/runter (Tastatur) oder vom rechten Stick (Gamepad).
 
 const PROFILE = [
   { id:'tastatur', name:'Tastatur', emo:'⌨️', taste:'1',
-    hilfe:'<kbd>←</kbd> <kbd>→</kbd> oder <kbd>A</kbd> <kbd>D</kbd> laufen · <kbd>Leertaste</kbd> springen (länger drücken = höher) · <b>zweimal schnell = Extrasprung</b>' },
+    hilfe:'<kbd>←</kbd> <kbd>→</kbd> laufen · <kbd>Leertaste</kbd> springen (länger = höher) · <b>zweimal schnell = Extrasprung</b> · <kbd>Bild↑</kbd> <kbd>Bild↓</kbd> Lift' },
   { id:'touchpad', name:'Touchpad', emo:'👆', taste:'2',
-    hilfe:'Zeiger <b>neben</b> den Fuchs bewegen – er läuft dorthin · <b>Klicken und halten</b> zum Springen · <b>Doppelklick = Extrasprung</b>' },
+    hilfe:'Zeiger <b>neben</b> den Fuchs bewegen – er läuft dorthin · <b>Klicken und halten</b> zum Springen · <b>Doppelklick = Extrasprung</b> · <b>zwei Finger</b> bewegen den Lift' },
   { id:'gamepad',  name:'Gamepad', emo:'🎮', taste:'3',
-    hilfe:'Steuerkreuz oder linker Stick · <b>A</b> springen · <b>B</b> oder zweimal A = Extrasprung' },
+    hilfe:'Steuerkreuz oder linker Stick · <b>A</b> springen · <b>B</b> oder zweimal A = Extrasprung · rechter Stick = Lift' },
 ];
-let profil = 'tastatur';
+let profil = 'touchpad';   // Standard: die Übung, um die es hier geht
 
 /* --- Rohdaten der drei Quellen --- */
 const tasten = new Set();
-const maus   = { x:0, y:0, imBild:false, unten:false, letzterKlick:0, doppelt:false };
+const maus   = { x:0, y:0, imBild:false, unten:false, letzterKlick:0, doppelt:false, schwung:0 };
 let letzterSprungTipp = 0, tastenDoppelt = false;   // Doppeltipp auf der Tastatur
 let gpVorher = false, gpLetzter = 0, gpDoppelt = false;
 
@@ -445,7 +474,7 @@ addEventListener('keydown', e=>{
   if(e.key==='m'||e.key==='M'){ tonUmschalten(); return; }
   if(e.key==='n'||e.key==='N'){ musikUmschalten(); return; }
   if(e.key==='c'||e.key==='C'){ crtUmschalten(); return; }
-  if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key)) e.preventDefault();
+  if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar','PageUp','PageDown'].includes(e.key)) e.preventDefault();
   // Zweimal schnell springen = Doppeltipp. e.repeat aussortieren, sonst
   // löst eine gehaltene Taste die Tastenwiederholung als "Doppeltipp" aus.
   const istSprung = e.key===' '||e.key==='Spacebar'||e.key==='ArrowUp'||e.key.toLowerCase()==='w';
@@ -492,15 +521,29 @@ cv.addEventListener('pointerdown', e=>{
 addEventListener('pointerup', ()=>{ maus.unten=false; });
 cv.addEventListener('contextmenu', e=>e.preventDefault());
 
+/* Zwei Finger auf dem Touchpad (bzw. das Mausrad) treiben die
+   Liftplattformen. Der Schwung klingt weich ab, damit der Lift nicht
+   bei jeder Rastung ruckelt. */
+cv.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const rastungen = e.deltaMode === 1 ? e.deltaY : e.deltaY/100;
+  maus.schwung = Math.max(-1, Math.min(1, maus.schwung + rastungen*TUNING.scrollProRad));
+}, { passive:false });
+
 /* --- Rohdaten -> abstrakte Eingabe. Nur das aktive Profil wird gelesen. --- */
 function leseEingabe(){
-  let x=0, sprung=false, extra=false;
+  let x=0, y=0, sprung=false, extra=false;
+  maus.schwung *= TUNING.scrollAbklang;
+  if(Math.abs(maus.schwung) < 0.02) maus.schwung = 0;
 
   if(profil==='tastatur'){
     if(tasten.has('arrowleft') ||tasten.has('a')) x-=1;
     if(tasten.has('arrowright')||tasten.has('d')) x+=1;
     sprung = tasten.has(' ')||tasten.has('arrowup')||tasten.has('w');
     extra = tastenDoppelt; tastenDoppelt = false;
+    // Für den Lift: Bild hoch / Bild runter. Pfeil hoch ist schon Springen.
+    if(tasten.has('pageup'))   y -= 1;
+    if(tasten.has('pagedown')) y += 1;
 
   }else if(profil==='touchpad'){
     if(maus.imBild){
@@ -520,6 +563,7 @@ function leseEingabe(){
     }
     sprung = maus.unten;
     extra = maus.doppelt; maus.doppelt = false;
+    y = maus.schwung;                      // zwei Finger auf dem Touchpad
 
   }else if(profil==='gamepad'){
     const gp = (navigator.getGamepads?.()||[])[0];
@@ -538,6 +582,10 @@ function leseEingabe(){
       gpVorher = sprung;
       if(gp.buttons[2]?.pressed || gp.buttons[3]?.pressed) gpDoppelt = true;
       extra = gpDoppelt; gpDoppelt = false;
+      const ay = gp.axes[3] || 0;          // rechter Stick für den Lift
+      if(Math.abs(ay) > 0.25) y = ay;
+      if(gp.buttons[4]?.pressed) y = -1;
+      if(gp.buttons[5]?.pressed) y =  1;
     }
   }
 
@@ -545,20 +593,21 @@ function leseEingabe(){
   eingabe.sprung = sprung;
   eingabe.extraNeu = extra;
   eingabe.x = Math.max(-1, Math.min(1, x));
+  eingabe.y = Math.max(-1, Math.min(1, y));
 }
 
 /* ============================================================
    LEVEL EINLESEN
    ============================================================ */
 let karte=[], levelB=0, levelH=0, muenzen=[], startPos={x:0,y:0}, zielPos={x:0,y:0};
-let gegner=[], checkpoints=[], startVorlage=[];
+let gegner=[], checkpoints=[], startVorlage=[], lifte=[], liftVorlage=[];
 
 function levelLaden(){
   const L = LEVELS[levelNr].karte;
   levelB = Math.max(...L.map(z=>z.length));
   levelH = L.length;
   karte = L.map(z => z.padEnd(levelB,'.').split(''));
-  muenzen=[]; checkpoints=[]; startVorlage=[];
+  muenzen=[]; checkpoints=[]; startVorlage=[]; liftVorlage=[];
   for(let r=0;r<levelH;r++) for(let c=0;c<levelB;c++){
     const z = karte[r][c];
     const mx = c*TILE+TILE/2, my = r*TILE+TILE/2;
@@ -569,8 +618,10 @@ function levelLaden(){
     if(z==='C'){ checkpoints.push({x:c*TILE, y:r*TILE, aktiv:false}); karte[r][c]='.'; }
     if(z==='L'){ startVorlage.push({art:'laeufer', x:c*TILE+3, y:r*TILE+2}); karte[r][c]='.'; }
     if(z==='V'){ startVorlage.push({art:'flieger', x:c*TILE+2, y:r*TILE+2}); karte[r][c]='.'; }
+    if(z==='A'){ liftVorlage.push({c, r}); karte[r][c]='.'; }
   }
   gegnerSetzen();
+  lifteSetzen();
 }
 
 /* Gegner aus der Vorlage neu aufstellen – nach jedem Tod von vorn */
@@ -581,6 +632,63 @@ function gegnerSetzen(){
     vx: v.art==='laeufer' ? -TUNING.gegnerTempo : -TUNING.fliegerTempo,
     t: Math.random()*6, tot:false, totT:0, schritt:0
   }));
+}
+
+/* ============================================================
+   LIFTPLATTFORMEN
+   Fahren hoch und runter, solange gescrollt wird – mit zwei
+   Fingern auf dem Touchpad. Das ist die Übung aus der Station
+   "Hoch und runter", nur mitten im Spiel.
+
+   Wie weit ein Lift fährt, ergibt sich aus seinem Schacht: er
+   hält an, wo darüber oder darunter fester Boden kommt.
+   ============================================================ */
+const LIFT_BREITE = 3;          // Kacheln
+const LIFT_DICKE  = 6;          // Pixel
+
+function lifteSetzen(){
+  lifte = liftVorlage.map(v=>{
+    // Der Fahrweg ergibt sich aus den Führungswänden links und rechts:
+    // wo keine Wand mehr ist, hält der Lift. Ohne diese Regel führe er
+    // bis unter den Himmel, weil dort nichts im Weg steht.
+    let oben = v.r, unten = v.r;
+    const freiBei = rr => {
+      for(let i=0;i<LIFT_BREITE;i++) if(fest(v.c+i, rr)) return false;
+      return true;
+    };
+    const gefuehrtBei = rr => fest(v.c-1, rr) || fest(v.c+LIFT_BREITE, rr);
+    while(oben-1 >= 0      && freiBei(oben-1)  && gefuehrtBei(oben-1))  oben--;
+    while(unten+1 < levelH && freiBei(unten+1) && gefuehrtBei(unten+1)) unten++;
+    return {
+      x: v.c*TILE, y: v.r*TILE,
+      b: LIFT_BREITE*TILE, h: LIFT_DICKE,
+      obenGrenze: oben*TILE, untenGrenze: unten*TILE,
+      dy: 0, start: v.r*TILE,
+    };
+  });
+}
+
+/* Trägt der Lift den Fuchs gerade? */
+function liftUnterSpieler(){
+  const fussY = spieler.y + spieler.h;
+  return lifte.find(l =>
+    spieler.x + spieler.b > l.x + 1 && spieler.x < l.x + l.b - 1 &&
+    fussY >= l.y - 2 && fussY <= l.y + l.h + 2) || null;
+}
+
+function lifteSchritt(){
+  const trage = liftUnterSpieler();
+  lifte.forEach(l=>{
+    const vorher = l.y;
+    l.y += eingabe.y * TUNING.liftTempo * DT;
+    l.y = Math.max(l.obenGrenze, Math.min(l.untenGrenze, l.y));
+    l.dy = l.y - vorher;
+  });
+  // Wer oben draufsteht, fährt mit
+  if(trage && trage.dy !== 0){
+    spieler.y += trage.dy;
+    if(trage.dy < 0) spieler.vy = Math.min(spieler.vy, 0);   // beim Hochfahren nicht durchsacken
+  }
 }
 
 const fest    = (c,r)=> (r<0||c<0||c>=levelB) ? false : (r>=levelH ? false : karte[r][c]==='#');
@@ -654,6 +762,7 @@ function levelNeu(){
   spieler.leben = TUNING.leben; spieler.schonzeit = 0;
   spieler.respawnX = spieler.x; spieler.respawnY = spieler.y;
   punkte=0; boni=0; zeit=0; partikel.length=0; texte.length=0;
+  liftHinweis = 3;
   punktestand=0; kombo=0; komboT=0; zielBonus={herzen:0,zeit:0};
   gewonnen=false; gewonnenT=0; gameOver=false; gameOverT=0; pause=false;
   ruettelStaerke=0;
@@ -768,6 +877,15 @@ function bewegeY(d){
   const rechts= Math.floor((spieler.x+spieler.b-1)/TILE);
 
   if(d>0){                                  // fallen -> Boden suchen
+    // Erst die Lifte: sie liegen nicht in der Kachelkarte und tragen
+    // nur von oben, wie eine Einweg-Plattform.
+    for(const l of lifte){
+      if(spieler.x + spieler.b > l.x + 1 && spieler.x < l.x + l.b - 1 &&
+         vorherUnten <= l.y + 2 && spieler.y + spieler.h >= l.y){
+        spieler.y = l.y - spieler.h; spieler.vy = 0; spieler.amBoden = true;
+        return;
+      }
+    }
     // Achtung: hier OHNE -1 rechnen. Liegt der Fuchs exakt auf einer Kachel,
     // zeigt (y+h-1) eine Zeile zu hoch – er würde jeden Einzelschritt zwischen
     // "steht" und "fällt" flackern (Dauerstaub, Coyote Time wirkungslos).
@@ -1186,6 +1304,29 @@ function zeichne(){
   });
   ctx.globalAlpha=1;
 
+  /* Liftplattformen samt Schacht */
+  lifte.forEach(l=>{
+    const lx = Math.round(l.x-kx), ly = Math.round(l.y-ky);
+    if(lx < -80 || lx > SICHT_B+80) return;
+    // Führungsschiene, damit der Fahrweg sichtbar ist
+    ctx.fillStyle='rgba(44,33,64,.16)';
+    ctx.fillRect(lx+2, l.obenGrenze-ky, 2, l.untenGrenze-l.obenGrenze+l.h);
+    ctx.fillRect(lx+l.b-4, l.obenGrenze-ky, 2, l.untenGrenze-l.obenGrenze+l.h);
+    // Plattform
+    ctx.fillStyle='#8892A0'; ctx.fillRect(lx, ly, l.b, l.h);
+    ctx.fillStyle='#C9D2DE'; ctx.fillRect(lx, ly, l.b, 2);
+    ctx.fillStyle='#6B6280'; ctx.fillRect(lx, ly+l.h-1, l.b, 1);
+    // Pfeile als Hinweis, solange der Lift noch nicht bewegt wurde
+    if(liftHinweis > 0){
+      ctx.globalAlpha = Math.min(1, liftHinweis);
+      ctx.fillStyle='#2FC79B';
+      const m = lx + l.b/2, w = Math.sin(zeit*4)*1.5;
+      ctx.beginPath(); ctx.moveTo(m, ly-9+w); ctx.lineTo(m-4, ly-4+w); ctx.lineTo(m+4, ly-4+w); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(m, ly+l.h+9-w); ctx.lineTo(m-4, ly+l.h+4-w); ctx.lineTo(m+4, ly+l.h+4-w); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  });
+
   /* Gegner */
   gegner.forEach(g=>zeichneGegner(g,kx,ky));
 
@@ -1327,6 +1468,7 @@ let szene = 'titel', szeneT = 0;
 let blende = 0;                 // 1 = ganz zu, 0 = offen
 let punktestand = 0, kombo = 0, komboT = 0;
 let zielBonus = { herzen:0, zeit:0 };
+let liftHinweis = 0;   // blendet die Pfeile aus, sobald der Lift benutzt wurde
 
 const WERT = { muenze:100, diamant:1000, gegner:200, herz:500, sekunde:20 };
 
@@ -1509,7 +1651,7 @@ function schritt(){
 
   if(szene === 'titel'){
     selbstSteuern();
-    spielerSchritt(); gegnerSchritt(); partikelSchritt(); kameraSetzen();
+    lifteSchritt(); spielerSchritt(); gegnerSchritt(); partikelSchritt(); kameraSetzen();
     return;
   }
   if(szene === 'bereit'){
@@ -1537,6 +1679,8 @@ function schritt(){
   zeit+=DT;
   if(komboT>0){ komboT -= DT; if(komboT<=0) kombo = 0; }
   texteSchritt();
+  if(lifte.length && liftHinweis > 0 && Math.abs(eingabe.y) > 0.08) liftHinweis -= DT*1.6;
+  lifteSchritt();
   spielerSchritt();
   gegnerSchritt();
   gegnerPruefen();
@@ -1703,8 +1847,8 @@ if(window.BRUECKE){
 /* Start */
 fortschrittLaden();
 zumTitel();
+setzeProfil('touchpad');
 knoepfeAuffrischen();
-setzeProfil('tastatur');
 skalieren();
 requestAnimationFrame(bild);
 </script>

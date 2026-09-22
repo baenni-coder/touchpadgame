@@ -53,6 +53,7 @@ Versuch · gespeicherter Fortschritt und Bestwerte.
 | 1 · Erste Schritte | Nur laufen, springen, sammeln. Keine Gegner, keine Stacheln. |
 | 2 · Waldweg | Gegner, Stacheln, Abgründe, Einweg-Plattformen. |
 | 3 · Hoch hinaus | Mehr in die Höhe, Flieger auf dem Weg, Stacheln unter den Sprüngen. |
+| 4 · Der Lift | **Liftplattformen**, die man mit zwei Fingern hoch- und runterfährt. |
 
 Ein Level wird erst freigeschaltet, wenn das davor geschafft ist. Der
 Fortschritt liegt in `localStorage` – **auf dem Gerät**, nur Zahlen, keine
@@ -63,11 +64,13 @@ Drei Steuerungen zum Vergleichen, umschaltbar mit <kbd>1</kbd> <kbd>2</kbd>
 
 | Taste | Profil | Bedienung |
 |---|---|---|
-| 1 | Tastatur | Pfeiltasten oder A/D · Leertaste springen (länger halten = höher) |
-| 2 | Touchpad | Zeiger neben den Fuchs bewegen · klicken und halten zum Springen |
-| 3 | Gamepad | Steuerkreuz oder Stick · A-Taste springen |
+| 1 | Tastatur | Pfeiltasten · Leertaste springen (länger halten = höher) · Bild↑/Bild↓ für den Lift |
+| 2 | Touchpad | Zeiger neben den Fuchs bewegen · klicken und halten zum Springen · **zwei Finger bewegen den Lift** |
+| 3 | Gamepad | Steuerkreuz oder Stick · A-Taste springen · rechter Stick für den Lift |
 
-**Der Doppelklick-Sprung** ist die eigentliche Touchpad-Übung: zweimal
+**Touchpad ist die Standardeinstellung** – darum geht es hier schliesslich.
+
+**Der Doppelklick-Sprung** ist die zweite Touchpad-Übung: zweimal
 schnell klicken (bzw. Leertaste doppelt tippen, am Gamepad B) springt
 4.2 statt 2.9 Kacheln hoch. Nur damit erreicht man die blauen Bonus-Diamanten –
 das Level selbst ist aber auch ohne ihn durchspielbar.
@@ -110,7 +113,7 @@ deshalb beim ersten Tastendruck oder Klick.
 Brauchen Node.js und laufen alle lokal:
 
 ```
-node tools/test.mjs           # 88 Browsertests
+node tools/test.mjs           # 100 Browsertests
 node tools/messen.mjs         # misst Sprunghöhe und -weite
 node tools/level-pruefen.mjs  # prüft, ob Ziel und Münzen erreichbar sind
 node tools/level-bauen.mjs    # erzeugt die Kachelkarten

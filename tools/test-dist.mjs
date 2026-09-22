@@ -131,6 +131,39 @@ await page.waitForTimeout(200);
 pruefe('Der Lehrer-Bereich lässt sich schliessen',
        await page.evaluate(() => !document.querySelector('.lehrer-hg')));
 
+// 7b) Die Stationskarte muss scrollbar sein – sonst sind die unteren
+//     Kacheln auf kleinen Bildschirmen schlicht nicht erreichbar.
+await page.setViewportSize({ width: 1100, height: 600 });
+await page.waitForTimeout(400);
+const karte = await page.evaluate(() => {
+  const d = document.documentElement;
+  const kacheln = document.querySelectorAll('#teil-stationen .station');
+  const letzte = kacheln[kacheln.length-1];
+  return {
+    dokHoehe: d.scrollHeight, fenster: innerHeight,
+    scrollbar: d.scrollHeight > innerHeight + 4,
+    bodyOverflowY: getComputedStyle(document.body).overflowY,
+    letzteUnten: Math.round(letzte.getBoundingClientRect().bottom),
+  };
+});
+pruefe('Die Karte ist höher als der Bildschirm', karte.dokHoehe > karte.fenster,
+       `${karte.dokHoehe} px Inhalt bei ${karte.fenster} px Fenster`);
+pruefe('Die Karte lässt sich scrollen', karte.scrollbar && karte.bodyOverflowY !== 'hidden',
+       'overflow-y: ' + karte.bodyOverflowY);
+
+await page.evaluate(() => window.scrollTo(0, 9999));
+await page.waitForTimeout(300);
+const gescrollt = await page.evaluate(() => {
+  const kacheln = document.querySelectorAll('#teil-stationen .station');
+  const letzte = kacheln[kacheln.length-1].getBoundingClientRect();
+  return { y: window.scrollY, sichtbar: letzte.bottom <= innerHeight + 2 && letzte.top >= -2 };
+});
+pruefe('Nach unten gescrollt ist die letzte Kachel ganz sichtbar',
+       gescrollt.y > 0 && gescrollt.sichtbar, 'scrollY = ' + gescrollt.y);
+await page.setViewportSize({ width: 1280, height: 820 });
+await page.evaluate(() => window.scrollTo(0,0));
+await page.waitForTimeout(300);
+
 // 8) Kein Nachladen aus dem Netz
 pruefe('Die Datei lädt nichts nach', netz.length === 0,
        netz.length ? netz.slice(0,3).join(', ') : 'keine externen Anfragen');

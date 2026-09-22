@@ -28,6 +28,7 @@ const NACH_FELD = {
   'B': 17,   // stern0
   'L':  8,   // kaefer0
   'V': 11,   // flieger0
+  'A': 49,   // Liftplattform (Balken aus dem Kachelsatz)
   'C': 33,   // fahne_aus
   'P':  0,   // fuchs_steh
   'F': 35,   // ziel
@@ -43,10 +44,11 @@ const NACH_ZEICHEN = {
   8:'L', 9:'L',
   11:'V', 12:'V',
   33:'C', 34:'C',
+  49:'A',
   0:'P', 1:'P', 2:'P', 3:'P', 4:'P', 5:'P', 6:'P', 7:'P',
   35:'F',
 };
-const BODEN_ZEICHEN  = new Set(['#','=','^']);
+const BODEN_ZEICHEN  = new Set(['#','=','^','A']);
 
 /* ---------- Export: unsere Karte -> Tiled-JSON ---------- */
 export function nachTiled(zeilen, name){

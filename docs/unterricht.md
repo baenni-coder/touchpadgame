@@ -25,6 +25,10 @@ gesammelt sind – das Jump-&-Run **Fuchs-Sprung**.
 | Geschenke auspacken | Rechtsklick / Zwei-Finger-Tipp |
 | **Fuchs-Sprung** | alles zusammen, in einer Spielwelt |
 
+Im Fuchs-Sprung selbst gibt es vier Level. Das vierte, **Der Lift**, greift
+die Station „Hoch und runter" wieder auf: Plattformen fahren mit zwei
+Fingern auf dem Touchpad hoch und runter, und der Fuchs fährt mit.
+
 Jede Station hat drei Level und gibt bis zu drei Sterne. Das Jump-&-Run
 öffnet sich standardmässig **ab 12 Sternen** – das entspricht etwa vier
 geschafften Übungsleveln.
@@ -47,9 +51,9 @@ Oben lässt sich zwischen drei Steuerungen umschalten:
 
 | | Bedienung | wofür |
 |---|---|---|
-| **Touchpad** | Zeiger neben den Fuchs, klicken zum Springen, **Doppelklick = Extrasprung** | wer das Touchpad noch übt |
-| **Tastatur** | Pfeiltasten und Leertaste | wer es schon kann |
-| **Gamepad** | Stick und A-Taste | falls vorhanden |
+| **Touchpad** *(Standard)* | Zeiger neben den Fuchs, klicken zum Springen, **Doppelklick = Extrasprung**, **zwei Finger = Lift** | wer das Touchpad noch übt |
+| **Tastatur** | Pfeiltasten und Leertaste, Bild↑/Bild↓ für den Lift | wer es schon kann |
+| **Gamepad** | Stick und A-Taste, rechter Stick für den Lift | falls vorhanden |
 
 So lässt sich in derselben Klasse differenzieren: Alle spielen dieselben
 Level, jedes Kind mit der Steuerung, die gerade dran ist.

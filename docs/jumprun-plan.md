@@ -1,6 +1,6 @@
 # Vom Touchpad-Abenteuer zum echten Arcade-Jump-&-Run
 
-**Stand:** 22.09.2026 · **Phase 1 bis 4 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
+**Stand:** 22.09.2026 · **Phase 1 bis 5 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
 
 ---
 

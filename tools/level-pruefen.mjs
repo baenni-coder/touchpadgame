@@ -28,14 +28,18 @@ function pruefe(zeilen, name){
   const k = zeilen.map(z=>z.split(''));
   const H = k.length, Bre = k[0].length;
 
+  const key = (r,c)=>r*Bre+c;
   // Nur Vollblöcke versperren den Weg. Eine Einweg-Plattform ('=') trägt
   // von oben, lässt den Fuchs aber von unten durchspringen – sie ist frei.
   const frei   = (r,c) => r>=0 && r<H && c>=0 && c<Bre && k[r][c]!=='#';
   const traegt = (r,c) => r+1<H && c>=0 && c<Bre && (k[r+1][c]==='#' || k[r+1][c]==='=');
   // Auf Stacheln kann man nicht stehen bleiben – drüberspringen geht aber.
-  const steht  = (r,c) => frei(r,c) && frei(r-1,c) && traegt(r,c) && k[r][c]!=='^';
+  // Standplatz: fester Boden darunter – oder irgendwo im Schacht eines Lifts
+  const liftFelder = new Set();   // wird unten gefüllt
+  const stehtRoh = (r,c) => frei(r,c) && frei(r-1,c) && k[r][c]!=='^';
+  const steht  = (r,c) => stehtRoh(r,c) && (traegt(r,c) || liftFelder.has(key(r,c)));
 
-  let start=null, ziel=null; const muenzen=[], boni=[], checkpoints=[];
+  let start=null, ziel=null; const muenzen=[], boni=[], checkpoints=[], lifte=[];
   for(let r=0;r<H;r++) for(let c=0;c<Bre;c++){
     const z = k[r][c];
     if(z==='P'){ start={r,c}; k[r][c]='.'; }
@@ -44,6 +48,7 @@ function pruefe(zeilen, name){
     if(z==='B'){ boni.push({r,c}); k[r][c]='.'; }
     if(z==='C'){ checkpoints.push({r,c}); k[r][c]='.'; }
     if(z==='L'||z==='V'){ k[r][c]='.'; }        // Gegner bewegen sich, nicht prüfbar
+    if(z==='A'){ lifte.push({r,c}); k[r][c]='.'; }
   }
 
   const meldungen = [];
@@ -52,11 +57,28 @@ function pruefe(zeilen, name){
   if(!start || !ziel) return { name, fehler:meldungen.length, warnung:0, meldungen, karte:null };
 
   /* Breitensuche über alle Standplätze */
-  const key = (r,c)=>r*Bre+c;
   const gesehen = new Map();
   const schlange = [];
   let sr = start.r; while(sr+1<H && !traegt(sr,start.c)) sr++;
   gesehen.set(key(sr,start.c),'sicher'); schlange.push({r:sr,c:start.c,art:'sicher'});
+
+  /* Eine Liftplattform trägt überall in ihrem Schacht. Für die Suche
+     zählt deshalb jede freie Zeile darüber und darunter als Standplatz –
+     sonst meldet der Prüfer alles über dem Lift als unerreichbar. */
+  const LIFT_BREITE = 3;
+  lifte.forEach(l=>{
+    const freiBei = rr => {
+      for(let i=0;i<LIFT_BREITE;i++){ const cc=l.c+i; if(cc>=Bre || !frei(rr,cc)) return false; }
+      return true;
+    };
+    // wie im Spiel: der Fahrweg reicht so weit wie die Führungswände
+    const gefuehrtBei = rr => !frei(rr, l.c-1) || !frei(rr, l.c+LIFT_BREITE);
+    let o=l.r, u=l.r;
+    while(o-1>=0 && freiBei(o-1) && gefuehrtBei(o-1)) o--;
+    while(u+1<H && freiBei(u+1) && gefuehrtBei(u+1)) u++;
+    for(let rr=o; rr<=u; rr++)
+      for(let i=0;i<LIFT_BREITE;i++) liftFelder.add(key(rr, l.c+i));
+  });
 
   const versuche = (r,c,art) => {
     if(!steht(r,c)) return;

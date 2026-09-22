@@ -33,8 +33,12 @@ function zerlegen(datei){
 }
 
 /* ---------- CSS auf einen Container einschränken ---------- */
-// Regeln, die global bleiben müssen oder dürfen
-const GLOBAL = /^(:root|\*|html|body|html\s*,\s*body|@font-face)$/;
+// Regeln, die global bleiben müssen oder dürfen.
+// "body" gehört NICHT hierher: beide Teile setzen eigene body-Regeln
+// (der eine overflow:hidden, der andere touch-action:none). Blieben die
+// global, würden sie sich gegenseitig überschreiben – und die
+// Stationskarte liesse sich nicht mehr scrollen.
+const GLOBAL = /^(:root|\*|html|@font-face)$/;
 
 function cssEinschraenken(css, behaelter){
   let aus = '', i = 0;
@@ -117,14 +121,23 @@ const html = `<!DOCTYPE html>
 <style>
 /* ---------- gemeinsame Grundlage ---------- */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+/* Nur html auf volle Höhe. Bekäme body ebenfalls height:100%, wäre die
+   Seite auf Fensterhöhe gedeckelt und die unteren Kacheln nicht
+   erreichbar – sie würden einfach abgeschnitten. */
+html{height:100%}
 body{
   font-family:"SF Pro Rounded",ui-rounded,"Segoe UI Rounded","Nunito","Baloo 2",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   background:linear-gradient(180deg,#FFF1DC 0%,#BFE3FF 100%);
   background-attachment:fixed;
   -webkit-user-select:none;user-select:none;
+  min-height:100%;
 }
 #teil-stationen,#teil-sprung{min-height:100vh}
+/* Die Stationskarte darf länger sein als der Bildschirm und muss sich
+   dann scrollen lassen – auch mit zwei Fingern auf dem Touchpad. */
+#teil-stationen{overflow:visible;touch-action:pan-y}
+/* Das Spielfeld ist immer bildschirmhoch und soll nicht wegscrollen. */
+#teil-sprung{overflow:hidden;touch-action:none}
 #teil-sprung[hidden],#teil-stationen[hidden]{display:none!important}
 
 /* ---------- die acht Übungen ---------- */

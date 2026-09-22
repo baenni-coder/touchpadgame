@@ -21,7 +21,10 @@ await page.waitForTimeout(700);
 // nicht die Einblendungen – also direkt in die laufende Szene springen.
 // Für Titelbild und BEREIT/LOS gibt es eigene Tests weiter unten.
 const inSzene = () => page.evaluate(() => { szene = 'spiel'; blende = 0; });
-await page.evaluate(() => { spielStarten(0); szene = 'spiel'; blende = 0; });
+// Standard ist das Touchpad. Die folgenden Tests prüfen die Physik über
+// die Tastatur, also hier bewusst umstellen – dass Touchpad der Standard
+// ist, prüft ein eigener Test weiter unten nach einem Neuladen.
+await page.evaluate(() => { setzeProfil('tastatur'); spielStarten(0); szene = 'spiel'; blende = 0; });
 await page.waitForTimeout(300);
 
 const lies = () => page.evaluate(() => ({
@@ -423,7 +426,8 @@ const levels = await page.evaluate(() => {
   levelWechseln(0); szene='spiel'; blende=0;
   return raus;
 });
-pruefe('Alle drei Levels laden', levels.length === 3, levels.map(l=>l.name).join(', '));
+const anzahlLevels = await page.evaluate(() => LEVELS.length);
+pruefe('Alle Levels laden', levels.length === anzahlLevels, levels.map(l=>l.name).join(', '));
 levels.forEach(l => pruefe(`Level ${l.nr+1} hat Start, Ziel und Inhalt`,
   l.zielX > l.startX && l.muenzen > 0 && l.breite > 20,
   `${l.breite} Kacheln, ${l.muenzen} Sammelobjekte, ${l.gegner} Gegner`));
@@ -472,8 +476,8 @@ pruefe('Fortschritt übersteht das Neuladen',
 const knoepfe = await page.evaluate(() =>
   [...document.querySelectorAll('#levels .pbtn')].map(b => ({
     zu: b.classList.contains('zu'), text: b.textContent })));
-pruefe('Für jedes Level gibt es einen Knopf', knoepfe.length === 3);
-pruefe('Level 3 ist noch gesperrt', knoepfe[2].zu === true);
+pruefe('Für jedes Level gibt es einen Knopf', knoepfe.length === anzahlLevels, knoepfe.length + ' Knöpfe');
+pruefe('Die späteren Levels sind noch gesperrt', knoepfe[2].zu === true);
 pruefe('Die freigeschalteten Levels sind offen', !knoepfe[0].zu && !knoepfe[1].zu);
 
 // Aufräumen, damit der nächste Lauf sauber startet
@@ -659,6 +663,136 @@ pruefe('Die Musik erzeugt hörbares Signal',
 pruefe('Die Musik übersteuert nicht', klang.spitze < 1.0, 'Spitze ' + klang.spitze);
 pruefe('Die Musik ist nicht überwiegend Stille',
        klang.stilleAnteil < 0.5, (klang.stilleAnteil*100).toFixed(0) + ' % Stille');
+
+// ============ Liftplattformen ============
+// Das Lift-Level ist das letzte
+const liftLevel = await page.evaluate(() => LEVELS.length - 1);
+
+// 30) Der Lift fährt auf Scroll-Eingabe hoch und runter
+const lift = await page.evaluate(({nr}) => new Promise(res => {
+  levelWechseln(nr); szene='spiel'; blende=0;
+  setTimeout(() => {
+    if(!lifte.length){ res({ keine:true }); return; }
+    const l = lifte[0];
+    const start = l.y;
+    // Über das Touchpad-Profil: den Schwung halten, sonst setzt
+    // leseEingabe() eingabe.y im nächsten Bild sofort wieder zurück.
+    setzeProfil('touchpad');
+    let richtung = -1;
+    const halten = setInterval(() => { maus.schwung = richtung; }, 16);
+    let hoch = 0, runter = 0;
+    setTimeout(() => {
+      hoch = start - l.y;
+      richtung = 1;
+      setTimeout(() => {
+        clearInterval(halten); maus.schwung = 0;
+        runter = l.y - (start - hoch);
+        res({ hoch:+hoch.toFixed(0), runter:+runter.toFixed(0),
+              obenGrenze:l.obenGrenze, untenGrenze:l.untenGrenze,
+              anzahl: lifte.length });
+      }, 500);
+    }, 500);
+  }, 300);
+}), { nr: liftLevel });
+pruefe('Das Lift-Level hat Liftplattformen', !lift.keine && lift.anzahl > 0,
+       lift.anzahl + ' Lifte');
+pruefe('Scrollen nach oben hebt den Lift', lift.hoch > 20, lift.hoch + ' px');
+pruefe('Scrollen nach unten senkt ihn wieder', lift.runter > 20, lift.runter + ' px');
+
+// 31) Der Lift hält an den Schachtenden
+const grenzen = await page.evaluate(() => new Promise(res => {
+  const l = lifte[0];
+  let richtung = -1;
+  const halten = setInterval(() => { maus.schwung = richtung; }, 16);
+  setTimeout(() => {
+    const ganzOben = l.y;
+    richtung = 1;
+    setTimeout(() => {
+      clearInterval(halten); maus.schwung = 0;
+      res({ ganzOben:+ganzOben.toFixed(0), ganzUnten:+l.y.toFixed(0),
+            obenGrenze:l.obenGrenze, untenGrenze:l.untenGrenze });
+    }, 2600);
+  }, 2600);
+}));
+pruefe('Der Lift fährt nicht durch die Decke',
+       grenzen.ganzOben >= grenzen.obenGrenze - 1, `${grenzen.ganzOben} vs Grenze ${grenzen.obenGrenze}`);
+pruefe('Der Lift fährt nicht durch den Boden',
+       grenzen.ganzUnten <= grenzen.untenGrenze + 1, `${grenzen.ganzUnten} vs Grenze ${grenzen.untenGrenze}`);
+
+// 32) Der Fuchs steht auf dem Lift und fährt mit
+const mitfahren = await page.evaluate(() => new Promise(res => {
+  const l = lifte[0];
+  eingabe.y = 0;
+  // Fuchs genau auf den Lift stellen
+  spieler.x = l.x + l.b/2 - spieler.b/2;
+  spieler.y = l.y - spieler.h;
+  spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
+  setTimeout(() => {
+    const spielerVor = spieler.y, liftVor = l.y;
+    const halten = setInterval(() => { maus.schwung = -1; }, 16);
+    setTimeout(() => {
+      clearInterval(halten); maus.schwung = 0;
+      const dSpieler = spielerVor - spieler.y, dLift = liftVor - l.y;
+      res({ dSpieler:+dSpieler.toFixed(0), dLift:+dLift.toFixed(0),
+            steht: spieler.amBoden, abstand:+(spieler.y + spieler.h - l.y).toFixed(1) });
+    }, 500);
+  }, 200);
+}));
+pruefe('Der Fuchs fährt auf dem Lift mit',
+       mitfahren.dSpieler > 20 && Math.abs(mitfahren.dSpieler - mitfahren.dLift) < 4,
+       `Fuchs ${mitfahren.dSpieler} px, Lift ${mitfahren.dLift} px`);
+pruefe('Er bleibt dabei auf der Plattform stehen',
+       Math.abs(mitfahren.abstand) < 3, 'Abstand ' + mitfahren.abstand + ' px');
+
+// 33) Von unten darf man durch den Lift springen (wie bei Einweg-Plattformen)
+const vonUnten = await page.evaluate(() => new Promise(res => {
+  const l = lifte[0];
+  maus.schwung = 0;
+  spieler.x = l.x + l.b/2 - spieler.b/2;
+  spieler.y = l.y + 22;                    // knapp unter dem Lift
+  spieler.vx = 0; spieler.vy = -300;       // kräftig nach oben
+  spieler.amBoden = false;
+  let haengen = false;
+  const iv = setInterval(() => {
+    // Bleibt er beim Aufsteigen am Lift kleben, wäre amBoden true,
+    // obwohl er sich noch nach oben bewegt.
+    if(spieler.vy < -20 && spieler.amBoden) haengen = true;
+  }, 8);
+  setTimeout(() => { clearInterval(iv);
+    res({ y:+spieler.y.toFixed(0), liftY:+l.y.toFixed(0), haengen,
+          drueber: spieler.y + spieler.h <= l.y + 4 }); }, 260);
+}));
+pruefe('Von unten bleibt man nicht am Lift hängen', !vonUnten.haengen);
+pruefe('Von unten kommt man durch den Lift hindurch', vonUnten.drueber,
+       `Fuchs bei ${vonUnten.y}, Lift bei ${vonUnten.liftY}`);
+
+// 34) Touchpad ist die Standardsteuerung
+await page.reload();
+await page.waitForTimeout(800);
+const standard = await page.evaluate(() => ({
+  profil,
+  knopfAn: document.querySelector('.pbtn[data-id="touchpad"]').classList.contains('on'),
+}));
+pruefe('Touchpad ist von Anfang an eingestellt',
+       standard.profil === 'touchpad' && standard.knopfAn, 'profil = ' + standard.profil);
+
+// 35) Zwei Finger auf dem Touchpad steuern den Lift
+await page.evaluate(({nr}) => { levelWechseln(nr); szene='spiel'; blende=0; }, { nr: liftLevel });
+await page.waitForTimeout(300);
+const rad = await page.evaluate(() => new Promise(res => {
+  const l = lifte[0];
+  const vor = l.y;
+  const cv = document.getElementById('cv');
+  for(let i=0;i<6;i++) cv.dispatchEvent(new WheelEvent('wheel', { deltaY:-100, bubbles:true, cancelable:true }));
+  setTimeout(() => res({ bewegt:+(vor - l.y).toFixed(0), schwung:+maus.schwung.toFixed(2) }), 400);
+}));
+pruefe('Zwei-Finger-Wischen bewegt den Lift', rad.bewegt > 5, rad.bewegt + ' px');
+
+// Der Schwung klingt von allein ab
+const abklang = await page.evaluate(() => new Promise(res => {
+  setTimeout(() => res({ schwung:+maus.schwung.toFixed(3) }), 900);
+}));
+pruefe('Der Schwung klingt wieder ab', abklang.schwung === 0, 'schwung = ' + abklang.schwung);
 
 pruefe('Keine JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));
 
