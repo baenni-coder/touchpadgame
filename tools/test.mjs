@@ -17,6 +17,13 @@ page.on('console', m => { if (m.type() === 'error') fehler.push('Konsole: ' + m.
 await page.goto('file://' + process.cwd() + '/prototyp.html');
 await page.waitForTimeout(700);
 
+// Das Spiel startet auf dem Titelbild. Die Tests prüfen die Spielmechanik,
+// nicht die Einblendungen – also direkt in die laufende Szene springen.
+// Für Titelbild und BEREIT/LOS gibt es eigene Tests weiter unten.
+const inSzene = () => page.evaluate(() => { szene = 'spiel'; blende = 0; });
+await page.evaluate(() => { spielStarten(0); szene = 'spiel'; blende = 0; });
+await page.waitForTimeout(300);
+
 const lies = () => page.evaluate(() => ({
   x: +spieler.x.toFixed(1), y: +spieler.y.toFixed(1),
   amBoden: spieler.amBoden, tot: spieler.tot,
@@ -121,7 +128,7 @@ pruefe('Bonus-Diamant zählt getrennt von den Münzen',
 
 // 7) Sturz in den Abgrund -> kostet ein Herz, Neustart am Checkpoint
 const vorSturz = await page.evaluate(() => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   // einen Checkpoint aktivieren und den Fuchs dann abstürzen lassen
   const cp = checkpoints[0];
   cp.aktiv = true; spieler.respawnX = cp.x + 3; spieler.respawnY = cp.y + 2;
@@ -224,7 +231,7 @@ pruefe('Zeiger weit über dem Spielfeld -> Steuerung ruht', ruhig.x === 0 && !ru
 // 12) Doppelklick-Sprung: höher als normal UND verlässlich gleich hoch
 await page.click('.pbtn[data-id="tastatur"]');
 const messeSprung = (extraNachMs) => page.evaluate(({ ms }) => new Promise(res => {
-  levelNeu();
+  levelNeu(); szene='spiel'; blende=0;
   setTimeout(() => {
     spieler.x = 8 * TILE; spieler.y = (levelH-2) * TILE - spieler.h;
     spieler.vx = 0; spieler.vy = 0; spieler.amBoden = true;
@@ -259,12 +266,12 @@ pruefe('Zu langsamer zweiter Tipp löst keinen Extrasprung aus',
 // Level 1 ist das Tutorial – dort gibt es bewusst weder Gegner noch
 // Stacheln. Diese Tests laufen deshalb auf Level 2.
 await page.click('.pbtn[data-id="tastatur"]');
-await page.evaluate(() => levelWechseln(1));
+await page.evaluate(() => { levelWechseln(1); szene='spiel'; blende=0; });
 await page.waitForTimeout(250);
 
 // 13) Von oben auf einen Gegner springen -> Gegner platt, Fuchs prallt ab
 const platt = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
     g.x = 5 * TILE; g.y = (levelH-2) * TILE - g.h; g.vx = 0;   // flacher Boden, stillgestellt
@@ -283,7 +290,7 @@ pruefe('Draufspringen kostet kein Herz', platt.leben === platt.leben0);
 //     Gegner und Fuchs auf eine ruhige, flache Bodenstelle setzen: auf einer
 //     schmalen Stufe wandert der Gegner weg und die beiden verfehlen sich.
 const seitlich = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
     g.x = 5 * TILE; g.y = (levelH-2) * TILE - g.h; g.vx = 0;     // flacher Boden, Abschnitt A
@@ -306,7 +313,7 @@ pruefe('Der Treffer stösst den Fuchs weg', seitlich.vx < 0, 'vx = ' + seitlich.
 
 // 15) Die Schonzeit verhindert, dass man sofort noch ein Herz verliert
 const doppelt = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     const g = gegner.find(g => g.art === 'laeufer');
     g.x = 5 * TILE; g.y = (levelH-2) * TILE - g.h; g.vx = 0;
@@ -321,7 +328,7 @@ pruefe('Zwei Berührungen in Folge kosten nur ein Herz',
 
 // 16) Stacheln kosten ein Herz
 const stachel = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     let ziel = null;
     for (let r = 0; r < levelH && !ziel; r++)
@@ -339,7 +346,7 @@ pruefe('Stacheln kosten ein Herz',
 
 // 17) Langzeitlauf: Gegner müssen sich dauerhaft vernünftig verhalten
 const dauer = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     const start = gegner.map(g => ({ art: g.art, y: g.y }));
     const anfangs = gegner.length;
@@ -369,7 +376,7 @@ pruefe('Kein Gegner bleibt in einer Wand stecken', dauer.steckt === 0, dauer.ste
 
 // 18) Alle Herzen weg -> Game Over
 const ende = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     spieler.leben = 1;
     spieler.schonzeit = 0;
@@ -388,7 +395,7 @@ pruefe('Leertaste startet einen neuen Versuch',
 
 // 19) Pause hält das Spiel wirklich an
 const angehalten = await page.evaluate(() => new Promise(res => {
-  levelWechseln(1);
+  levelWechseln(1); szene='spiel'; blende=0;
   setTimeout(() => {
     spieler.x = 8 * TILE; spieler.y = (levelH-2) * TILE - spieler.h; spieler.vx = 60;
     pause = true;
@@ -407,13 +414,13 @@ await page.evaluate(() => { pause = false; });
 const levels = await page.evaluate(() => {
   const raus = [];
   for(let i=0;i<LEVELS.length;i++){
-    levelWechseln(i);
+    levelWechseln(i); szene='spiel'; blende=0;
     raus.push({ nr:i, name:LEVELS[i].name, breite:levelB, hoehe:levelH,
                 muenzen:muenzen.length, gegner:gegner.length,
                 checkpoints:checkpoints.length,
                 startX:startPos.x, zielX:zielPos.x });
   }
-  levelWechseln(0);
+  levelWechseln(0); szene='spiel'; blende=0;
   return raus;
 });
 pruefe('Alle drei Levels laden', levels.length === 3, levels.map(l=>l.name).join(', '));
@@ -427,7 +434,7 @@ pruefe('Die späteren Levels haben Gegner', levels[1].gegner > 0 && levels[2].ge
 await page.evaluate(() => {
   localStorage.removeItem('fuchssprung');
   fortschritt = { frei:0, best:{} };
-  levelWechseln(0);
+  levelWechseln(0); szene='spiel'; blende=0;
 });
 const vorher = await page.evaluate(() => ({ frei: fortschritt.frei }));
 pruefe('Zu Beginn ist nur Level 1 frei', vorher.frei === 0);
@@ -471,6 +478,187 @@ pruefe('Die freigeschalteten Levels sind offen', !knoepfe[0].zu && !knoepfe[1].z
 
 // Aufräumen, damit der nächste Lauf sauber startet
 await page.evaluate(() => { try{ localStorage.removeItem('fuchssprung'); }catch(e){} });
+
+// ============ Phase 4: Arcade-Anstrich ============
+
+// 23) Titelbild: das Spiel startet dort und der Fuchs läuft von allein
+await page.reload();
+await page.waitForTimeout(800);
+const titel = await page.evaluate(() => new Promise(res => {
+  const x0 = spieler.x;
+  setTimeout(() => res({ szene, gelaufen: spieler.x - x0, lebt: !gameOver }), 900);
+}));
+pruefe('Das Spiel startet auf dem Titelbild', titel.szene === 'titel', 'szene = ' + titel.szene);
+pruefe('Im Attract-Modus läuft der Fuchs von allein',
+       titel.gelaufen > 20, titel.gelaufen.toFixed(0) + ' px in 0.9 s');
+
+// Der Attract-Modus muss auch über längere Zeit durchhalten,
+// ohne stecken zu bleiben oder das Level zu verlassen
+const attract = await page.evaluate(() => new Promise(res => {
+  let stecken = 0, weiteste = 0, neustarts = 0, vorher = spieler.x;
+  const iv = setInterval(() => {
+    if (spieler.x < vorher - 40) neustarts++;     // von vorn begonnen
+    if (Math.abs(spieler.x - vorher) < 0.2 && spieler.amBoden) stecken++;
+    weiteste = Math.max(weiteste, spieler.x);
+    vorher = spieler.x;
+  }, 100);
+  setTimeout(() => { clearInterval(iv); res({ stecken, weiteste, neustarts, szene }); }, 9000);
+}));
+pruefe('Der Attract-Fuchs bleibt nicht stehen',
+       attract.stecken < 8, attract.stecken + ' von 90 Messungen ohne Fortschritt');
+pruefe('Der Attract-Fuchs kommt voran',
+       attract.weiteste > 12 * 18, 'bis Spalte ' + Math.round(attract.weiteste / 18));
+pruefe('Das Titelbild bleibt aktiv', attract.szene === 'titel');
+
+// 24) Leertaste startet das Spiel über BEREIT?/LOS!
+await page.keyboard.press(' ');
+await page.waitForTimeout(120);
+const bereit = await page.evaluate(() => ({ szene, blende: +blende.toFixed(2), x: +spieler.x.toFixed(0) }));
+pruefe('Leertaste führt in die Startaufstellung', bereit.szene === 'bereit', 'szene = ' + bereit.szene);
+pruefe('Beim Szenenwechsel blendet das Bild um', bereit.blende > 0, 'blende = ' + bereit.blende);
+
+// In BEREIT bewegt sich noch nichts
+const stillstand = await page.evaluate(() => new Promise(res => {
+  const x0 = spieler.x, z0 = zeit;
+  setTimeout(() => res({ bewegt: Math.abs(spieler.x - x0), zeitLief: zeit - z0 }), 400);
+}));
+pruefe('Vor dem Start bewegt sich nichts',
+       stillstand.bewegt < 0.5 && stillstand.zeitLief < 0.01,
+       stillstand.bewegt.toFixed(1) + ' px');
+
+// ... und danach geht es los
+await page.waitForTimeout(1600);
+const laeuft = await page.evaluate(() => ({ szene, blende: +blende.toFixed(2) }));
+pruefe('Nach LOS! beginnt das Spiel', laeuft.szene === 'spiel', 'szene = ' + laeuft.szene);
+pruefe('Die Blende ist wieder offen', laeuft.blende === 0);
+
+// 25) Punkte und Kombo
+const punkteTest = await page.evaluate(() => new Promise(res => {
+  levelWechseln(1); szene='spiel'; blende=0;
+  setTimeout(() => {
+    punktestand = 0; kombo = 0; komboT = 0;
+    const frei = muenzen.filter(m => !m.weg && !m.bonus).slice(0, 3);
+    const hol = (m) => { spieler.x = m.x - 5; spieler.y = m.y - 7; spieler.vx = 0; spieler.vy = 0; };
+    hol(frei[0]);
+    setTimeout(() => {
+      const nach1 = { punkte: punktestand, kombo };
+      hol(frei[1]);
+      setTimeout(() => {
+        const nach2 = { punkte: punktestand, kombo };
+        res({ nach1, nach2, texte: texte.length });
+      }, 140);
+    }, 140);
+  }, 260);
+}));
+pruefe('Eine Münze gibt Punkte', punkteTest.nach1.punkte === 100,
+       punkteTest.nach1.punkte + ' Punkte, Kombo ' + punkteTest.nach1.kombo);
+pruefe('Schnell nacheinander sammeln erhöht die Kombo',
+       punkteTest.nach2.kombo === 2, 'Kombo ' + punkteTest.nach2.kombo);
+pruefe('Die Kombo vervielfacht die Punkte',
+       punkteTest.nach2.punkte === 300, punkteTest.nach2.punkte + ' statt 200');
+pruefe('Gesammeltes zeigt eine aufsteigende Zahl', punkteTest.texte > 0);
+
+// Die Kombo läuft nach der eingestellten Zeit aus
+const komboAus = await page.evaluate(() => new Promise(res => {
+  kombo = 5; komboT = 0.2;
+  setTimeout(() => res({ kombo, komboT: +komboT.toFixed(2) }), 600);
+}));
+pruefe('Die Kombo läuft nach einer Pause aus', komboAus.kombo === 0, 'Kombo ' + komboAus.kombo);
+
+// 26) Zielbonus für Herzen und Zeit
+const ziel = await page.evaluate(() => new Promise(res => {
+  levelWechseln(1); szene='spiel'; blende=0;
+  setTimeout(() => {
+    punktestand = 0; zeit = 10; spieler.leben = 3;
+    spieler.x = zielPos.x + 4; spieler.y = zielPos.y + 2;
+    setTimeout(() => res({ gewonnen, zielBonus, punktestand,
+                           gespeichert: (fortschritt.best[levelNr]||{}).punkte }), 250);
+  }, 260);
+}));
+pruefe('Am Ziel gibt es einen Bonus für übrige Herzen',
+       ziel.zielBonus.herzen === 1500, ziel.zielBonus.herzen + ' Punkte');
+pruefe('Am Ziel gibt es einen Bonus für die Zeit',
+       ziel.zielBonus.zeit > 0, ziel.zielBonus.zeit + ' Punkte');
+pruefe('Der Punktestand wird als Bestwert gemerkt',
+       ziel.gespeichert === ziel.punktestand, ziel.gespeichert + ' gespeichert');
+
+// 27) Musik und Schalter
+const musik = await page.evaluate(() => {
+  const vorher = { musikAn, tonAn, crtAn };
+  musikUmschalten();
+  const nachMusik = musikAn;
+  musikUmschalten();
+  crtUmschalten();
+  const nachCrt = { crtAn, klasse: document.getElementById('stage').classList.contains('crt') };
+  crtUmschalten();
+  return { vorher, nachMusik, nachCrt, knoepfe: document.querySelectorAll('#schalter .sbtn').length };
+});
+pruefe('Es gibt Schalter für Ton, Musik und Bildröhre', musik.knoepfe === 3, musik.knoepfe + ' Knöpfe');
+pruefe('Die Musik lässt sich abschalten', musik.nachMusik === false);
+pruefe('Die Bildröhren-Optik lässt sich zuschalten',
+       musik.nachCrt.crtAn === true && musik.nachCrt.klasse === true);
+
+// Der Sequenzer muss Töne planen, ohne zu stolpern
+const sequenzer = await page.evaluate(() => new Promise(res => {
+  try{
+    tonAusgabe();
+    musikAn = true; tonAn = true;
+    musikStopp(); musikStart();
+    const s0 = schrittNr;
+    setTimeout(() => {
+      const gelaufen = schrittNr - s0;
+      musikStopp();
+      res({ laeuft: musikLaeuft, gelaufen, ok: true });
+    }, 900);
+  }catch(e){ res({ ok:false, fehler: e.message }); }
+}));
+pruefe('Der Musik-Sequenzer läuft', sequenzer.ok && sequenzer.gelaufen > 3,
+       sequenzer.ok ? sequenzer.gelaufen + ' Sechzehntel in 0.9 s' : sequenzer.fehler);
+
+// 28) Die Noten müssen sich alle in Frequenzen übersetzen lassen
+const noten = await page.evaluate(() => {
+  const schlecht = [];
+  ['melodie','bass'].forEach(k=>{
+    TAKTE[k].trim().split(/\s+/).forEach(n=>{
+      if(n !== '.' && tonZuHertz(n) === null) schlecht.push(k+':'+n);
+    });
+  });
+  const a4 = tonZuHertz('A4');
+  return { schlecht, a4: a4 && +a4.toFixed(1) };
+});
+pruefe('Alle Noten sind gültig', noten.schlecht.length === 0, noten.schlecht.join(', '));
+pruefe('Die Stimmung stimmt (A4 = 440 Hz)', noten.a4 === 440, noten.a4 + ' Hz');
+
+// 29) Klingt da wirklich etwas? Die Musik wird offline gerendert und
+//     das Ergebnis vermessen - sonst merkt man Stille erst beim Zuhören.
+const klang = await page.evaluate(async () => {
+  const dauer = 2.0;
+  const off = new OfflineAudioContext(1, Math.ceil(44100*dauer), 44100);
+  const echt = AC;
+  try{
+    AC = off;                                  // Sequenzer auf den Offline-Kontext lenken
+    rauschPuffer = null;
+    let t = 0.05, i = 0;
+    while(t < dauer - 0.2){ musikSchritt(t, i); t += SCHRITT; i++; }
+    const puffer = await off.startRendering();
+    const d = puffer.getChannelData(0);
+    let spitze = 0, summe = 0, stille = 0;
+    for(let k=0;k<d.length;k++){
+      const a = Math.abs(d[k]);
+      spitze = Math.max(spitze, a); summe += a*a;
+      if(a < 0.0005) stille++;
+    }
+    return { schritte:i, spitze:+spitze.toFixed(3),
+             effektiv:+Math.sqrt(summe/d.length).toFixed(4),
+             stilleAnteil:+(stille/d.length).toFixed(2) };
+  } finally { AC = echt; rauschPuffer = null; }
+});
+pruefe('Die Musik erzeugt hörbares Signal',
+       klang.spitze > 0.05 && klang.effektiv > 0.005,
+       `Spitze ${klang.spitze}, Effektivwert ${klang.effektiv}, ${klang.schritte} Sechzehntel`);
+pruefe('Die Musik übersteuert nicht', klang.spitze < 1.0, 'Spitze ' + klang.spitze);
+pruefe('Die Musik ist nicht überwiegend Stille',
+       klang.stilleAnteil < 0.5, (klang.stilleAnteil*100).toFixed(0) + ' % Stille');
 
 pruefe('Keine JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));
 

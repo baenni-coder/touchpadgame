@@ -1,6 +1,6 @@
 # Vom Touchpad-Abenteuer zum echten Arcade-Jump-&-Run
 
-**Stand:** 21.09.2026 · **Phase 1 bis 3 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
+**Stand:** 22.09.2026 · **Phase 1 bis 4 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
 
 ---
 
@@ -224,9 +224,20 @@ das Spielgefühl ist also unverändert und alle Levels blieben gültig.
 
 **Ergebnis:** Ein Spiel mit Welt und Fortschritt. 65 Browsertests, alle grün.
 
-### Phase 4 · Arcade-Politur (~1–2 Sitzungen)
-Partikel, Bildschirm-Rüttler, Kombo-Punkte, Chiptune-Musik, Titelbildschirm, Attract Mode, CRT-Optik, Übergänge.
-**Ergebnis:** Es sieht und klingt nach Spielhalle.
+### Phase 4 · Arcade-Politur — ✅ **erledigt**
+Titelbild mit Vorführmodus (der Fuchs steuert sich dort selbst und springt vor Lücken, Stufen und Gegnern), BEREIT?/LOS!-Einblendung, Blende beim Szenenwechsel, Punktesystem mit Kombo bis x9, aufsteigende Punktezahlen, Schlussrechnung mit Herzen- und Zeitbonus, Bestwerte, zuschaltbare Bildröhren-Optik.
+
+**Chiptune-Musik:** ein eigener Sequenzer, der Melodie, Bass und Schlagzeug
+über die Uhr des Audio-Kontexts plant (nicht über `setTimeout` – das eiert).
+Die Melodie ist eigens geschrieben, die Noten stehen als Textraster im Code.
+Es wird weiterhin **keine einzige Datei** geladen.
+
+Weil sich Musik nicht anschauen lässt, prüft ein Test sie **messend**: Er
+rendert zwei Sekunden in einen `OfflineAudioContext` und misst Spitzenwert,
+Effektivwert und Stilleanteil. Ergebnis: Spitze 0.29 (keine Übersteuerung),
+33 % Stille – es klingt also wirklich etwas.
+
+**Ergebnis:** Es sieht und klingt nach Spielhalle. 88 Browsertests, alle grün.
 
 ### Phase 5 · Integration & Schule (~1 Sitzung)
 Verbindung mit den 8 Touchpad-Stationen (z.B. Sterne aus den Stationen schalten Levels frei – das motiviert zum Üben!), Lehrer-Modus, Barrierefreiheit, Speicherstand, Build zu einer Datei.

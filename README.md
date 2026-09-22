@@ -20,11 +20,12 @@ Es werden keine Daten übertragen; alles bleibt auf dem Gerät (revDSG-freundlic
 `prototyp.html` doppelklicken. Die Grafik ist bewusst schlicht und entsteht
 komplett im Code – es wird keine einzige Datei nachgeladen.
 
-Drin ist: **drei Levels** mit steigender Schwierigkeit · Laufen und Springen
-mit Coyote Time, Sprungpuffer und variabler Sprunghöhe · Gegner (Läufer und
-Flieger) · Stacheln · drei Herzen mit Schonzeit nach einem Treffer ·
-Checkpoints · Bonus-Diamanten · Pause · Spielende mit neuem Versuch ·
-gespeicherter Fortschritt.
+Drin ist: **Titelbild mit Vorführmodus** · **drei Levels** mit steigender
+Schwierigkeit · Laufen und Springen mit Coyote Time, Sprungpuffer und
+variabler Sprunghöhe · Gegner (Läufer und Flieger) · Stacheln · drei Herzen
+mit Schonzeit nach einem Treffer · Checkpoints · Bonus-Diamanten ·
+**Punkte mit Kombo** · **Chiptune-Musik** · Pause · Spielende mit neuem
+Versuch · gespeicherter Fortschritt und Bestwerte.
 
 | Level | Was neu dazukommt |
 |---|---|
@@ -50,15 +51,45 @@ schnell klicken (bzw. Leertaste doppelt tippen, am Gamepad B) springt
 4.2 statt 2.9 Kacheln hoch. Nur damit erreicht man die blauen Bonus-Diamanten –
 das Level selbst ist aber auch ohne ihn durchspielbar.
 
-<kbd>Esc</kbd> pausiert, <kbd>R</kbd> startet neu, <kbd>M</kbd> schaltet
-den Ton um.
+<kbd>Esc</kbd> pausiert (zweimal: zurück zum Titelbild), <kbd>R</kbd>
+startet neu. <kbd>M</kbd> Ton, <kbd>N</kbd> Musik, <kbd>C</kbd>
+Bildröhren-Optik – dieselben drei auch als Knöpfe oben rechts.
+
+## Punkte
+
+| Wofür | Punkte |
+|---|---|
+| Münze | 100 |
+| Bonus-Diamant | 1000 |
+| Gegner plätten | 200 |
+| Übriges Herz am Ziel | 500 |
+| Jede eingesparte Sekunde | 20 |
+
+Wer schnell hintereinander sammelt, baut eine **Kombo** auf: der
+Multiplikator steigt bis x9 und läuft nach 2,4 Sekunden ohne Beute wieder
+aus. Der beste Punktestand pro Level bleibt gespeichert und steht auf dem
+Titelbild.
+
+## Musik
+
+Die Chiptune-Schleife entsteht **im Code** – es wird keine Audiodatei
+geladen. Ein Sequenzer plant Melodie, Bass und Schlagzeug über die Uhr des
+Audio-Kontexts, damit der Takt nicht eiert. Die Noten stehen als
+Textraster im Objekt `TAKTE` und lassen sich dort direkt ändern:
+
+```
+C4 .  E4 .  G4 .  E4 .    ein Feld = ein Sechzehntel, "." = nichts Neues
+```
+
+Der Browser lässt Ton erst nach der ersten Eingabe zu – die Musik startet
+deshalb beim ersten Tastendruck oder Klick.
 
 ## Werkzeuge
 
 Brauchen Node.js und laufen alle lokal:
 
 ```
-node tools/test.mjs           # 65 Browsertests
+node tools/test.mjs           # 88 Browsertests
 node tools/messen.mjs         # misst Sprunghöhe und -weite
 node tools/level-pruefen.mjs  # prüft, ob Ziel und Münzen erreichbar sind
 node tools/level-bauen.mjs    # erzeugt die Kachelkarten
@@ -100,6 +131,6 @@ Sprites beschreibt `docs/sprites.md`.
 
 ## Nächster Schritt
 
-Siehe `docs/jumprun-plan.md`. Phase 1 bis 3 sind gebaut; als Nächstes
-kommt der Arcade-Anstrich (Phase 4): Titelbildschirm, Chiptune-Musik,
-Punktezähler, Übergänge.
+Siehe `docs/jumprun-plan.md`. Phase 1 bis 4 sind gebaut; als Nächstes
+kommt die Verbindung mit den acht Übungsstationen und der Lehrer-Modus
+(Phase 5).
