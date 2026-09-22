@@ -766,6 +766,37 @@ pruefe('Von unten bleibt man nicht am Lift hängen', !vonUnten.haengen);
 pruefe('Von unten kommt man durch den Lift hindurch', vonUnten.drueber,
        `Fuchs bei ${vonUnten.y}, Lift bei ${vonUnten.liftY}`);
 
+// 33b) Jeder Liftschacht muss betretbar sein.
+//      Gingen beide Führungswände bis zum Boden, wäre der Schacht eine
+//      zugemauerte Kammer – der Fuchs käme gar nicht an den Lift.
+const einstiege = await page.evaluate(() => {
+  const LIFT_BREITE = 3;
+  return lifte.map(l => {
+    const c = Math.round(l.x / TILE);
+    const unten = Math.round(l.untenGrenze / TILE);
+    const wandL = c - 1, wandR = c + LIFT_BREITE;
+    // Auf Fusshöhe und eine Kachel darüber muss eine Seite offen sein
+    const offen = (w) => !fest(w, unten) && !fest(w, unten-1);
+    return { spalte:c, links: offen(wandL), rechts: offen(wandR) };
+  });
+});
+const zugemauert = einstiege.filter(e => !e.links && !e.rechts);
+pruefe('Jeder Liftschacht hat einen Einstieg',
+       zugemauert.length === 0,
+       zugemauert.length ? 'zugemauert bei Spalte ' + zugemauert.map(e=>e.spalte).join(', ')
+                         : einstiege.length + ' Schächte geprüft');
+
+// Und die jeweils andere Seite muss den Lift unten noch führen
+const ungefuehrt = await page.evaluate(() => {
+  const LIFT_BREITE = 3;
+  return lifte.filter(l => {
+    const c = Math.round(l.x / TILE), unten = Math.round(l.untenGrenze / TILE);
+    return !fest(c-1, unten) && !fest(c+LIFT_BREITE, unten);
+  }).length;
+});
+pruefe('Unten wird jeder Lift noch von einer Wand geführt', ungefuehrt === 0,
+       ungefuehrt + ' ohne Führung');
+
 // 34) Touchpad ist die Standardsteuerung
 await page.reload();
 await page.waitForTimeout(800);

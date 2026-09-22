@@ -199,63 +199,77 @@ function levelDrei(){
 /* ============================================================
    LEVEL 4 · Der Lift
    Dreht sich ganz um die Liftplattformen: mit zwei Fingern auf
-   dem Touchpad fahren sie hoch und runter. Ein Lift hält da, wo
-   sein Schacht endet – also formen die Wände seinen Fahrweg.
+   dem Touchpad fahren sie hoch und runter.
    ============================================================ */
-function levelVier(){
-  const B=88+AUSLAUF, H=18, BODEN=16;
-  const {box,set,fertig} = gitter(B,H,BODEN);
 
-  // ---- A: Ankommen (0-13) ----
+/* Baut einen kompletten Liftschacht – Wände, Lift und Einstieg.
+
+   Der Lift ist 3 Kacheln breit und wird von den Wänden direkt
+   daneben geführt; er hält dort, wo die Führung endet.
+
+   Wichtig ist der EINSTIEG: Ginge die Wand auf der Anlaufseite bis
+   zum Boden, wäre der Schacht eine zugemauerte Kammer – man käme
+   gar nicht hinein. Auf dieser Seite endet die Wand deshalb zwei
+   Kacheln über der untersten Liftposition: eine Kachel zum
+   Durchlaufen, eine für den Kopf. Geführt wird der Lift unten
+   dann von der gegenüberliegenden Wand.                          */
+function liftSchacht(set, box, { c, unten, oben, einstieg='links' }){
+  const wandL = c-1, wandR = c+3;
+  if(einstieg === 'links'){
+    box(oben, wandL, unten-2, wandL, '#');     // kurze Wand: Platz zum Hineinlaufen
+    box(oben, wandR, unten,   wandR, '#');     // lange Wand: führt den Lift bis unten
+  }else{
+    box(oben, wandL, unten,   wandL, '#');
+    box(oben, wandR, unten-2, wandR, '#');
+  }
+  set(unten, c, 'A');
+}
+
+function levelVier(){
+  const B=92+AUSLAUF, H=18, BODEN=16;
+  const {box,set,fertig} = gitter(B,H,BODEN);
+  const schacht = o => liftSchacht(set, box, o);
+
+  // ---- A: Ankommen (0-11) ----
   set(15,1,'P');
   set(15,5,'o'); set(15,9,'o');
 
-  // ---- B: der erste Lift, ganz ohne Gefahr (14-26) ----
-  // Schacht: Wände links und rechts, oben offen bis Zeile 9
-  box(9,13,15,13,'#');                       // linke Wand
-  box(9,17,15,17,'#');                       // rechte Wand
-  set(15,14,'A');                            // Lift am Schachtboden
-  box(9,18,9,22,'=');                        // oben hinaus auf eine Plattform
-  set(8,19,'o'); set(8,20,'o'); set(8,21,'o');
+  // ---- B: der erste Lift, ganz ohne Gefahr (12-24) ----
+  schacht({ c:14, unten:15, oben:10, einstieg:'links' });
+  box(10,18,10,22,'=');                      // Ausstieg oben rechts
+  set(9,19,'o'); set(9,20,'o'); set(9,21,'o');
 
-  // ---- C: hinunter und weiter (27-40) ----
-  box(11,26,11,29,'=');
-  set(10,27,'o');
-  box(BODEN,31,H-1,33,'.');                  // Abgrund
+  // ---- C: wieder hinunter, über einen Abgrund (25-34) ----
+  box(12,26,12,29,'=');
+  set(11,27,'o');
+  box(BODEN,31,H-1,33,'.');                  // Abgrund zum Drüberspringen
   set(14,32,'o');
 
-  // ---- D: Lift über dem Abgrund (36-52) ----
-  // Wichtig: Der Lift ist 3 Kacheln breit und braucht die Führungswände
-  // direkt daneben – also bei Lift-Spalte-1 und Lift-Spalte+3.
-  box(8,36,15,36,'#');                       // linke Führung
-  box(8,40,15,40,'#');                       // rechte Führung
-  box(BODEN,37,H-1,39,'.');                  // Abgrund im Schacht
-  set(14,37,'A');                            // Lift darüber
-  set(13,38,'o');
-  box(8,41,8,45,'=');                        // Ausstieg oben rechts
-  set(7,42,'o'); set(7,43,'o');
-  set(3,43,'B');                             // Bonus über dem Ausstieg
+  // ---- D: ein höherer Lift (35-48) ----
+  // Kein Abgrund im Schacht: sonst führte die Erde links und rechts den
+  // Lift bis unter die Bodenlinie, und der Einstieg wäre zugemauert.
+  schacht({ c:37, unten:15, oben:9, einstieg:'links' });
+  set(14,38,'o');
+  box(9,41,9,45,'=');                        // Ausstieg oben rechts
+  set(8,42,'o'); set(8,43,'o');
+  set(4,43,'B');                             // Bonus über dem Ausstieg
   set(15,47,'C');
 
-  // ---- E: zwei Lifte hintereinander (53-72) ----
-  box(7,53,15,53,'#');
-  box(7,57,15,57,'#');
-  set(15,54,'A');
-  box(7,58,7,62,'=');
-  set(6,59,'o'); set(6,60,'o');
+  // ---- E: zwei Lifte hintereinander (49-72) ----
+  schacht({ c:52, unten:15, oben:8, einstieg:'links' });
+  box(8,56,8,60,'=');
+  set(7,57,'o'); set(7,58,'o');
 
-  box(5,64,13,64,'#');
-  box(5,68,13,68,'#');
-  set(13,65,'A');
-  box(5,69,5,73,'=');
-  set(4,70,'o'); set(4,71,'o');
-  set(0,71,'B');                             // zweiter Bonus: 4 über dem Ausstieg
+  schacht({ c:64, unten:15, oben:6, einstieg:'links' });
+  box(6,68,6,72,'=');
+  set(5,69,'o'); set(5,70,'o');
+  set(1,70,'B');                             // zweiter Bonus ganz oben
 
-  // ---- F: Abstieg und Ziel (73-87) ----
+  // ---- F: Abstieg und Ziel (73-91) ----
   set(15,76,'L');
-  set(15,79,'o');
-  set(15,82,'C');
-  set(15,85,'F');
+  set(15,80,'o');
+  set(15,84,'C');
+  set(15,89,'F');
   return fertig();
 }
 

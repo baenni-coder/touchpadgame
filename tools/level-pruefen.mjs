@@ -105,8 +105,19 @@ function pruefe(zeilen, name){
             else if(dc <= KNAPP[dh]) erlaubt='knapp';
           }
           if(!erlaubt) continue;
-          let blockiert=false;
-          for(let rr=Math.min(r,r2)-1; rr<=Math.min(r,r2); rr++) if(!frei(rr,c)) blockiert=true;
+          /* Ist der Weg dorthin überhaupt frei? Früher wurde nur die
+             Startspalte geprüft – dadurch galten Sprünge quer durch eine
+             Wand als möglich, und ein rundum zugemauerter Bereich wurde
+             als erreichbar gemeldet. Jetzt muss in jeder Spalte dazwischen
+             auf Kopfhöhe des höheren Endpunkts Platz sein. Wer über ein
+             Hindernis will, muss den Weg darüber nehmen – und der taucht
+             in der Suche als eigener Standplatz auf. */
+          const hoehe = Math.min(r, r2);
+          let blockiert = false;
+          const vonC = Math.min(c, c2), bisC = Math.max(c, c2);
+          for(let cc = vonC; cc <= bisC && !blockiert; cc++)
+            for(let rr = hoehe-1; rr <= hoehe; rr++)
+              if(!frei(rr, cc)){ blockiert = true; break; }
           if(blockiert) continue;
           versuche(r2,c2, (art==='knapp'||erlaubt==='knapp')?'knapp':'sicher');
         }

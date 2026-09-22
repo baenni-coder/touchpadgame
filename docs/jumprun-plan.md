@@ -265,8 +265,27 @@ Verbunden sind die Teile nur über `src/bruecke.js`.
   beiden Teilen, die ihn beim Aufbau schon abfragen. Nach dem Neuladen
   stand alles auf null. Geladen wird jetzt sofort.
 
-**Ergebnis:** Auslieferbar. 18 Tests auf der fertigen Datei, darunter die
+**Ergebnis:** Auslieferbar. 21 Tests auf der fertigen Datei, darunter die
 Prüfung, dass sie zur Laufzeit **nichts nachlädt**.
+
+### Nachtrag aus dem Spieltest
+
+Vier Rückmeldungen, zwei davon echte Fehler mit derselben Wurzel: Etwas
+sah beim Durchklicken richtig aus, war es aber nicht.
+
+- **Untere Kacheln abgeschnitten** – Fehler im Bauskript: `body` stand in
+  der Liste der global bleibenden Selektoren, also galten die `body`-Regeln
+  beider Teile für die ganze Seite und überschrieben sich. Das
+  `overflow:hidden` des Spielteils sperrte das Scrollen der Karte.
+- **Zeiger blieb am Levelende hängen** – die Steuerung war in Ordnung;
+  hinter dem Ziel fehlte Auslauf, sodass die Kamera früh klemmte. Alle
+  Levels haben jetzt zehn Kacheln Platz hinter dem Ziel.
+- **Liftschächte waren zugemauert** – und der Prüfer hatte es
+  durchgewinkt, weil er beim Sprung nur die Startspalte auf Hindernisse
+  prüfte, nicht die Spalten dazwischen. Er liess damit Sprünge quer durch
+  Wände zu. Behoben; danach meldete er Level 4 sofort als unspielbar.
+  Die Schächte werden jetzt von einer Hilfsfunktion gebaut, die den
+  Einstieg offen lässt.
 
 ### Phase 6 · Test & Feinschliff (laufend)
 Browser-Tests, Spieltest mit der Klasse, Balance nachziehen, Lehrer-Anleitung.
