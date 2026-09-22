@@ -239,9 +239,34 @@ Effektivwert und Stilleanteil. Ergebnis: Spitze 0.29 (keine Übersteuerung),
 
 **Ergebnis:** Es sieht und klingt nach Spielhalle. 88 Browsertests, alle grün.
 
-### Phase 5 · Integration & Schule (~1 Sitzung)
-Verbindung mit den 8 Touchpad-Stationen (z.B. Sterne aus den Stationen schalten Levels frei – das motiviert zum Üben!), Lehrer-Modus, Barrierefreiheit, Speicherstand, Build zu einer Datei.
-**Ergebnis:** Auslieferbar.
+### Phase 5 · Integration & Schule — ✅ **erledigt**
+Die beiden Teile sind jetzt **eine App**: `dist/touchpad-abenteuer.html`,
+136 KB, eine Datei, keine Nebendateien.
+
+- Neunte Kachel auf der Stationskarte; sie öffnet sich **ab 12 Sternen**
+  (rund vier geschaffte Übungslevel) und zeigt vorher, wie viele fehlen
+- gemeinsamer Speicherstand für Sterne, Stationen und Jump-&-Run
+- Weg zurück zur Karte aus dem Spiel
+- **Lehrer-Bereich** (Taste L oder langer Druck auf den Sternezähler):
+  Schwelle einstellen, alle Level öffnen, Sterne vergeben oder
+  zurücksetzen, ganzen Fortschritt löschen
+- `docs/unterricht.md` als Anleitung für die Lehrperson
+
+**Bauen:** `tools/bauen.mjs` schränkt das CSS jedes Teils auf einen eigenen
+Container ein und kapselt sein JavaScript in einer eigenen Funktion –
+sonst kollidieren gleiche Namen wie `$`, `state`, `beep` oder `sfx`.
+Verbunden sind die Teile nur über `src/bruecke.js`.
+
+**Zwei Fehler, die der Test der fertigen Datei gefunden hat:**
+- Brücke und Stationsteil führten getrennte Sternzähler. Die Kachel las den
+  einen, gespeichert wurde der andere – „+10 Sterne“ im Lehrer-Bereich wäre
+  wirkungslos geblieben. Die Zahl lebt jetzt nur noch an einer Stelle.
+- Die Brücke lud den Speicherstand erst in `starten()`, also **nach** den
+  beiden Teilen, die ihn beim Aufbau schon abfragen. Nach dem Neuladen
+  stand alles auf null. Geladen wird jetzt sofort.
+
+**Ergebnis:** Auslieferbar. 18 Tests auf der fertigen Datei, darunter die
+Prüfung, dass sie zur Laufzeit **nichts nachlädt**.
 
 ### Phase 6 · Test & Feinschliff (laufend)
 Browser-Tests, Spieltest mit der Klasse, Balance nachziehen, Lehrer-Anleitung.

@@ -10,10 +10,31 @@ Es werden keine Daten übertragen; alles bleibt auf dem Gerät (revDSG-freundlic
 
 | Pfad | Beschreibung |
 |---|---|
-| `original/touchpad-abenteuer.html` | Die bisherige Übungs-App. Einfach doppelklicken. |
-| `prototyp.html` | **Fuchs-Sprung** – der Jump-&-Run-Prototyp. Ebenfalls doppelklicken. |
-| `docs/jumprun-plan.md` | Plan und Übersicht für den Ausbau zu einem Arcade-Jump-&-Run |
-| `tools/` | Werkzeuge: Level bauen, Level prüfen, Physik messen, Tests |
+| **`dist/touchpad-abenteuer.html`** | **Das fertige Spiel – diese Datei verteilst du.** Übungen und Jump-&-Run in einem. |
+| `src/stationen.html` | Quelle: die acht Touchpad-Übungen |
+| `prototyp.html` | Quelle: das Jump-&-Run (läuft auch allein) |
+| `src/bruecke.js` | Quelle: verbindet beide Teile, Speicherstand, Lehrer-Bereich |
+| `original/touchpad-abenteuer.html` | Die ursprüngliche Übungs-App, unverändert als Referenz |
+| `docs/unterricht.md` | **Anleitung für die Lehrperson** |
+| `docs/jumprun-plan.md` | Plan und Übersicht für den Ausbau |
+| `docs/sprites.md` | Wie sich Grafik austauschen lässt |
+| `tools/` | Werkzeuge: bauen, Level prüfen, Physik messen, Tests |
+
+## Bauen
+
+```
+node tools/bauen.mjs        # erzeugt dist/touchpad-abenteuer.html
+node tools/test-dist.mjs    # prüft die fertige Datei
+```
+
+Das Bauskript setzt die beiden Teile zusammen. Sie sind eigenständige
+Seiten mit eigenem CSS und eigenen globalen Namen – damit sie sich nicht
+in die Quere kommen, bekommt jeder Teil einen eigenen Container, sein CSS
+wird darauf eingeschränkt und sein JavaScript läuft in einer eigenen
+Funktion. Verbunden sind sie nur über `src/bruecke.js`.
+
+**Änderungen gehören in die Quellen**, nicht in `dist/` – die Datei dort
+wird bei jedem Bauen überschrieben.
 
 ## Fuchs-Sprung (Prototyp)
 
@@ -129,8 +150,16 @@ Tiere, und der Fuchs ist das Maskottchen der Lern-App.
 Herkunft und Lizenzen stehen in `CREDITS.md`, das Austauschen weiterer
 Sprites beschreibt `docs/sprites.md`.
 
+## Für den Unterricht
+
+Alles Wichtige steht in **`docs/unterricht.md`**: verteilen, Lehrer-Bereich,
+Steuerung differenzieren, Datenschutz.
+
+Kurz: Die acht Übungen geben Sterne, ab **12 Sternen** öffnet sich das
+Jump-&-Run. Die Schwelle lässt sich im Lehrer-Bereich ändern (Taste **L**
+oder langer Druck auf den Sternezähler).
+
 ## Nächster Schritt
 
-Siehe `docs/jumprun-plan.md`. Phase 1 bis 4 sind gebaut; als Nächstes
-kommt die Verbindung mit den acht Übungsstationen und der Lehrer-Modus
-(Phase 5).
+Siehe `docs/jumprun-plan.md`. Phase 1 bis 5 sind gebaut. Offen bleibt
+Phase 6: Spieltest mit der Klasse und Feinschliff an der Schwierigkeit.
