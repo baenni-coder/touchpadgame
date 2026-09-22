@@ -192,16 +192,16 @@ das Ziel sicher erreichbar, keine Warnungen).
 aus den Übungsstationen schalten später die Levels frei.
 
 ### Phase 2 · Das Spiel drumherum — ✅ **erledigt**
-Zwei Gegnertypen (Läufer, der an Kanten und Wänden umdreht; Flieger auf Sinuskurve), Gegner durch Draufspringen besiegen, Stacheln, drei Herzen mit Schonzeit und Rückstoss, Checkpoints, Bonus-Sterne, HUD mit Herzen, Pause, Spielende, Bildschirm-Rüttler.
+Zwei Gegnertypen (Läufer, der an Kanten und Wänden umdreht; Flieger auf Sinuskurve), Gegner durch Draufspringen besiegen, Stacheln, drei Herzen mit Schonzeit und Rückstoss, Checkpoints, Bonus-Diamanten, HUD mit Herzen, Pause, Spielende, Bildschirm-Rüttler.
 
 **Dazugekommen:** der **Doppelklick-Sprung** als Touchpad-Übung – 4.2 statt
 2.9 Kacheln. Die Höhe wird aus der noch fehlenden Resthöhe berechnet statt
 als fester Impuls, dadurch ist sie unabhängig vom Timing des zweiten Klicks
 (gemessen: 4.23 Kacheln nach 80 ms wie nach 260 ms). Nur damit erreicht man
-die Bonus-Sterne; das Level bleibt ohne ihn durchspielbar.
+die Bonus-Diamanten; das Level bleibt ohne ihn durchspielbar.
 
 **Ergebnis:** Ein durchspielbares Level mit Anfang, Gefahr und Ende –
-96 Kacheln breit, 21 Münzen, 2 Bonus-Sterne, 3 Checkpoints, 4 Gegner.
+96 Kacheln breit, 21 Münzen, 2 Bonus-Diamanten, 3 Checkpoints, 4 Gegner.
 43 Browsertests, alle grün.
 
 ### Phase 3 · Inhalt — ✅ **erledigt**

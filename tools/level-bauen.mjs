@@ -14,7 +14,7 @@
    Grenzen aus der Messung (tools/messen.mjs):
      Stufe nach oben:  höchstens 2 Kacheln
      Lücke:            höchstens 3 Kacheln
-     Doppelklick-Sprung erreicht 4 Kacheln – nur für Bonus-Sterne
+     Doppelklick-Sprung erreicht 4 Kacheln – nur für Bonus-Diamanten
 
    Aufruf:  node tools/level-bauen.mjs [nummer]
    ============================================================ */
@@ -37,7 +37,7 @@ function gitter(breite, hoehe, boden){
    LEVEL 1 · Erste Schritte
    Zum Ankommen: keine Gegner, keine Stacheln, kein Abgrund.
    Nur laufen, kleine Stufen, ein erster weiter Sprung – und ein
-   Bonus-Stern zum Üben des Doppelklicks.
+   Bonus-Diamant zum Üben des Doppelklicks.
    ============================================================ */
 function levelEins(){
   const B=52, H=14, BODEN=12;
@@ -129,7 +129,7 @@ function levelZwei(){
 /* ============================================================
    LEVEL 3 · Hoch hinaus
    Mehr in die Höhe: gestapelte Plattformen, Flieger auf dem Weg,
-   Stacheln unter den Sprüngen. Die Bonus-Sterne liegen hier so,
+   Stacheln unter den Sprüngen. Die Bonus-Diamanten liegen hier so,
    dass man den Doppelklick-Sprung sicher beherrschen muss.
    ============================================================ */
 function levelDrei(){

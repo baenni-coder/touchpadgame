@@ -12,7 +12,7 @@
    Zwei Anforderungen werden getrennt geprüft:
      1. Jedes Level muss OHNE Doppelklick-Sprung durchspielbar sein.
         (Sonst hängt ein Kind fest, das ihn noch nicht beherrscht.)
-     2. Bonus-Sterne (B) sollen NUR mit ihm erreichbar sein –
+     2. Bonus-Diamanten (B) sollen NUR mit ihm erreichbar sein –
         sonst sind sie kein Bonus.
 
    Aufruf:  node tools/level-pruefen.mjs [nummer]

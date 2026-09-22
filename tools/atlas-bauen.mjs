@@ -53,6 +53,16 @@ const daten = await page.evaluate(({ ZELLE, SPALTEN, NAMEN }) => {
   const zelle = (i) => ({ x:(i%SPALTEN)*ZELLE, y:Math.floor(i/SPALTEN)*ZELLE });
   const px = (x,y,w,h,f) => { ctx.fillStyle=f; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
 
+  /* Runde Scheibe aus Pixelzeilen. ctx.arc() geht hier nicht: die weichen
+     Ränder würden beim harten Alpha-Schalten weiter unten zu ausgefransten
+     Treppen. Zeilenweise gerechnet wird der Kreis sauber. */
+  const scheibe = (cx,cy,rx,ry,f) => {
+    for(let y=-ry; y<=ry; y++){
+      const w = Math.round(rx * Math.sqrt(Math.max(0, 1-(y/ry)**2)));
+      if(w>0) px(cx-w, cy+y, w*2, 1, f);
+    }
+  };
+
   /* ---------- Der Fuchs ----------
      beinVersatz: Laufphase, koerperY: Hüpfen, ohrKnick: Sprung/Fall */
   function fuchs(ox,oy,{bein=0, koerperY=0, schwanz=0, aua=false, luft=0}={}){
@@ -109,13 +119,15 @@ const daten = await page.evaluate(({ ZELLE, SPALTEN, NAMEN }) => {
 
   /* ---------- Gegenstände ---------- */
   function muenze(ox,oy,phase){
-    // Grösser und flacher gedreht als früher: neben den 18er-Kacheln
-    // wirkte die alte Münze wie ein dünner Strich.
-    const br = [6,4,2.5,4][phase];
-    px(ox+8-br, oy+2, br*2, 12, P.goldD);
-    px(ox+8-br, oy+3, br*2, 10, P.gold);
-    if(br>3){ px(ox+7, oy+5, 2,6, '#FFE9A8'); }
-    else    { px(ox+8-br+0.5, oy+5, 1,6, '#FFE9A8'); }
+    // Runde Scheibe, die sich um die Hochachse dreht: die Höhe bleibt,
+    // die Breite pulsiert. Phase 2 ist die schmale Kante.
+    const rx = [6,4,2,4][phase], ry = 6;
+    const cx = ox+8, cy = oy+8;
+    scheibe(cx, cy, rx, ry, P.goldD);                        // dunkler Rand
+    scheibe(cx, cy, Math.max(1,rx-1), ry-1, P.gold);         // heller Kern
+    if(rx>=4){                                               // Glanzstrich
+      scheibe(cx-Math.round(rx*0.35), cy, Math.max(1,Math.round(rx*0.28)), ry-2, '#FFE9A8');
+    }
   }
   function stern(ox,oy,phase){
     // Breite pulsiert, damit die Drehung im Spiel auch wirklich auffällt

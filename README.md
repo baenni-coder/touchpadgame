@@ -23,7 +23,7 @@ komplett im Code – es wird keine einzige Datei nachgeladen.
 Drin ist: **drei Levels** mit steigender Schwierigkeit · Laufen und Springen
 mit Coyote Time, Sprungpuffer und variabler Sprunghöhe · Gegner (Läufer und
 Flieger) · Stacheln · drei Herzen mit Schonzeit nach einem Treffer ·
-Checkpoints · Bonus-Sterne · Pause · Spielende mit neuem Versuch ·
+Checkpoints · Bonus-Diamanten · Pause · Spielende mit neuem Versuch ·
 gespeicherter Fortschritt.
 
 | Level | Was neu dazukommt |
@@ -47,7 +47,7 @@ Drei Steuerungen zum Vergleichen, umschaltbar mit <kbd>1</kbd> <kbd>2</kbd>
 
 **Der Doppelklick-Sprung** ist die eigentliche Touchpad-Übung: zweimal
 schnell klicken (bzw. Leertaste doppelt tippen, am Gamepad B) springt
-4.2 statt 2.9 Kacheln hoch. Nur damit erreicht man die lila Bonus-Sterne –
+4.2 statt 2.9 Kacheln hoch. Nur damit erreicht man die blauen Bonus-Diamanten –
 das Level selbst ist aber auch ohne ihn durchspielbar.
 
 <kbd>Esc</kbd> pausiert, <kbd>R</kbd> startet neu, <kbd>M</kbd> schaltet
@@ -70,7 +70,7 @@ node tools/tiled.mjs rundlauf # prüft den Tiled-Austausch
 Breitensuche alle Standplätze ab und meldet, wenn eine Münze oder das Ziel
 nicht erreichbar ist – bevor ein Kind daran verzweifelt. Er prüft zwei
 Dinge getrennt: das Level muss **ohne** Doppelklick-Sprung durchspielbar
-sein, und die Bonus-Sterne müssen **nur mit** ihm erreichbar sein.
+sein, und die Bonus-Diamanten müssen **nur mit** ihm erreichbar sein.
 
 ## Levels selbst bauen
 

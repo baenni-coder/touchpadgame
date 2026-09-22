@@ -108,16 +108,16 @@ const m = await page.evaluate(() => new Promise(res => {
 }));
 pruefe('Münze wird eingesammelt', m.nachher > m.vorher, `${m.vorher} → ${m.nachher}`);
 
-// Bonus-Sterne zählen getrennt von den Münzen
+// Bonus-Diamanten zählen getrennt von den Münzen
 const bm = await page.evaluate(() => new Promise(res => {
   const vorher = { p: punkte, b: boni };
-  const stern = muenzen.find(m => !m.weg && m.bonus);
-  spieler.x = stern.x - 5; spieler.y = stern.y - 7; spieler.vx = 0; spieler.vy = 0;
+  const diamant = muenzen.find(m => !m.weg && m.bonus);
+  spieler.x = diamant.x - 5; spieler.y = diamant.y - 7; spieler.vx = 0; spieler.vy = 0;
   setTimeout(() => res({ vorher, boni, punkte }), 150);
 }));
-pruefe('Bonus-Stern zählt getrennt von den Münzen',
+pruefe('Bonus-Diamant zählt getrennt von den Münzen',
        bm.boni === bm.vorher.b + 1 && bm.punkte === bm.vorher.p,
-       `Münzen ${bm.punkte}, Sterne ${bm.boni}`);
+       `Münzen ${bm.punkte}, Diamanten ${bm.boni}`);
 
 // 7) Sturz in den Abgrund -> kostet ein Herz, Neustart am Checkpoint
 const vorSturz = await page.evaluate(() => {
