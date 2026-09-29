@@ -164,6 +164,7 @@ window.BRUECKE = (function(){
     sprungBereit(api){ teilSprung = api; },
     zurKarte(){
       zeigen('stationen');
+      if(teilSprung) teilSprung.musikStopp();   // auf der Karte ist es still
       if(teilStationen) teilStationen.renderHome();
     },
 

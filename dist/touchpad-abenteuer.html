@@ -9,7 +9,7 @@
    TOUCHPAD-ABENTEUER  ·  für die 3. Klasse
    Acht Übungen am Touchpad und ein Jump-&-Run als Belohnung.
 
-   Zusammengebaut am 2026-09-22 von tools/bauen.mjs
+   Zusammengebaut am 2026-09-29 von tools/bauen.mjs
    aus src/stationen.html, prototyp.html und src/bruecke.js.
    NICHT von Hand ändern – Änderungen gehören in die Quellen.
 
@@ -233,8 +233,6 @@ body{
   #teil-sprung header{display:flex;align-items:center;gap:12px;width:100%;max-width:1100px;flex-wrap:wrap}
   #teil-sprung .logo{font-size:clamp(19px,3vw,26px);font-weight:800;display:flex;align-items:center;gap:8px}
   #teil-sprung .spacer{flex:1}
-  #teil-sprung .tag{background:var(--card);border-radius:999px;padding:6px 14px;font-weight:800;font-size:13px;
-    box-shadow:0 6px 14px var(--shadow);color:var(--ink-soft)}
 
   /* Steuerungs-Umschalter */
   #teil-sprung .profiles{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
@@ -340,7 +338,6 @@ body{
 <header>
   <button class="pbtn" id="kartenKnopf" style="display:none">‹ Karte</button>
   <div class="logo">🦊 <span>Fuchs-Sprung</span></div>
-  <span class="tag">Prototyp · Phase 4</span>
   <div class="spacer"></div>
   <div class="profiles" id="levels"></div>
   <div class="profiles" id="profiles"></div>
@@ -524,6 +521,7 @@ window.BRUECKE = (function(){
     sprungBereit(api){ teilSprung = api; },
     zurKarte(){
       zeigen('stationen');
+      if(teilSprung) teilSprung.musikStopp();   // auf der Karte ist es still
       if(teilStationen) teilStationen.renderHome();
     },
 
@@ -1542,6 +1540,7 @@ function rauschen(){
 /* Eine Note zu einem festen Zeitpunkt einplanen. Über die Uhr des
    AudioContext, nicht über setTimeout – sonst eiert der Takt. */
 function note(zeit, hz, dauer, form, laut){
+  if(!tonAn) return;
   const o = AC.createOscillator(), g = AC.createGain();
   o.type = form; o.frequency.setValueAtTime(hz, zeit);
   g.gain.setValueAtTime(0.0001, zeit);
@@ -1551,6 +1550,7 @@ function note(zeit, hz, dauer, form, laut){
   o.start(zeit); o.stop(zeit + dauer + 0.02);
 }
 function schlagzeug(zeit, art){
+  if(!tonAn) return;
   if(art === 'K'){                                  // Basstrommel
     const o = AC.createOscillator(), g = AC.createGain();
     o.type='sine'; o.frequency.setValueAtTime(150, zeit);
@@ -1591,7 +1591,7 @@ function musikTakten(){
   }
 }
 function musikStart(){
-  if(musikLaeuft || !musikAn) return;
+  if(musikLaeuft || !musikAn || !tonAn) return;
   try{
     tonAusgabe(); rauschen();
     musikLaeuft = true; schrittNr = 0; naechsterSchritt = AC.currentTime + 0.1;
@@ -1605,7 +1605,25 @@ function musikStopp(){
 function musikUmschalten(){
   musikAn = !musikAn;
   musikAn ? musikStart() : musikStopp();
+  tonEinstellungSichern();
   knoepfeAuffrischen();
+}
+
+/* Wer den Ton ausschaltet, will ihn beim nächsten Mal auch aus haben.
+   Gespeichert werden zwei Zahlen (0 oder 1), sonst nichts. */
+const TONSPEICHER = 'fuchssprung-ton';
+function tonEinstellungLaden(){
+  try{
+    const roh = localStorage.getItem(TONSPEICHER);
+    if(!roh) return;
+    const e = JSON.parse(roh);
+    if(typeof e.ton   === 'number') tonAn   = e.ton   === 1;
+    if(typeof e.musik === 'number') musikAn = e.musik === 1;
+  }catch(e){ /* privates Fenster o.ä. */ }
+}
+function tonEinstellungSichern(){
+  try{ localStorage.setItem(TONSPEICHER,
+        JSON.stringify({ ton: tonAn?1:0, musik: musikAn?1:0 })); }catch(e){}
 }
 
 /* ============================================================
@@ -2945,6 +2963,7 @@ function crtUmschalten(){
 function tonUmschalten(){
   tonAn = !tonAn;
   if(!tonAn){ musikStopp(); } else if(musikAn){ musikStart(); }
+  tonEinstellungSichern();
   knoepfeAuffrischen();
   if(tonAn) beep(700,.06,'triangle',.12);
 }
@@ -3021,6 +3040,7 @@ if(window.BRUECKE){
 }
 
 /* Start */
+tonEinstellungLaden();
 fortschrittLaden();
 zumTitel();
 setzeProfil('touchpad');

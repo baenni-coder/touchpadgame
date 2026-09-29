@@ -197,7 +197,90 @@ const keineAdresse = await page.evaluate(() =>
   !/[\w.]+@[\w.]+\.\w+/.test(document.documentElement.outerHTML));
 pruefe('Keine E-Mail-Adresse in der Spieldatei', keineAdresse);
 
-// 8) Kein Nachladen aus dem Netz
+// 8) Der Ton-Schalter
+//     Gemeldet war: der Knopf wechselt auf durchgestrichen, die Musik
+//     läuft aber weiter. Gezählt wird, was der Browser wirklich an
+//     Tönen einplant – die Knopfbeschriftung allein sagt zu wenig.
+const toeneZaehlen = (ms=1100) => page.evaluate(ms => new Promise(fertig => {
+  let z = 0;
+  const proto = (window.AudioContext || window.webkitAudioContext).prototype;
+  const oszAlt = proto.createOscillator, pufAlt = proto.createBufferSource;
+  proto.createOscillator  = function(){ z++; return oszAlt.call(this); };
+  proto.createBufferSource = function(){ z++; return pufAlt.call(this); };
+  setTimeout(() => {
+    proto.createOscillator = oszAlt; proto.createBufferSource = pufAlt;
+    fertig(z);
+  }, ms);
+}), ms);
+const tonKnopf  = () => page.evaluate(() => document.querySelectorAll('#teil-sprung .sbtn')[0].click());
+const tonZeigt  = () => page.evaluate(() => {
+  const b = document.querySelectorAll('#teil-sprung .sbtn')[0];
+  return { aus: b.classList.contains('aus'), zeichen: b.textContent };
+});
+const insSpiel = async () => {
+  await page.evaluate(() => { BRUECKE.sterneSetzen(14); BRUECKE.zumSprung(); });
+  await page.waitForTimeout(400);
+  await page.mouse.click(640, 400);          // gibt den Ton frei
+  await page.waitForTimeout(600);
+};
+
+await insSpiel();
+const tonAnfang = await toeneZaehlen();
+pruefe('Mit Ton an spielt die Musik', tonAnfang > 0, tonAnfang + ' Töne');
+
+await tonKnopf();
+await page.waitForTimeout(200);
+const nachAus = await toeneZaehlen();
+const zeichenAus = await tonZeigt();
+pruefe('Der Knopf zeigt "aus"', zeichenAus.aus, zeichenAus.zeichen);
+pruefe('Mit Ton aus ist es still', nachAus === 0, nachAus + ' Töne');
+
+// Der eigentliche Fehler: über die Karte zurück ins Spiel
+await page.evaluate(() => BRUECKE.zurKarte());
+await page.waitForTimeout(400);
+const aufKarte = await toeneZaehlen(500);
+pruefe('Auf der Karte ist es still', aufKarte === 0, aufKarte + ' Töne');
+await insSpiel();
+const nachRueckkehr = await toeneZaehlen();
+pruefe('Ton aus bleibt aus, auch nach dem Umweg über die Karte',
+       nachRueckkehr === 0, nachRueckkehr + ' Töne');
+
+// Auch der Musik-Knopf darf den stummen Ton nicht aushebeln
+await page.evaluate(() => document.querySelectorAll('#teil-sprung .sbtn')[1].click());
+await page.waitForTimeout(200);
+const trotzMusikKnopf = await toeneZaehlen();
+pruefe('Der Musik-Knopf hebelt "Ton aus" nicht aus', trotzMusikKnopf === 0, trotzMusikKnopf + ' Töne');
+await page.evaluate(() => document.querySelectorAll('#teil-sprung .sbtn')[1].click());
+
+// Und Sprung-Geräusche ebenso wenig
+await page.keyboard.press('Space');
+const sprungStumm = await toeneZaehlen(500);
+pruefe('Auch Geräusche bleiben stumm', sprungStumm === 0, sprungStumm + ' Töne');
+
+// Die Einstellung übersteht das Neuladen
+await page.reload();
+await page.waitForTimeout(800);
+await insSpiel();
+const nachNeuladen = await toeneZaehlen();
+pruefe('Ton aus bleibt nach dem Neuladen aus', nachNeuladen === 0, nachNeuladen + ' Töne');
+
+// Wieder einschalten – und es muss wirklich wieder tönen
+await tonKnopf();
+await page.waitForTimeout(300);
+const wiederAn = await toeneZaehlen();
+pruefe('Einschalten bringt die Musik zurück', wiederAn > 0, wiederAn + ' Töne');
+
+// 9) Nichts heisst mehr "Prototyp"
+const beschriftung = await page.evaluate(() => ({
+  titel: document.title,
+  kopf: document.querySelector('#teil-sprung header').textContent,
+}));
+pruefe('Im Spielkopf steht kein "Prototyp" mehr',
+       !/Prototyp|Phase \d/i.test(beschriftung.kopf), beschriftung.kopf.trim().slice(0,60));
+pruefe('Auch der Seitentitel ist sauber',
+       !/Prototyp/i.test(beschriftung.titel), beschriftung.titel);
+
+// 10) Kein Nachladen aus dem Netz
 pruefe('Die Datei lädt nichts nach', netz.length === 0,
        netz.length ? netz.slice(0,3).join(', ') : 'keine externen Anfragen');
 pruefe('Keine JavaScript-Fehler', fehler.length === 0, fehler.slice(0,2).join(' | '));
