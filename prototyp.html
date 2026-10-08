@@ -68,11 +68,17 @@
   .pbtn .hak{color:var(--mint);font-size:12px}
   .pbtn.on .hak{color:#8CE0A8}
   .trenn{width:1px;height:26px;background:rgba(44,33,64,.14);margin:0 4px}
-  .sbtn{border:none;font-family:inherit;background:var(--card);cursor:pointer;color:var(--ink);
+  .sbtn{position:relative;border:none;font-family:inherit;background:var(--card);
+    cursor:pointer;color:var(--ink);
     border-radius:14px;padding:9px 12px;font-weight:800;font-size:15px;
     box-shadow:0 6px 14px var(--shadow);transition:transform .12s,opacity .12s}
   .sbtn:hover{transform:translateY(-2px)}
-  .sbtn.aus{opacity:.4}
+  .sbtn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  /* Ausgeschaltet: blasser, grauer – und deutlich durchgestrichen. */
+  .sbtn.aus{opacity:.55;background:#DCD7E6}
+  .sbtn.aus::after{content:'';position:absolute;left:12%;right:12%;top:calc(50% - 1.5px);
+    height:3px;border-radius:2px;background:var(--ink);
+    transform:rotate(-22deg);pointer-events:none}
 
   /* Spielfläche */
   #stage{position:relative;line-height:0;border-radius:16px;overflow:hidden;
@@ -529,9 +535,23 @@ cv.addEventListener('pointerdown', e=>{
   const jetzt = performance.now();
   if(jetzt - maus.letzterKlick < TUNING.doppelZeit) maus.doppelt = true;
   maus.letzterKlick = jetzt;
-  cv.setPointerCapture(e.pointerId);
+  // Den Zeiger festhalten, damit der Fuchs weiterspringt, auch wenn man
+  // beim Halten aus dem Spielfeld fährt.
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
 });
+function griffLoesen(e){
+  try{ if(e && cv.hasPointerCapture(e.pointerId)) cv.releasePointerCapture(e.pointerId); }catch(err){}
+}
+// Loslassen heisst auch: Griff zurückgeben. Chromium macht das von sich
+// aus, andere Browser nicht zuverlässig – und ein hängender Griff leitet
+// jeden weiteren Klick auf die Spielfläche um. Dann reagiert oben kein
+// Knopf mehr, während die Tastatur noch geht.
+cv.addEventListener('pointerup', griffLoesen);
+cv.addEventListener('pointercancel', griffLoesen);
 addEventListener('pointerup', ()=>{ maus.unten=false; });
+// Sicherheitsnetz: wer irgendwo ausserhalb des Spielfelds drückt, bekommt
+// den Griff auf jeden Fall zurück – egal, wie er hängen geblieben ist.
+addEventListener('pointerdown', e=>{ if(e.target !== cv) griffLoesen(e); }, true);
 cv.addEventListener('contextmenu', e=>e.preventDefault());
 
 /* Zwei Finger auf dem Touchpad (bzw. das Mausrad) treiben die
@@ -1792,9 +1812,12 @@ function tonUmschalten(){
 }
 
 const SCHALTER = [
-  { id:'ton',   zeichen:'🔊', aus:'🔇', titel:'Ton an/aus (M)',     an:()=>tonAn,  klick:tonUmschalten },
-  { id:'musik', zeichen:'🎵', aus:'🎵', titel:'Musik an/aus (N)',   an:()=>musikAn && tonAn, klick:musikUmschalten },
-  { id:'crt',   zeichen:'📺', aus:'📺', titel:'Bildröhren-Optik (C)',an:()=>crtAn, klick:crtUmschalten },
+  { id:'ton',   name:'Ton',               taste:'M', zeichen:'🔊', aus:'🔇',
+    an:()=>tonAn,             klick:tonUmschalten },
+  { id:'musik', name:'Musik',             taste:'N', zeichen:'🎵', aus:'🎵',
+    an:()=>musikAn && tonAn,  klick:musikUmschalten },
+  { id:'crt',   name:'Bildröhren-Optik',  taste:'C', zeichen:'📺', aus:'📺',
+    an:()=>crtAn,             klick:crtUmschalten },
 ];
 function knoepfeAuffrischen(){
   const box = document.getElementById('schalter');
@@ -1803,10 +1826,14 @@ function knoepfeAuffrischen(){
   SCHALTER.forEach(k=>{
     const b = document.createElement('button');
     const an = k.an();
+    b.type = 'button';
     b.className = 'sbtn' + (an ? '' : ' aus');
-    b.title = k.titel;
+    b.title = k.name + ' ist ' + (an ? 'an' : 'aus') + ' – klicken zum '
+            + (an ? 'Ausschalten' : 'Einschalten') + ' (Taste ' + k.taste + ')';
+    b.setAttribute('aria-label', k.name);
+    b.setAttribute('aria-pressed', an ? 'true' : 'false');
     b.textContent = an ? k.zeichen : k.aus;
-    b.onclick = k.klick;
+    b.addEventListener('click', k.klick);
     box.appendChild(b);
   });
   zeichneHilfe();

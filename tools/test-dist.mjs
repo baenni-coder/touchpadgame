@@ -212,7 +212,11 @@ const toeneZaehlen = (ms=1100) => page.evaluate(ms => new Promise(fertig => {
     fertig(z);
   }, ms);
 }), ms);
-const tonKnopf  = () => page.evaluate(() => document.querySelectorAll('#teil-sprung .sbtn')[0].click());
+const echtKlicken = async (i) => {
+  const r = await page.locator('#teil-sprung .sbtn').nth(i).boundingBox();
+  await page.mouse.click(r.x + r.width/2, r.y + r.height/2);
+};
+const tonKnopf  = () => echtKlicken(0);
 const tonZeigt  = () => page.evaluate(() => {
   const b = document.querySelectorAll('#teil-sprung .sbtn')[0];
   return { aus: b.classList.contains('aus'), zeichen: b.textContent };
@@ -246,11 +250,11 @@ pruefe('Ton aus bleibt aus, auch nach dem Umweg über die Karte',
        nachRueckkehr === 0, nachRueckkehr + ' Töne');
 
 // Auch der Musik-Knopf darf den stummen Ton nicht aushebeln
-await page.evaluate(() => document.querySelectorAll('#teil-sprung .sbtn')[1].click());
+await echtKlicken(1);
 await page.waitForTimeout(200);
 const trotzMusikKnopf = await toeneZaehlen();
 pruefe('Der Musik-Knopf hebelt "Ton aus" nicht aus', trotzMusikKnopf === 0, trotzMusikKnopf + ' Töne');
-await page.evaluate(() => document.querySelectorAll('#teil-sprung .sbtn')[1].click());
+await echtKlicken(1);
 
 // Und Sprung-Geräusche ebenso wenig
 await page.keyboard.press('Space');
@@ -269,6 +273,79 @@ await tonKnopf();
 await page.waitForTimeout(300);
 const wiederAn = await toeneZaehlen();
 pruefe('Einschalten bringt die Musik zurück', wiederAn > 0, wiederAn + ' Töne');
+
+// 8b) Der Knopf muss nach dem Spielen klickbar bleiben
+//     Gemeldet war: nur die Taste M schaltet, der Knopf nicht. Ursache war
+//     der Zeigergriff der Spielfläche (setPointerCapture), der nie
+//     zurückgegeben wurde. Wer einmal ins Spielfeld geklickt hatte, dessen
+//     weitere Klicks landeten dort statt auf dem Knopf.
+await page.keyboard.press('Enter');                 // Titelbild verlassen
+await page.waitForTimeout(400);
+const feld = await page.locator('#teil-sprung #cv').boundingBox();
+await page.mouse.click(feld.x + feld.width/2, feld.y + feld.height/2);   // springen
+await page.waitForTimeout(250);
+const griffFrei = await page.evaluate(() => {
+  const cv = document.querySelector('#teil-sprung #cv');
+  // über alle plausiblen Zeiger-Nummern prüfen
+  for(let id=0; id<6; id++) if(cv.hasPointerCapture(id)) return false;
+  return true;
+});
+pruefe('Die Spielfläche gibt den Zeiger wieder frei', griffFrei);
+
+// Das Sicherheitsnetz gezielt prüfen: Maustaste auf dem Spielfeld halten,
+// dann daneben drücken. Chromium löst den Griff beim Loslassen von selbst –
+// dieser Test kommt dem zuvor und fällt durch, wenn die Freigabe fehlt.
+await page.mouse.move(feld.x + feld.width/2, feld.y + feld.height/2);
+await page.mouse.down();
+await page.waitForTimeout(80);
+const griffProbe = await page.evaluate(() => {
+  const cv = document.querySelector('#teil-sprung #cv');
+  let id = -1;
+  for(let i=0;i<6;i++) if(cv.hasPointerCapture(i)){ id = i; break; }
+  if(id < 0) return { gehalten:false };
+  // Druck neben dem Spielfeld, mit demselben Zeiger
+  document.querySelectorAll('#teil-sprung .sbtn')[0].dispatchEvent(
+    new PointerEvent('pointerdown', { pointerId:id, bubbles:true, cancelable:true }));
+  return { gehalten:true, id, danachNochGehalten: cv.hasPointerCapture(id) };
+});
+await page.mouse.up();
+pruefe('Ein Druck neben dem Spielfeld löst den Griff sofort',
+       griffProbe.gehalten && griffProbe.danachNochGehalten === false,
+       griffProbe.gehalten ? ('Zeiger ' + griffProbe.id + ' danach gehalten: '
+                              + griffProbe.danachNochGehalten)
+                           : 'Griff wurde gar nicht erst gesetzt');
+
+// Und die Freigabe muss im ausgelieferten Code wirklich drinstehen
+const quelle = await page.content();
+pruefe('Die Auslieferungsdatei gibt den Zeigergriff ausdrücklich zurück',
+       /releasePointerCapture/.test(quelle));
+
+const vorKlick = await page.evaluate(() =>
+  document.querySelectorAll('#teil-sprung .sbtn')[0].getAttribute('aria-pressed'));
+await tonKnopf();
+await page.waitForTimeout(250);
+const nachKlick = await page.evaluate(() =>
+  document.querySelectorAll('#teil-sprung .sbtn')[0].getAttribute('aria-pressed'));
+pruefe('Ein echter Mausklick schaltet den Ton auch nach dem Spielen',
+       vorKlick !== nachKlick, vorKlick + ' → ' + nachKlick);
+
+// 8c) Der Aus-Zustand muss sichtbar sein, nicht nur am Emoji hängen
+const aus = await page.evaluate(() => {
+  const b = document.querySelectorAll('#teil-sprung .sbtn')[0];
+  const st = getComputedStyle(b, '::after');
+  return {
+    klasse:  b.classList.contains('aus'),
+    gedrueckt: b.getAttribute('aria-pressed'),
+    titel:   b.title,
+    strich:  st.content !== 'none' && parseFloat(st.height) > 0,
+    grund:   getComputedStyle(b).backgroundColor,
+  };
+});
+pruefe('Der ausgeschaltete Knopf ist durchgestrichen', aus.klasse && aus.strich,
+       'Strich: ' + aus.strich + ', Hintergrund ' + aus.grund);
+pruefe('Der Knopf sagt im Tooltip, was gerade gilt',
+       /ist aus/.test(aus.titel), aus.titel);
+pruefe('Der Zustand ist auch für Vorlesewerkzeuge lesbar', aus.gedrueckt === 'false');
 
 // 9) Nichts heisst mehr "Prototyp"
 const beschriftung = await page.evaluate(() => ({
