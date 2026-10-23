@@ -239,6 +239,13 @@
   .lvl.ernst{width:auto;padding:0 9px;font-size:15px}
   .lvl.ernst.done{background:var(--grape);color:#fff}
 
+  /* Ausgeschaltet: durchgestrichen – 🔇 ist je nach Schriftart
+     selbst noch ein Lautsprecher und kaum zu unterscheiden. */
+  .iconbtn{position:relative}
+  .iconbtn.aus{opacity:.55;background:#DCD7E6}
+  .iconbtn.aus::after{content:'';position:absolute;left:14%;right:14%;top:calc(50% - 1.5px);
+    height:3px;border-radius:2px;background:var(--ink);transform:rotate(-22deg);pointer-events:none}
+
   .foot{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;margin-top:16px;opacity:.8}
   .foot .urheber{font-size:12px;opacity:.75;display:inline-block;margin-top:3px}
 
@@ -1298,12 +1305,26 @@ ERNSTFALL.aufraeumen = (arena, fertig) => {
    Kopfzeilen-Knöpfe
    ============================================================ */
 $('#backBtn').onclick=goHome;
-$('#soundBtn').onclick=()=>{
-  state.sound=!state.sound;
-  $('#soundBtn').textContent=state.sound?'🔊':'🔇';
+/* Ein Schalter für beide Teile. Früher kannte dieser Knopf nur die
+   Geräusche der Übungen – die Musik des Fuchs-Sprungs lief weiter,
+   obwohl das Symbol auf "aus" wechselte. */
+function tonSetzen(an, melden = true){
+  state.sound = !!an;
+  tonKnopfAuffrischen();
   if(state.sound) beep(700,.06,'triangle',.15);
-};
-$('#soundBtn').textContent=state.sound?'🔊':'🔇';
+  if(melden && window.BRUECKE && window.BRUECKE.tonGemeldet)
+    window.BRUECKE.tonGemeldet(state.sound);
+}
+function tonKnopfAuffrischen(){
+  const b = $('#soundBtn');
+  b.textContent = state.sound ? '🔊' : '🔇';
+  b.classList.toggle('aus', !state.sound);
+  b.title = state.sound ? 'Ton ist an – klicken zum Ausschalten'
+                        : 'Ton ist aus – klicken zum Einschalten';
+  b.setAttribute('aria-pressed', state.sound ? 'true' : 'false');
+}
+$('#soundBtn').onclick=()=>tonSetzen(!state.sound);
+tonKnopfAuffrischen();
 $('#fsBtn').onclick=()=>{
   if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();
@@ -1325,6 +1346,8 @@ if(window.BRUECKE) window.BRUECKE.stationenBereit({
     renderHome();
   },
   sterneLesen: ()=> state.totalStars,
+  tonSetzen: an => tonSetzen(an, false),
+  tonLesen: ()=> state.sound,
 });
 </script>
 </body>

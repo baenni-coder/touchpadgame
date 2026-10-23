@@ -267,6 +267,13 @@ body{
   #teil-stationen .lvl.ernst{width:auto;padding:0 9px;font-size:15px}
   #teil-stationen .lvl.ernst.done{background:var(--grape);color:#fff}
 
+  /* Ausgeschaltet: durchgestrichen – 🔇 ist je nach Schriftart
+     selbst noch ein Lautsprecher und kaum zu unterscheiden. */
+  #teil-stationen .iconbtn{position:relative}
+  #teil-stationen .iconbtn.aus{opacity:.55;background:#DCD7E6}
+  #teil-stationen .iconbtn.aus::after{content:'';position:absolute;left:14%;right:14%;top:calc(50% - 1.5px);
+    height:3px;border-radius:2px;background:var(--ink);transform:rotate(-22deg);pointer-events:none}
+
   #teil-stationen .foot{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;margin-top:16px;opacity:.8}
   #teil-stationen .foot .urheber{font-size:12px;opacity:.75;display:inline-block;margin-top:3px}
 
@@ -446,6 +453,7 @@ window.BRUECKE = (function(){
     sterne: 0,
     stationen: {},          // Stationskürzel -> Liste erledigter Level
     abzeichen: [],          // Stationen, deren Ernstfall geschafft ist
+    ton: 1,                 // 1 = Ton an, 0 = aus. Gilt für beide Teile.
     schwelle: STERNE_FUER_SPRUNG_STANDARD,
   };
   let teilStationen = null, teilSprung = null;   // Rückrufe der beiden Teile
@@ -459,6 +467,7 @@ window.BRUECKE = (function(){
       if(typeof g.sterne === 'number') stand.sterne = g.sterne;
       if(g.stationen && typeof g.stationen === 'object') stand.stationen = g.stationen;
       if(Array.isArray(g.abzeichen)) stand.abzeichen = g.abzeichen;
+      if(typeof g.ton === 'number') stand.ton = g.ton ? 1 : 0;
       if(typeof g.schwelle === 'number') stand.schwelle = g.schwelle;
     }catch(e){ /* privates Fenster o.ä. – dann eben ohne Speicherstand */ }
   }
@@ -549,7 +558,8 @@ window.BRUECKE = (function(){
           e.target.textContent = 'Wirklich alles löschen?';
           return;
         }
-        stand = { sterne:0, stationen:{}, abzeichen:[], schwelle: STERNE_FUER_SPRUNG_STANDARD };
+        stand = { sterne:0, stationen:{}, abzeichen:[], ton:1,
+                  schwelle: STERNE_FUER_SPRUNG_STANDARD };
         try{ localStorage.removeItem(SCHLUESSEL); localStorage.removeItem('fuchssprung'); }catch(err){}
         if(teilSprung) teilSprung.fortschrittLoeschen();
         hg.remove();
@@ -557,6 +567,16 @@ window.BRUECKE = (function(){
       }
     });
     document.body.appendChild(hg);
+  }
+
+  /* Den gemeinsamen Ton-Zustand an beide Teile weitergeben. Die
+     Teile melden dabei nicht zurück, sonst drehte sich das im Kreis. */
+  function tonVerteilen(){
+    const an = stand.ton === 1;
+    if(teilStationen && teilStationen.tonSetzen && teilStationen.tonLesen
+       && teilStationen.tonLesen() !== an) teilStationen.tonSetzen(an);
+    if(teilSprung && teilSprung.tonSetzen && teilSprung.tonLesen
+       && teilSprung.tonLesen() !== an) teilSprung.tonSetzen(an);
   }
 
   /* ---------- Nach aussen ---------- */
@@ -581,7 +601,17 @@ window.BRUECKE = (function(){
       });
       if(state.abzeichen) stand.abzeichen.forEach(id=>state.abzeichen.add(id));
     },
-    stationenBereit(api){ teilStationen = api; },
+    stationenBereit(api){ teilStationen = api; tonVerteilen(); },
+
+    /* Ein Schalter für beide Teile. Vorher hatte jeder Teil seinen
+       eigenen: der Knopf auf der Karte liess die Spielmusik laufen,
+       der Knopf im Spiel die Geräusche der Übungen. */
+    tonGemeldet(an){
+      stand.ton = an ? 1 : 0;
+      sichern();
+      tonVerteilen();
+    },
+    tonLesen: ()=> stand.ton === 1,
     sterneSetzen(n){ if(teilStationen) teilStationen.sterneSetzen(n); else { stand.sterne = n; sichern(); } },
     sterneLesen(){ return teilStationen ? teilStationen.sterneLesen() : stand.sterne; },
     zumSprung(){
@@ -590,7 +620,7 @@ window.BRUECKE = (function(){
     },
 
     /* -- vom Jump-&-Run -- */
-    sprungBereit(api){ teilSprung = api; },
+    sprungBereit(api){ teilSprung = api; tonVerteilen(); },
     zurKarte(){
       zeigen('stationen');
       if(teilSprung) teilSprung.musikStopp();   // auf der Karte ist es still
@@ -1636,12 +1666,26 @@ ERNSTFALL.aufraeumen = (arena, fertig) => {
    Kopfzeilen-Knöpfe
    ============================================================ */
 $('#backBtn').onclick=goHome;
-$('#soundBtn').onclick=()=>{
-  state.sound=!state.sound;
-  $('#soundBtn').textContent=state.sound?'🔊':'🔇';
+/* Ein Schalter für beide Teile. Früher kannte dieser Knopf nur die
+   Geräusche der Übungen – die Musik des Fuchs-Sprungs lief weiter,
+   obwohl das Symbol auf "aus" wechselte. */
+function tonSetzen(an, melden = true){
+  state.sound = !!an;
+  tonKnopfAuffrischen();
   if(state.sound) beep(700,.06,'triangle',.15);
-};
-$('#soundBtn').textContent=state.sound?'🔊':'🔇';
+  if(melden && window.BRUECKE && window.BRUECKE.tonGemeldet)
+    window.BRUECKE.tonGemeldet(state.sound);
+}
+function tonKnopfAuffrischen(){
+  const b = $('#soundBtn');
+  b.textContent = state.sound ? '🔊' : '🔇';
+  b.classList.toggle('aus', !state.sound);
+  b.title = state.sound ? 'Ton ist an – klicken zum Ausschalten'
+                        : 'Ton ist aus – klicken zum Einschalten';
+  b.setAttribute('aria-pressed', state.sound ? 'true' : 'false');
+}
+$('#soundBtn').onclick=()=>tonSetzen(!state.sound);
+tonKnopfAuffrischen();
 $('#fsBtn').onclick=()=>{
   if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();
@@ -1663,6 +1707,8 @@ if(window.BRUECKE) window.BRUECKE.stationenBereit({
     renderHome();
   },
   sterneLesen: ()=> state.totalStars,
+  tonSetzen: an => tonSetzen(an, false),
+  tonLesen: ()=> state.sound,
 });
 
 })();
@@ -1978,8 +2024,15 @@ function musikTakten(){
     schrittNr++;
   }
 }
+/* Läuft diese Datei als Teil der zusammengebauten Fassung, ist sie
+   versteckt, solange die Stationskarte vorne ist. Dann darf hier
+   keine Musik losgehen – sonst spielt das Spiel in die Karte hinein. */
+function spielSichtbar(){
+  const t = document.getElementById('teil-sprung');
+  return !t || !t.hidden;
+}
 function musikStart(){
-  if(musikLaeuft || !musikAn || !tonAn) return;
+  if(musikLaeuft || !musikAn || !tonAn || !spielSichtbar()) return;
   try{
     tonAusgabe(); rauschen();
     musikLaeuft = true; schrittNr = 0; naechsterSchritt = AC.currentTime + 0.1;
@@ -3362,13 +3415,19 @@ function crtUmschalten(){
   document.getElementById('stage').classList.toggle('crt', crtAn);
   knoepfeAuffrischen();
 }
-function tonUmschalten(){
-  tonAn = !tonAn;
+function tonSetzen(an, melden = true){
+  tonAn = !!an;
   if(!tonAn){ musikStopp(); } else if(musikAn){ musikStart(); }
   tonEinstellungSichern();
   knoepfeAuffrischen();
   if(tonAn) beep(700,.06,'triangle',.12);
+  // Beide Teile teilen sich einen Schalter: was hier umgelegt wird,
+  // gilt auch auf der Stationskarte. Sonst schaltet ein Knopf den Ton
+  // aus und der andere lässt ihn weiterlaufen.
+  if(melden && window.BRUECKE && window.BRUECKE.tonGemeldet)
+    window.BRUECKE.tonGemeldet(tonAn);
 }
+function tonUmschalten(){ tonSetzen(!tonAn); }
 
 const SCHALTER = [
   { id:'ton',   name:'Ton',               taste:'M', zeichen:'🔊', aus:'🔇',
@@ -3444,6 +3503,8 @@ if(window.BRUECKE){
     alleFreischalten: ()=>{ fortschritt.frei = LEVELS.length-1; fortschrittSichern(); baueLevelKnoepfe(); },
     fortschrittLoeschen: ()=>{ fortschritt = { frei:0, best:{} }; fortschrittSichern(); baueLevelKnoepfe(); },
     musikStopp, musikStart,
+    tonSetzen: an => tonSetzen(an, false),
+    tonLesen: ()=> tonAn,
     anzahlLevels: LEVELS.length,
   });
 }

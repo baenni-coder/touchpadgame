@@ -419,8 +419,15 @@ function musikTakten(){
     schrittNr++;
   }
 }
+/* Läuft diese Datei als Teil der zusammengebauten Fassung, ist sie
+   versteckt, solange die Stationskarte vorne ist. Dann darf hier
+   keine Musik losgehen – sonst spielt das Spiel in die Karte hinein. */
+function spielSichtbar(){
+  const t = document.getElementById('teil-sprung');
+  return !t || !t.hidden;
+}
 function musikStart(){
-  if(musikLaeuft || !musikAn || !tonAn) return;
+  if(musikLaeuft || !musikAn || !tonAn || !spielSichtbar()) return;
   try{
     tonAusgabe(); rauschen();
     musikLaeuft = true; schrittNr = 0; naechsterSchritt = AC.currentTime + 0.1;
@@ -1803,13 +1810,19 @@ function crtUmschalten(){
   document.getElementById('stage').classList.toggle('crt', crtAn);
   knoepfeAuffrischen();
 }
-function tonUmschalten(){
-  tonAn = !tonAn;
+function tonSetzen(an, melden = true){
+  tonAn = !!an;
   if(!tonAn){ musikStopp(); } else if(musikAn){ musikStart(); }
   tonEinstellungSichern();
   knoepfeAuffrischen();
   if(tonAn) beep(700,.06,'triangle',.12);
+  // Beide Teile teilen sich einen Schalter: was hier umgelegt wird,
+  // gilt auch auf der Stationskarte. Sonst schaltet ein Knopf den Ton
+  // aus und der andere lässt ihn weiterlaufen.
+  if(melden && window.BRUECKE && window.BRUECKE.tonGemeldet)
+    window.BRUECKE.tonGemeldet(tonAn);
 }
+function tonUmschalten(){ tonSetzen(!tonAn); }
 
 const SCHALTER = [
   { id:'ton',   name:'Ton',               taste:'M', zeichen:'🔊', aus:'🔇',
@@ -1885,6 +1898,8 @@ if(window.BRUECKE){
     alleFreischalten: ()=>{ fortschritt.frei = LEVELS.length-1; fortschrittSichern(); baueLevelKnoepfe(); },
     fortschrittLoeschen: ()=>{ fortschritt = { frei:0, best:{} }; fortschrittSichern(); baueLevelKnoepfe(); },
     musikStopp, musikStart,
+    tonSetzen: an => tonSetzen(an, false),
+    tonLesen: ()=> tonAn,
     anzahlLevels: LEVELS.length,
   });
 }

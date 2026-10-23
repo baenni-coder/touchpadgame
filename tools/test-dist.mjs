@@ -347,6 +347,72 @@ pruefe('Der Knopf sagt im Tooltip, was gerade gilt',
        /ist aus/.test(aus.titel), aus.titel);
 pruefe('Der Zustand ist auch für Vorlesewerkzeuge lesbar', aus.gedrueckt === 'false');
 
+// 8e) Ein Ton-Schalter für beide Teile
+//     Gemeldet war: der Lautsprecher auf der Stationskarte wechselt das
+//     Symbol, die Spielmusik läuft weiter. Zwei Ursachen – die Musik ging
+//     bei jedem Klick los, auch auf der Karte (tonFreigeben hing am
+//     ganzen Fenster), und beide Teile hatten einen eigenen Schalter.
+await page.evaluate(() => BRUECKE.zurKarte());
+await page.waitForTimeout(500);
+const aufDerKarte = await toeneZaehlen(1200);
+pruefe('Auf der Stationskarte spielt keine Musik', aufDerKarte <= 2,
+       aufDerKarte + ' Töne (Klickgeräusche zählen mit)');
+
+const tonBilder = () => page.evaluate(() => ({
+  karte: (()=>{ const b=document.querySelector('#teil-stationen #soundBtn');
+                return b.getAttribute('aria-pressed'); })(),
+  spiel: (()=>{ const b=document.querySelector('#teil-sprung .sbtn');
+                return b.getAttribute('aria-pressed'); })(),
+}));
+const karteKnopf = async () => {
+  const r = await page.locator('#teil-stationen #soundBtn').boundingBox();
+  await page.mouse.click(r.x + r.width/2, r.y + r.height/2);
+  await page.waitForTimeout(250);
+};
+
+// Sicherstellen, dass der Ton an ist
+if((await tonBilder()).karte === 'false') await karteKnopf();
+await page.evaluate(() => BRUECKE.zumSprung());
+await page.waitForTimeout(800);
+const musikLaeuft = await toeneZaehlen();
+pruefe('Im Spiel läuft die Musik', musikLaeuft > 5, musikLaeuft + ' Töne');
+
+// Über den Karten-Knopf zurück und dort ausschalten
+const zurueck = await page.locator('#teil-sprung #kartenKnopf').boundingBox();
+await page.mouse.click(zurueck.x + zurueck.width/2, zurueck.y + zurueck.height/2);
+await page.waitForTimeout(500);
+await karteKnopf();
+const beide = await tonBilder();
+pruefe('Der Knopf auf der Karte schaltet auch den Spielton aus',
+       beide.karte === 'false' && beide.spiel === 'false',
+       'Karte ' + beide.karte + ', Spiel ' + beide.spiel);
+
+await page.evaluate(() => BRUECKE.zumSprung());
+await page.waitForTimeout(900);
+const stillImSpiel = await toeneZaehlen();
+pruefe('Danach bleibt das Spiel still', stillImSpiel === 0, stillImSpiel + ' Töne');
+
+// Umgekehrt: im Spiel einschalten, Karte muss folgen
+await echtKlicken(0);
+await page.waitForTimeout(350);
+const wiederAnBeide = await tonBilder();
+pruefe('Der Knopf im Spiel stellt auch den Knopf auf der Karte um',
+       wiederAnBeide.karte === 'true' && wiederAnBeide.spiel === 'true',
+       'Karte ' + wiederAnBeide.karte + ', Spiel ' + wiederAnBeide.spiel);
+const wiederMusik = await toeneZaehlen();
+pruefe('Und die Musik kommt zurück', wiederMusik > 5, wiederMusik + ' Töne');
+
+// Aus, neu laden – der gemeinsame Zustand bleibt
+await echtKlicken(0);
+await page.waitForTimeout(250);
+await page.reload();
+await page.waitForTimeout(900);
+const nachNeustart = await tonBilder();
+pruefe('Der gemeinsame Schalter übersteht das Neuladen',
+       nachNeustart.karte === 'false' && nachNeustart.spiel === 'false',
+       'Karte ' + nachNeustart.karte + ', Spiel ' + nachNeustart.spiel);
+await karteKnopf();   // für die folgenden Abschnitte wieder an
+
 // 8d) Der Ernstfall – die echte Situation am Computer
 await page.evaluate(() => BRUECKE.zurKarte());
 await page.waitForTimeout(400);
@@ -471,7 +537,7 @@ pruefe('Das Abzeichen übersteht das Neuladen', nachher.medaille && nachher.punk
 // Datenschutz: im Speicher stehen nur Zahlen und Stationskürzel
 const gespeichert = await page.evaluate(() => localStorage.getItem('touchpad-abenteuer'));
 const g = JSON.parse(gespeichert);
-const bekannt = ['sterne','stationen','abzeichen','schwelle'];
+const bekannt = ['sterne','stationen','abzeichen','ton','schwelle'];
 pruefe('Der Speicher enthält nur die bekannten Felder',
        Object.keys(g).every(k => bekannt.includes(k)), Object.keys(g).join(', '));
 pruefe('Im Speicher steht kein Freitext',
