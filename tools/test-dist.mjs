@@ -347,6 +347,146 @@ pruefe('Der Knopf sagt im Tooltip, was gerade gilt',
        /ist aus/.test(aus.titel), aus.titel);
 pruefe('Der Zustand ist auch für Vorlesewerkzeuge lesbar', aus.gedrueckt === 'false');
 
+// 8d) Der Ernstfall – die echte Situation am Computer
+await page.evaluate(() => BRUECKE.zurKarte());
+await page.waitForTimeout(400);
+
+// Nur Stationen mit Ernstfall bekommen den vierten Punkt
+const punkte = await page.evaluate(() => {
+  const karten = [...document.querySelectorAll('#teil-stationen .station')];
+  return karten.slice(0, 8).map(k => !!k.querySelector('.lp.ernst'));
+});
+pruefe('Vier Stationen weniger haben den vierten Punkt nicht',
+       punkte.filter(Boolean).length === 2, punkte.filter(Boolean).length + ' von 8 mit Ernstfall');
+
+// "Türchen öffnen" (Doppelklick) durchspielen
+await page.locator('#teil-stationen .station').nth(4).click();
+await page.waitForTimeout(350);
+const reihe = await page.evaluate(() =>
+  [...document.querySelectorAll('#levelDots .lvl')].map(e => e.textContent).join(' '));
+pruefe('Die Punktreihe zeigt den Ernstfall als vierten Schritt',
+       reihe === '1 2 3 Ernstfall', reihe);
+
+for(let lvl = 1; lvl <= 3; lvl++){
+  for(let n = 0; n < 40; n++){
+    const zu = await page.evaluate(() =>
+      [...document.querySelectorAll('#arena .door')].findIndex(e => !e._open));
+    if(zu < 0) break;
+    const r = await page.locator('#arena .door').nth(zu).boundingBox();
+    await page.mouse.dblclick(r.x + r.width/2, r.y + r.height/2);
+    await page.waitForTimeout(80);
+  }
+  await page.waitForTimeout(550);
+  if(lvl < 3){
+    await page.locator('#ovBtns button', { hasText:'Nächstes Level' }).click();
+    await page.waitForTimeout(400);
+  }
+}
+const angebot = await page.evaluate(() =>
+  [...document.querySelectorAll('#ovBtns button')].map(b => b.textContent).join(' | '));
+pruefe('Nach Level 3 wird der Ernstfall angeboten', /Ernstfall/.test(angebot), angebot);
+pruefe('Der Ernstfall ist überspringbar', /Zur Karte/.test(angebot));
+
+const sterneVorErnstfall = await page.evaluate(() =>
+  document.querySelector('#totalStars').textContent);
+await page.locator('#ovBtns button', { hasText:'Ernstfall' }).click();
+await page.waitForTimeout(450);
+const szene = await page.evaluate(() => ({
+  auftrag: document.querySelector('.ef-auftrag')?.textContent.trim(),
+  fenster: document.querySelector('.fenster-titel')?.textContent,
+  dateien: document.querySelectorAll('.datei').length,
+  bilder:  [...document.querySelectorAll('.datei')].filter(e => e._datei.ziel).length,
+  namen:   [...document.querySelectorAll('.datei')].map(e => e._datei.name),
+}));
+pruefe('Der Schreibtisch steht', !!szene.fenster && szene.dateien === 8,
+       szene.dateien + ' Dateien, Fenster "' + szene.fenster + '"');
+pruefe('Der Auftrag nennt das Ziel', /Bilder/.test(szene.auftrag||''), szene.auftrag);
+pruefe('Es sind echte Dateinamen mit Endung',
+       szene.namen.every(n => /\.(jpg|png|docx|pdf|mp3|txt)$/.test(n)), szene.namen.slice(0,3).join(', '));
+
+// Ein einfacher Klick darf nur auswählen, nicht öffnen
+const ersteBild = await page.evaluate(() =>
+  [...document.querySelectorAll('.datei')].findIndex(e => e._datei.ziel));
+let r = await page.locator('.datei').nth(ersteBild).boundingBox();
+await page.mouse.click(r.x + r.width/2, r.y + r.height/2);
+await page.waitForTimeout(200);
+const nachEinfach = await page.evaluate(i => {
+  const el = [...document.querySelectorAll('.datei')][i];
+  return { gewaehlt: el.classList.contains('gewaehlt'), offen: el.classList.contains('offen') };
+}, ersteBild);
+pruefe('Ein einfacher Klick wählt nur aus', nachEinfach.gewaehlt && !nachEinfach.offen,
+       'gewählt: ' + nachEinfach.gewaehlt + ', offen: ' + nachEinfach.offen);
+
+// Eine falsche Datei doppelklicken -> Hinweis, kein Fortschritt
+const keinBild = await page.evaluate(() =>
+  [...document.querySelectorAll('.datei')].findIndex(e => !e._datei.ziel));
+r = await page.locator('.datei').nth(keinBild).boundingBox();
+await page.mouse.dblclick(r.x + r.width/2, r.y + r.height/2);
+await page.waitForTimeout(350);
+const hinweis = await page.evaluate(() => ({
+  da:   !!document.querySelector('.ef-dialog'),
+  text: document.querySelector('.ef-dialog .box p')?.textContent || '',
+  stand: document.querySelector('.ef-auftrag').textContent,
+}));
+pruefe('Die falsche Datei bringt einen Hinweis zum Lesen', hinweis.da, hinweis.text.slice(0,48));
+pruefe('Sie zählt nicht als Treffer', /0\/4/.test(hinweis.stand), hinweis.stand.trim());
+await page.locator('.ef-dialog button').click();
+await page.waitForTimeout(250);
+pruefe('Der Hinweis lässt sich wegklicken',
+       await page.evaluate(() => !document.querySelector('.ef-dialog')));
+
+// Alle Bilder öffnen -> Abzeichen
+for(let n = 0; n < 10; n++){
+  const i = await page.evaluate(() => [...document.querySelectorAll('.datei')]
+      .findIndex(e => e._datei.ziel && !e.classList.contains('offen')));
+  if(i < 0) break;
+  const bb = await page.locator('.datei').nth(i).boundingBox();
+  await page.mouse.dblclick(bb.x + bb.width/2, bb.y + bb.height/2);
+  await page.waitForTimeout(180);
+}
+await page.waitForTimeout(700);
+const belohnung = await page.evaluate(() => ({
+  titel:  document.querySelector('#ovTitle').textContent,
+  sterne: document.querySelector('#totalStars').textContent,
+}));
+pruefe('Der Ernstfall bringt ein Abzeichen', /Abzeichen/.test(belohnung.titel), belohnung.titel);
+pruefe('Er vergibt keine Sterne – die Rechnung bleibt unberührt',
+       belohnung.sterne === sterneVorErnstfall,
+       sterneVorErnstfall + ' vorher, ' + belohnung.sterne + ' nachher');
+
+await page.locator('#ovBtns button', { hasText:'Zur Karte' }).click();
+await page.waitForTimeout(400);
+const kachelStand = () => page.evaluate(() => {
+  const k = document.querySelectorAll('#teil-stationen .station')[4];
+  return { medaille: !!k.querySelector('.abz'), punkt: !!k.querySelector('.lp.ernst.on') };
+});
+const vorher = await kachelStand();
+pruefe('Die Karte zeigt das Abzeichen', vorher.medaille && vorher.punkt);
+
+await page.reload();
+await page.waitForTimeout(800);
+const nachher = await kachelStand();
+pruefe('Das Abzeichen übersteht das Neuladen', nachher.medaille && nachher.punkt);
+
+// Datenschutz: im Speicher stehen nur Zahlen und Stationskürzel
+const gespeichert = await page.evaluate(() => localStorage.getItem('touchpad-abenteuer'));
+const g = JSON.parse(gespeichert);
+const bekannt = ['sterne','stationen','abzeichen','schwelle'];
+pruefe('Der Speicher enthält nur die bekannten Felder',
+       Object.keys(g).every(k => bekannt.includes(k)), Object.keys(g).join(', '));
+pruefe('Im Speicher steht kein Freitext',
+       typeof g.sterne === 'number' && Array.isArray(g.abzeichen)
+       && g.abzeichen.every(x => /^[a-z]+$/.test(x)), JSON.stringify(g.abzeichen));
+
+// Der zweite Ernstfall: Ziehen
+await page.locator('#teil-stationen .station').nth(3).click();
+await page.waitForTimeout(350);
+pruefe('Auch "Aufräumen" hat einen Ernstfall',
+       await page.evaluate(() => [...document.querySelectorAll('#levelDots .lvl')]
+         .some(e => e.classList.contains('ernst'))));
+await page.evaluate(() => document.querySelector('#backBtn').click());
+await page.waitForTimeout(300);
+
 // 9) Nichts heisst mehr "Prototyp"
 const beschriftung = await page.evaluate(() => ({
   titel: document.title,

@@ -9,7 +9,7 @@
    TOUCHPAD-ABENTEUER  ·  für die 3. Klasse
    Acht Übungen am Touchpad und ein Jump-&-Run als Belohnung.
 
-   Zusammengebaut am 2026-10-08 von tools/bauen.mjs
+   Zusammengebaut am 2026-10-23 von tools/bauen.mjs
    aus src/stationen.html, prototyp.html und src/bruecke.js.
    NICHT von Hand ändern – Änderungen gehören in die Quellen.
 
@@ -205,6 +205,68 @@ body{
   #teil-stationen .btn.primary{background:var(--ink);color:#fff}
   #teil-stationen .btn.ghost{background:#EFECF6;color:var(--ink)}
 
+  /* ============================================================
+     DER ERNSTFALL – ein stilisierter Schreibtisch
+     Absichtlich KEIN Nachbau von Windows oder macOS: die Schulen
+     fahren verschiedene Systeme, und gelernt wird die Handlung
+     (Doppelklick öffnet, Ziehen räumt ein), nicht die Pixel.
+     ============================================================ */
+  #teil-stationen .ef{position:absolute;inset:0;display:flex;flex-direction:column;padding:12px;gap:10px}
+  #teil-stationen .ef-auftrag{background:var(--ink);color:#fff;border-radius:16px;padding:10px 16px;
+    font-weight:800;font-size:16px;text-align:center;flex:none}
+  #teil-stationen .ef-auftrag b{color:var(--sun)}
+  /* Fensterrahmen */
+  #teil-stationen .fenster{flex:1;display:flex;flex-direction:column;background:#fff;border-radius:16px;
+    overflow:hidden;box-shadow:0 10px 26px var(--shadow);min-height:0}
+  #teil-stationen .fenster-leiste{display:flex;align-items:center;gap:8px;padding:9px 12px;
+    background:#EFECF6;border-bottom:2px solid #E2DDEC;flex:none}
+  #teil-stationen .fenster-punkte{display:flex;gap:5px}
+  #teil-stationen .fenster-punkte i{width:11px;height:11px;border-radius:50%;background:#C9C3D6;display:block}
+  #teil-stationen .fenster-titel{font-weight:800;font-size:15px;color:var(--ink-soft)}
+  #teil-stationen .fenster-inhalt{flex:1;display:flex;min-height:0}
+  /* Ordnerspalte */
+  #teil-stationen .ef-ordner{width:178px;flex:none;border-right:2px solid #E2DDEC;padding:14px 10px;
+    display:flex;flex-direction:column;gap:12px;background:#FBFAFD}
+  #teil-stationen .ef-ordner .ord{display:flex;align-items:center;gap:10px;padding:18px 12px;border-radius:16px;
+    font-weight:800;font-size:17px;background:#fff;border:3px dashed #DCD7E6;transition:transform .12s}
+  #teil-stationen .ef-ordner .ord .o-emo{font-size:34px}
+  #teil-stationen .ef-ordner .ord.hot{border-color:var(--mint);background:#E4FAF2;transform:scale(1.05)}
+  #teil-stationen .ef-ordner .ord .zahl{margin-left:auto;font-size:13px;color:var(--ink-soft)}
+  /* Dateifläche */
+  #teil-stationen .ef-flaeche{flex:1;position:relative;padding:14px;overflow:auto;display:grid;place-items:center}
+  /* Die Kacheln stehen in einem eigenen Block, damit vier pro Reihe
+     passen und das Fenster nicht dreiviertel leer wirkt. */
+  #teil-stationen .ef-raster{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:536px}
+  #teil-stationen .datei{width:122px;padding:10px 6px;border-radius:14px;text-align:center;cursor:pointer;
+    user-select:none;-webkit-user-select:none;touch-action:none;border:2px solid transparent}
+  #teil-stationen .datei .d-emo{font-size:44px;line-height:1.1;filter:drop-shadow(0 3px 4px var(--shadow))}
+  /* Dateinamen nie mitten im Wort trennen – Drittklässler lesen sonst
+     "Aufsatz.doc" und "x" als zwei Dinge. */
+  #teil-stationen .datei .d-name{font-size:13px;font-weight:800;line-height:1.25;margin-top:3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #teil-stationen .datei.gewaehlt{background:#DCEBFF;border-color:var(--sky)}
+  #teil-stationen .datei.offen{opacity:.45}
+  #teil-stationen .datei.offen .d-emo{filter:none}
+  #teil-stationen .datei.zieht{position:fixed;z-index:200;pointer-events:none;background:#fff;
+    box-shadow:0 10px 24px var(--shadow);opacity:.92}
+  #teil-stationen .datei.falsch{animation:wackeln .3s}
+  @keyframes wackeln{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  /* Kleines Dialogfenster – hier wird gelesen, nicht weggeklickt */
+  #teil-stationen .ef-dialog{position:absolute;inset:0;display:grid;place-items:center;z-index:150;
+    background:rgba(44,33,64,.35)}
+  #teil-stationen .ef-dialog .box{background:#fff;border-radius:18px;padding:18px 22px;max-width:300px;
+    text-align:center;box-shadow:0 16px 34px var(--shadow)}
+  #teil-stationen .ef-dialog .box p{font-weight:800;color:var(--ink);margin:6px 0 14px;font-size:15px}
+  /* Abzeichen */
+  #teil-stationen .ef-abzeichen{font-size:60px;margin:6px 0}
+  #teil-stationen .station .abz{position:absolute;top:10px;right:14px;font-size:27px;z-index:3;
+    filter:drop-shadow(0 3px 5px var(--shadow))}
+  /* Vierter Punkt in der Reihe: der Ernstfall. */
+  #teil-stationen .station .lp.ernst{border:2px solid #CFC8DE;background:transparent;width:24px}
+  #teil-stationen .station .lp.ernst.on{background:var(--grape);border-color:var(--grape)}
+  #teil-stationen .lvl.ernst{width:auto;padding:0 9px;font-size:15px}
+  #teil-stationen .lvl.ernst.done{background:var(--grape);color:#fff}
+
   #teil-stationen .foot{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;margin-top:16px;opacity:.8}
   #teil-stationen .foot .urheber{font-size:12px;opacity:.75;display:inline-block;margin-top:3px}
 
@@ -383,6 +445,7 @@ window.BRUECKE = (function(){
   let stand = {
     sterne: 0,
     stationen: {},          // Stationskürzel -> Liste erledigter Level
+    abzeichen: [],          // Stationen, deren Ernstfall geschafft ist
     schwelle: STERNE_FUER_SPRUNG_STANDARD,
   };
   let teilStationen = null, teilSprung = null;   // Rückrufe der beiden Teile
@@ -395,6 +458,7 @@ window.BRUECKE = (function(){
       const g = JSON.parse(roh);
       if(typeof g.sterne === 'number') stand.sterne = g.sterne;
       if(g.stationen && typeof g.stationen === 'object') stand.stationen = g.stationen;
+      if(Array.isArray(g.abzeichen)) stand.abzeichen = g.abzeichen;
       if(typeof g.schwelle === 'number') stand.schwelle = g.schwelle;
     }catch(e){ /* privates Fenster o.ä. – dann eben ohne Speicherstand */ }
   }
@@ -485,7 +549,7 @@ window.BRUECKE = (function(){
           e.target.textContent = 'Wirklich alles löschen?';
           return;
         }
-        stand = { sterne:0, stationen:{}, schwelle: STERNE_FUER_SPRUNG_STANDARD };
+        stand = { sterne:0, stationen:{}, abzeichen:[], schwelle: STERNE_FUER_SPRUNG_STANDARD };
         try{ localStorage.removeItem(SCHLUESSEL); localStorage.removeItem('fuchssprung'); }catch(err){}
         if(teilSprung) teilSprung.fortschrittLoeschen();
         hg.remove();
@@ -499,7 +563,7 @@ window.BRUECKE = (function(){
   return {
     /* -- vom Stationsteil -- */
     sterneFuerSprung: ()=> stand.schwelle,
-    sterneMelden(sterne, levelsDone){
+    sterneMelden(sterne, levelsDone, abzeichen){
       stand.sterne = sterne;
       if(levelsDone){
         stand.stationen = {};
@@ -507,6 +571,7 @@ window.BRUECKE = (function(){
           stand.stationen[k] = Array.from(levelsDone[k] || []);
         });
       }
+      if(Array.isArray(abzeichen)) stand.abzeichen = abzeichen;
       sichern();
     },
     standUebernehmen(state){
@@ -514,6 +579,7 @@ window.BRUECKE = (function(){
       Object.keys(stand.stationen).forEach(k=>{
         if(state.levelsDone[k]) stand.stationen[k].forEach(n=>state.levelsDone[k].add(n));
       });
+      if(state.abzeichen) stand.abzeichen.forEach(id=>state.abzeichen.add(id));
     },
     stationenBereit(api){ teilStationen = api; },
     sterneSetzen(n){ if(teilStationen) teilStationen.sterneSetzen(n); else { stand.sterne = n; sichern(); } },
@@ -605,7 +671,8 @@ const STATIONS = [
 const state = {
   sound: CONFIG.SOUND_DEFAULT,
   totalStars: 0,       // Gesamtsumme (darf durch Wiederholen weiter wachsen -> Easteregg)
-  levelsDone: {}       // levelsDone[stationId] = Set der gelösten Level-Nummern
+  levelsDone: {},      // levelsDone[stationId] = Set der gelösten Level-Nummern
+  abzeichen: new Set() // Stationen, deren Ernstfall geschafft ist
 };
 STATIONS.forEach(s=>state.levelsDone[s.id]=new Set());
 
@@ -646,16 +713,24 @@ function renderHome(){
   const total=CONFIG.LEVELS_PER_STATION;
   STATIONS.forEach(s=>{
     const done=state.levelsDone[s.id].size;
-    const pips=Array.from({length:total},(_,i)=>`<span class="lp${i<done?' on':''}"></span>`).join('');
+    let pips=Array.from({length:total},(_,i)=>`<span class="lp${i<done?' on':''}"></span>`).join('');
+    if(ERNSTFALL[s.id])
+      pips += `<span class="lp ernst${state.abzeichen.has(s.id)?' on':''}"></span>`;
     const card=document.createElement('button');
     card.className='station';
+    const abz = state.abzeichen.has(s.id)
+      ? '<div class="abz" title="Ernstfall geschafft">🏅</div>' : '';
     card.innerHTML=`
       <div class="blob" style="background:${s.color};opacity:.22"></div>
+      ${abz}
       <div class="emo">${s.emo}</div>
       <h3>${s.titel}</h3>
       <div class="skill">${s.skill}</div>
       <div class="levelsdone"><span class="lpwrap">${pips}</span><span class="lpnum">${done}/${total} Level</span></div>
       <div class="go">Los! ›</div>`;
+    if(ERNSTFALL[s.id]) card.title = state.abzeichen.has(s.id)
+      ? 'Ernstfall geschafft – Abzeichen verdient'
+      : 'Nach Level 3 wartet der Ernstfall am Computer';
     card.onclick=()=>openStation(s.id);
     g.appendChild(card);
   });
@@ -716,6 +791,15 @@ function buildLevelDots(){
     dot.textContent=i; dot.dataset.i=i;
     d.appendChild(dot);
   }
+  // Hat die Station einen Ernstfall, bekommt er einen eigenen Schritt.
+  if(ERNSTFALL[current.id]){
+    const dot=document.createElement('div');
+    dot.className='lvl ernst'+(level===ERNSTFALL_NR?' on':'')
+               +(state.abzeichen.has(current.id)?' done':'');
+    dot.textContent='Ernstfall'; dot.dataset.i=ERNSTFALL_NR;
+    dot.title='Die echte Situation am Computer';
+    d.appendChild(dot);
+  }
 }
 function markLevelDone(){
   const dot=$('#levelDots').querySelector(`.lvl[data-i="${level}"]`);
@@ -762,7 +846,7 @@ function winLevel(starsEarned=3){
   state.totalStars += starsEarned;
   state.levelsDone[current.id].add(level);
   $('#totalStars').textContent=state.totalStars;
-  if(window.BRUECKE) window.BRUECKE.sterneMelden(state.totalStars, state.levelsDone);
+  meldeStand();
 
   const full='⭐'.repeat(starsEarned);
   const dim=`<span class="dim">⭐</span>`.repeat(3-starsEarned);
@@ -776,8 +860,62 @@ function winLevel(starsEarned=3){
   const add=(txt,cls,fn)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=txt;b.onclick=fn;btns.appendChild(b);};
   add('Nochmal','ghost',()=>{ $('#overlay').classList.remove('show'); startLevel(); });
   if(!last) add('Nächstes Level ›','primary',()=>{ level++; updateDots(); $('#overlay').classList.remove('show'); startLevel(); });
+  // Nach dem letzten Level kommt die echte Situation – freiwillig.
+  // Wer langsam liest, soll nicht am Fuchs-Sprung gehindert werden.
+  if(last && ERNSTFALL[current.id]){
+    $('#ovText').textContent = 'Jetzt kommt der Ernstfall: dasselbe am Computer.';
+    add('Ernstfall ›','primary',()=>{ $('#overlay').classList.remove('show'); startErnstfall(); });
+  }
   add('Zur Karte','ghost',()=>goHome());
   $('#overlay').classList.add('show');
+}
+
+/* Der Ernstfall zählt als eigener Schritt hinter Level 3. Er gibt
+   kein Sternchen, sondern ein Abzeichen – es ist eine andere Art
+   von Können als Geschicklichkeit, und so bleibt die Sternrechnung
+   für den Fuchs-Sprung unverändert. */
+const ERNSTFALL_NR = CONFIG.LEVELS_PER_STATION + 1;
+
+function startErnstfall(){
+  if(cleanup){cleanup();cleanup=null;}
+  level = ERNSTFALL_NR;
+  const arena=$('#arena');
+  [...arena.children].forEach(c=>{ if(c.id!=='overlay'&&c.id!=='howto') c.remove(); });
+  $('#overlay').classList.remove('show');
+  $('#gTitle').textContent = current.titel + ' · Ernstfall';
+  $('#howto').style.display='none';
+  $('#arena').classList.remove('grass');
+  setScore(0);
+  updateDots();
+  cleanup = ERNSTFALL[current.id](arena, ernstfallGeschafft);
+}
+
+function ernstfallGeschafft({ fehler = 0 } = {}){
+  if(cleanup){cleanup();cleanup=null;}
+  sfx.win();
+  const neu = !state.abzeichen.has(current.id);
+  state.abzeichen.add(current.id);
+  meldeStand();
+  const dot=$('#levelDots').querySelector('.lvl.ernst');
+  if(dot){ dot.classList.add('done'); dot.classList.remove('on'); }
+
+  $('#ovTitle').textContent = neu ? 'Abzeichen verdient! 🏅' : 'Nochmal geschafft! 🏅';
+  $('#ovStars').innerHTML = '<span class="ef-abzeichen">🏅</span>';
+  $('#ovText').textContent = fehler === 0
+    ? 'Ohne einen einzigen Fehler – genau so macht man das am Computer.'
+    : (fehler === 1 ? 'Ein Versuch ging daneben – und dann hast du es gefunden.'
+                    : 'Ein paar Versuche waren nötig – geschafft ist geschafft.');
+  const btns=$('#ovBtns'); btns.innerHTML='';
+  const add=(txt,cls,fn)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=txt;b.onclick=fn;btns.appendChild(b);};
+  add('Nochmal','ghost',()=>{ $('#overlay').classList.remove('show'); startErnstfall(); });
+  add('Zur Karte','primary',()=>goHome());
+  $('#overlay').classList.add('show');
+}
+
+/* Sterne und Abzeichen in einem Rutsch melden */
+function meldeStand(){
+  if(window.BRUECKE) window.BRUECKE.sterneMelden(
+    state.totalStars, state.levelsDone, Array.from(state.abzeichen));
 }
 
 function goHome(){
@@ -1251,6 +1389,250 @@ GAMES.rechtsklick=(arena,lvl,onWin)=>{
 };
 
 /* ============================================================
+   DER ERNSTFALL
+   Nach den drei Übungslevels kommt die echte Situation: derselbe
+   Griff, aber am Computer statt im Spiel. Wichtig dabei – hier
+   zählt NICHT das Tempo, sondern ob das Richtige getroffen wird.
+   In den Levels übt man die Hand, im Ernstfall den Kopf.
+
+   Der Schreibtisch ist bewusst kein Nachbau von Windows oder
+   macOS. Die Schulen fahren verschiedene Systeme, und gelernt
+   wird die Handlung, nicht wo bei einem Hersteller der Knopf
+   sitzt. Alle Ernstfälle teilen sich denselben Fensterrahmen.
+   ============================================================ */
+const ERNSTFALL = {};
+
+const DATEI_EMO = { bild:'🖼️', text:'📄', ton:'🎵', film:'🎬' };
+
+/* Baut Auftragszeile + Fenster. Gibt die Bausteine zurück,
+   damit die einzelne Szene nur noch ihre Dateien hineinlegt. */
+function schreibtisch(arena, o){
+  const wrap = document.createElement('div');
+  wrap.className = 'ef';
+  const ordnerHtml = (o.ordner||[]).map(f =>
+    `<div class="ord" data-ordner="${f.id}">
+       <span class="o-emo">${f.emo}</span><span>${f.name}</span>
+       <span class="zahl" data-zahl="${f.id}"></span>
+     </div>`).join('');
+  wrap.innerHTML = `
+    <div class="ef-auftrag">${o.auftrag}</div>
+    <div class="fenster">
+      <div class="fenster-leiste">
+        <span class="fenster-punkte"><i></i><i></i><i></i></span>
+        <span class="fenster-titel">${o.fenster}</span>
+      </div>
+      <div class="fenster-inhalt">
+        ${o.ordner ? `<div class="ef-ordner">${ordnerHtml}</div>` : ''}
+        <div class="ef-flaeche"><div class="ef-raster"></div></div>
+      </div>
+    </div>`;
+  arena.appendChild(wrap);
+  return {
+    wrap,
+    flaeche: wrap.querySelector('.ef-raster'),
+    ordner:  [...wrap.querySelectorAll('.ord')],
+    auftrag: wrap.querySelector('.ef-auftrag'),
+  };
+}
+
+/* Eine Datei als Kachel */
+function dateiKachel(d){
+  const el = document.createElement('div');
+  el.className = 'datei';
+  el.innerHTML = `<div class="d-emo">${DATEI_EMO[d.typ]||'📄'}</div>
+                  <div class="d-name">${d.name}</div>`;
+  el._datei = d;
+  return el;
+}
+
+/* Kleines Fenster, das gelesen werden will. Der Knopf schliesst es –
+   das ist selbst schon ein Stück echte Bedienung. */
+function efDialog(wrap, text, danach){
+  const d = document.createElement('div');
+  d.className = 'ef-dialog';
+  d.innerHTML = `<div class="box"><div style="font-size:34px">🤔</div>
+    <p>${text}</p><button class="btn primary">Verstanden</button></div>`;
+  d.querySelector('button').onclick = ()=>{ d.remove(); if(danach) danach(); };
+  wrap.appendChild(d);
+  setTimeout(()=>d.querySelector('button').focus(), 30);
+}
+
+/* Zeiger beim Ziehen festhalten – und zuverlässig wieder loslassen.
+   Ohne Freigabe behalten manche Browser den Griff und leiten danach
+   jeden Klick auf das alte Element um. */
+function griffNehmen(el, e){ try{ el.setPointerCapture(e.pointerId); }catch(err){} }
+function griffGeben(el, e){
+  try{ if(el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId); }catch(err){}
+}
+
+/* ---------- ERNSTFALL ZU "TÜRCHEN ÖFFNEN": DOPPELKLICK ----------
+   Im Spiel öffnet ein Doppelklick eine Tür. Hier öffnet er eine
+   Datei – und zwar nur die richtige. Ein einfacher Klick wählt bloss
+   aus. Genau dieser Unterschied ist der eigentliche Lernstoff. */
+ERNSTFALL.tueren = (arena, fertig) => {
+  const dateien = [
+    { name:'Ferienfoto.jpg',   typ:'bild', ziel:true  },
+    { name:'Aufsatz.docx',     typ:'text', ziel:false },
+    { name:'Schulreise.png',   typ:'bild', ziel:true  },
+    { name:'Mathe.pdf',        typ:'text', ziel:false },
+    { name:'Katze.jpg',        typ:'bild', ziel:true  },
+    { name:'Lied.mp3',         typ:'ton',  ziel:false },
+    { name:'Familie.png',      typ:'bild', ziel:true  },
+    { name:'Notizen.txt',      typ:'text', ziel:false },
+  ].sort(()=>Math.random()-0.5);
+  const noetig = dateien.filter(d=>d.ziel).length;
+
+  const t = schreibtisch(arena, {
+    auftrag: `Öffne alle <b>Bilder</b> mit einem Doppelklick. <b>0/${noetig}</b>`,
+    fenster: '📁 Meine Dateien',
+  });
+  let offen = 0, fehler = 0, gewaehlt = null;
+
+  function stand(){
+    t.auftrag.innerHTML =
+      `Öffne alle <b>Bilder</b> mit einem Doppelklick. <b>${offen}/${noetig}</b>`;
+  }
+  function oeffne(el){
+    const d = el._datei;
+    if(el.classList.contains('offen')) return;
+    if(d.ziel){
+      el.classList.add('offen'); el.classList.remove('gewaehlt');
+      el.querySelector('.d-emo').textContent = '✅';
+      sfx.coin(); offen++; setScore(offen); stand();
+      if(offen >= noetig) setTimeout(()=>fertig({ fehler }), 450);
+    }else{
+      fehler++; sfx.wrong();
+      el.classList.add('falsch');
+      setTimeout(()=>el.classList.remove('falsch'), 320);
+      efDialog(t.wrap, `<b>${d.name}</b> ist kein Bild.<br>Schliesse es wieder und suche weiter.`);
+    }
+  }
+
+  dateien.forEach(d=>{
+    const el = dateiKachel(d);
+    // Einfacher Klick wählt nur aus ...
+    el.addEventListener('click', ()=>{
+      if(gewaehlt) gewaehlt.classList.remove('gewaehlt');
+      gewaehlt = el; el.classList.add('gewaehlt'); sfx.pop();
+    });
+    // ... erst der Doppelklick öffnet.
+    el.addEventListener('dblclick', ()=>oeffne(el));
+    // Touchpad-Doppeltipp ohne echten dblclick-Event
+    let zuletzt = 0;
+    el.addEventListener('pointerdown', ()=>{
+      const jetzt = Date.now();
+      if(jetzt - zuletzt < 400) oeffne(el);
+      zuletzt = jetzt;
+    });
+    t.flaeche.appendChild(el);
+  });
+
+  return ()=>{};
+};
+
+/* ---------- ERNSTFALL ZU "AUFRÄUMEN": ZIEHEN ----------
+   Im Spiel wandert Obst in den Korb. Hier wandern Dateien in den
+   richtigen Ordner – die Alltagshandlung, an der Kinder am
+   häufigsten scheitern. */
+ERNSTFALL.aufraeumen = (arena, fertig) => {
+  const ordner = [
+    { id:'bilder', emo:'📁', name:'Bilder' },
+    { id:'schule', emo:'📁', name:'Schule' },
+  ];
+  const dateien = [
+    { name:'Ferienfoto.jpg', typ:'bild', ordner:'bilder' },
+    { name:'Aufsatz.docx',   typ:'text', ordner:'schule' },
+    { name:'Katze.png',      typ:'bild', ordner:'bilder' },
+    { name:'Mathe.pdf',      typ:'text', ordner:'schule' },
+    { name:'Schulreise.jpg', typ:'bild', ordner:'bilder' },
+    { name:'Lesetext.docx',  typ:'text', ordner:'schule' },
+  ].sort(()=>Math.random()-0.5);
+
+  const t = schreibtisch(arena, {
+    auftrag: `Ziehe jede Datei in den richtigen Ordner. <b>0/${dateien.length}</b>`,
+    fenster: '📁 Mein Schreibtisch',
+    ordner,
+  });
+  let fertigeZahl = 0, fehler = 0;
+  const zaehler = {};
+  ordner.forEach(o=>zaehler[o.id]=0);
+
+  function stand(){
+    t.auftrag.innerHTML =
+      `Ziehe jede Datei in den richtigen Ordner. <b>${fertigeZahl}/${dateien.length}</b>`;
+    ordner.forEach(o=>{
+      const z = t.wrap.querySelector(`[data-zahl="${o.id}"]`);
+      if(z) z.textContent = zaehler[o.id] ? zaehler[o.id] : '';
+    });
+  }
+  function ueber(el, e){
+    const r = el.getBoundingClientRect();
+    return e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+  }
+
+  dateien.forEach(d=>{
+    const el = dateiKachel(d);
+    let zieht = false, dx = 0, dy = 0, platz = null;
+
+    el.addEventListener('pointerdown', e=>{
+      if(el.classList.contains('weg')) return;
+      e.preventDefault();
+      griffNehmen(el, e);
+      const r = el.getBoundingClientRect();
+      dx = e.clientX - r.left; dy = e.clientY - r.top;
+      // Lücke offenhalten, damit die anderen Kacheln nicht springen
+      platz = document.createElement('div');
+      platz.style.width = r.width+'px'; platz.style.height = r.height+'px';
+      el.after(platz);
+      el.classList.add('zieht');
+      el.style.width = r.width+'px';
+      el.style.left = r.left+'px'; el.style.top = r.top+'px';
+      zieht = true;
+    });
+    el.addEventListener('pointermove', e=>{
+      if(!zieht) return;
+      el.style.left = (e.clientX-dx)+'px';
+      el.style.top  = (e.clientY-dy)+'px';
+      t.ordner.forEach(o=>o.classList.toggle('hot', ueber(o, e)));
+    });
+    function loslassen(e){
+      if(!zieht) return;
+      zieht = false;
+      griffGeben(el, e);
+      const ziel = t.ordner.find(o=>ueber(o, e));
+      t.ordner.forEach(o=>o.classList.remove('hot'));
+      el.classList.remove('zieht');
+      el.style.left = el.style.top = el.style.width = '';
+      if(ziel && ziel.dataset.ordner === d.ordner){
+        sfx.coin();
+        zaehler[d.ordner]++; fertigeZahl++; setScore(fertigeZahl);
+        el.classList.add('weg');
+        el.style.transition = 'transform .2s,opacity .2s';
+        el.style.transform = 'scale(0)'; el.style.opacity = '0';
+        setTimeout(()=>{ el.remove(); if(platz) platz.remove(); }, 200);
+        stand();
+        if(fertigeZahl >= dateien.length) setTimeout(()=>fertig({ fehler }), 450);
+        return;
+      }
+      if(platz){ platz.replaceWith(el); platz = null; }
+      if(ziel){
+        fehler++; sfx.wrong();
+        el.classList.add('falsch');
+        setTimeout(()=>el.classList.remove('falsch'), 320);
+        const o = ordner.find(x=>x.id===ziel.dataset.ordner);
+        efDialog(t.wrap, `<b>${d.name}</b> gehört nicht in <b>${o.name}</b>.<br>Schau auf das Symbol.`);
+      }
+    }
+    el.addEventListener('pointerup', loslassen);
+    el.addEventListener('pointercancel', loslassen);
+    t.flaeche.appendChild(el);
+  });
+
+  stand();
+  return ()=>{};
+};
+
+/* ============================================================
    Kopfzeilen-Knöpfe
    ============================================================ */
 $('#backBtn').onclick=goHome;
@@ -1277,7 +1659,7 @@ if(window.BRUECKE) window.BRUECKE.stationenBereit({
   sterneSetzen(n){
     state.totalStars = Math.max(0, n|0);
     $('#totalStars').textContent = state.totalStars;
-    window.BRUECKE.sterneMelden(state.totalStars, state.levelsDone);
+    meldeStand();
     renderHome();
   },
   sterneLesen: ()=> state.totalStars,

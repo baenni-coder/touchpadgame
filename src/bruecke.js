@@ -20,6 +20,7 @@ window.BRUECKE = (function(){
   let stand = {
     sterne: 0,
     stationen: {},          // Stationskürzel -> Liste erledigter Level
+    abzeichen: [],          // Stationen, deren Ernstfall geschafft ist
     schwelle: STERNE_FUER_SPRUNG_STANDARD,
   };
   let teilStationen = null, teilSprung = null;   // Rückrufe der beiden Teile
@@ -32,6 +33,7 @@ window.BRUECKE = (function(){
       const g = JSON.parse(roh);
       if(typeof g.sterne === 'number') stand.sterne = g.sterne;
       if(g.stationen && typeof g.stationen === 'object') stand.stationen = g.stationen;
+      if(Array.isArray(g.abzeichen)) stand.abzeichen = g.abzeichen;
       if(typeof g.schwelle === 'number') stand.schwelle = g.schwelle;
     }catch(e){ /* privates Fenster o.ä. – dann eben ohne Speicherstand */ }
   }
@@ -122,7 +124,7 @@ window.BRUECKE = (function(){
           e.target.textContent = 'Wirklich alles löschen?';
           return;
         }
-        stand = { sterne:0, stationen:{}, schwelle: STERNE_FUER_SPRUNG_STANDARD };
+        stand = { sterne:0, stationen:{}, abzeichen:[], schwelle: STERNE_FUER_SPRUNG_STANDARD };
         try{ localStorage.removeItem(SCHLUESSEL); localStorage.removeItem('fuchssprung'); }catch(err){}
         if(teilSprung) teilSprung.fortschrittLoeschen();
         hg.remove();
@@ -136,7 +138,7 @@ window.BRUECKE = (function(){
   return {
     /* -- vom Stationsteil -- */
     sterneFuerSprung: ()=> stand.schwelle,
-    sterneMelden(sterne, levelsDone){
+    sterneMelden(sterne, levelsDone, abzeichen){
       stand.sterne = sterne;
       if(levelsDone){
         stand.stationen = {};
@@ -144,6 +146,7 @@ window.BRUECKE = (function(){
           stand.stationen[k] = Array.from(levelsDone[k] || []);
         });
       }
+      if(Array.isArray(abzeichen)) stand.abzeichen = abzeichen;
       sichern();
     },
     standUebernehmen(state){
@@ -151,6 +154,7 @@ window.BRUECKE = (function(){
       Object.keys(stand.stationen).forEach(k=>{
         if(state.levelsDone[k]) stand.stationen[k].forEach(n=>state.levelsDone[k].add(n));
       });
+      if(state.abzeichen) stand.abzeichen.forEach(id=>state.abzeichen.add(id));
     },
     stationenBereit(api){ teilStationen = api; },
     sterneSetzen(n){ if(teilStationen) teilStationen.sterneSetzen(n); else { stand.sterne = n; sichern(); } },
