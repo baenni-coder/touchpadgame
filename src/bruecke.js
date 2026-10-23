@@ -189,10 +189,17 @@ window.BRUECKE = (function(){
 
     /* -- vom Jump-&-Run -- */
     sprungBereit(api){ teilSprung = api; tonVerteilen(); },
+    /* Für das Diplom: wie viele Jump-&-Run-Level sind geschafft? */
+    sprungStand(){
+      if(!teilSprung || !teilSprung.fortschrittLesen) return null;
+      return teilSprung.fortschrittLesen();
+    },
     zurKarte(){
       zeigen('stationen');
       if(teilSprung) teilSprung.musikStopp();   // auf der Karte ist es still
-      if(teilStationen) teilStationen.renderHome();
+      // goHome statt renderHome: räumt ein noch laufendes Übungsspiel
+      // auf und schaltet den Stationsteil wirklich auf die Karte.
+      if(teilStationen) (teilStationen.goHome || teilStationen.renderHome)();
     },
 
     /* -- Start -- */

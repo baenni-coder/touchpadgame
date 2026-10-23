@@ -1900,6 +1900,10 @@ if(window.BRUECKE){
     musikStopp, musikStart,
     tonSetzen: an => tonSetzen(an, false),
     tonLesen: ()=> tonAn,
+    fortschrittLesen: ()=>({
+      geschafft: Object.keys(fortschritt.best).length,
+      gesamt: LEVELS.length,
+    }),
     anzahlLevels: LEVELS.length,
   });
 }

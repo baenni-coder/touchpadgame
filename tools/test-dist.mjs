@@ -422,8 +422,8 @@ const punkte = await page.evaluate(() => {
   const karten = [...document.querySelectorAll('#teil-stationen .station')];
   return karten.slice(0, 8).map(k => !!k.querySelector('.lp.ernst'));
 });
-pruefe('Vier Stationen weniger haben den vierten Punkt nicht',
-       punkte.filter(Boolean).length === 2, punkte.filter(Boolean).length + ' von 8 mit Ernstfall');
+pruefe('Jede der acht Stationen hat einen Ernstfall',
+       punkte.filter(Boolean).length === 8, punkte.filter(Boolean).length + ' von 8');
 
 // "Türchen öffnen" (Doppelklick) durchspielen
 await page.locator('#teil-stationen .station').nth(4).click();
@@ -552,6 +552,228 @@ pruefe('Auch "Aufräumen" hat einen Ernstfall',
          .some(e => e.classList.contains('ernst'))));
 await page.evaluate(() => document.querySelector('#backBtn').click());
 await page.waitForTimeout(300);
+
+// 8f) Alle acht Ernstfälle lassen sich durchspielen
+//     Jede Szene wird bis zum Abzeichen gespielt – aufgebaut heisst
+//     noch lange nicht abschliessbar.
+const ernstfallSpielen = {
+  async sterne(){
+    for(const [m, e] of [['Datei','Drucken'],['Bearbeiten','Kopieren'],['Ansicht','Vollbild']]){
+      const a = await page.locator('.mtitel', { hasText:m }).boundingBox();
+      await page.mouse.move(a.x + a.width/2, a.y + a.height/2);
+      await page.waitForTimeout(220);
+      const t = await page.locator('.ef-klapp .meintrag', { hasText:e }).boundingBox();
+      await page.mouse.move(t.x + t.width/2, t.y + t.height/2);
+      await page.waitForTimeout(650);
+    }
+  },
+  async ballons(){
+    for(const k of ['Speichern','Rückgängig','Abbrechen']){
+      await page.locator('.ef-flaeche .btn', { hasText:new RegExp('^'+k+'$') }).click();
+      await page.waitForTimeout(280);
+    }
+  },
+  async maulwurf(){
+    for(const n of ['Spiele gratis','Gewinnspiel!!!','Werbung']){
+      await page.locator('.ef-tab', { hasText:n }).locator('.zu').click();
+      await page.waitForTimeout(260);
+    }
+  },
+  async aufraeumen(){
+    for(let n = 0; n < 8; n++){
+      const i = await page.evaluate(() => [...document.querySelectorAll('.datei')]
+          .findIndex(e => !e.classList.contains('weg')));
+      if(i < 0) break;
+      const ziel = await page.evaluate(i => {
+        const el = [...document.querySelectorAll('.datei')][i];
+        return [...document.querySelectorAll('.ord')]
+                 .findIndex(o => o.dataset.ordner === el._datei.ordner);
+      }, i);
+      const a = await page.locator('.datei').nth(i).boundingBox();
+      const o = await page.locator('.ord').nth(ziel).boundingBox();
+      await page.mouse.move(a.x + a.width/2, a.y + a.height/2);
+      await page.mouse.down();
+      await page.mouse.move(a.x + a.width/2 - 25, a.y + a.height/2 - 15, { steps:4 });
+      await page.mouse.move(o.x + o.width/2, o.y + o.height/2, { steps:10 });
+      await page.mouse.up();
+      await page.waitForTimeout(300);
+    }
+  },
+  async tueren(){
+    for(let n = 0; n < 10; n++){
+      const i = await page.evaluate(() => [...document.querySelectorAll('.datei')]
+          .findIndex(e => e._datei.ziel && !e.classList.contains('offen')));
+      if(i < 0) break;
+      const r = await page.locator('.datei').nth(i).boundingBox();
+      await page.mouse.dblclick(r.x + r.width/2, r.y + r.height/2);
+      await page.waitForTimeout(180);
+    }
+  },
+  async weg(){
+    const a = await page.locator('.mtitel', { hasText:'Datei' }).boundingBox();
+    await page.mouse.move(a.x + a.width/2, a.y + a.height/2);
+    await page.waitForTimeout(250);
+    const n = await page.locator('.ef-klapp .meintrag', { hasText:'Neu' }).boundingBox();
+    await page.mouse.move(n.x + n.width/2, n.y + n.height/2);
+    await page.waitForTimeout(300);
+    const o = await page.locator('.ef-klapp').nth(1)
+                        .locator('.meintrag', { hasText:'Ordner' }).boundingBox();
+    await page.mouse.move(o.x + o.width/2, o.y + o.height/2);
+    await page.waitForTimeout(300);
+  },
+  async scrollen(){
+    for(const k of ['Der Bach','Die Pilze']){
+      await page.evaluate(k => {
+        const h = [...document.querySelectorAll('.ef-blatt h4')].find(x => x._kapitel === k);
+        const doku = document.querySelector('.ef-doku');
+        doku.scrollTop = h.offsetTop - 30;
+        doku.dispatchEvent(new Event('scroll'));
+      }, k);
+      await page.waitForTimeout(850);
+    }
+  },
+  async rechtsklick(){
+    for(const [datei, tue] of [['unbenannt.txt','Umbenennen'],['Werbung.pdf','Löschen'],
+                               ['Aufsatz.docx','Kopieren']]){
+      const r = await page.locator('.datei').filter({ hasText:datei }).boundingBox();
+      await page.mouse.click(r.x + r.width/2, r.y + r.height/2, { button:'right' });
+      await page.waitForTimeout(230);
+      await page.locator('.ef-kontext button', { hasText:new RegExp('^'+tue+'$') }).click();
+      await page.waitForTimeout(280);
+    }
+  },
+};
+
+// Über den Lehrer-Weg alle Level öffnen wäre nicht nötig: der Ernstfall
+// hängt am Stationsknopf, nicht am Fortschritt. Wir rufen ihn direkt auf.
+const ernstfallStarten = async (id) => {
+  const nr = ['sterne','ballons','maulwurf','aufraeumen','tueren','weg','scrollen','rechtsklick']
+    .indexOf(id);
+  await page.locator('#teil-stationen .station').nth(nr).click();
+  await page.waitForTimeout(300);
+  // Zum Ernstfall springen: den vierten Punkt gibt es nur dort, wo es
+  // einen gibt – sonst ist dieser Test ohnehin falsch.
+  await page.evaluate(() => {
+    const d = document.querySelector('#levelDots .lvl.ernst');
+    if(d) d.click();
+  });
+  await page.waitForTimeout(200);
+  return !!(await page.$('.ef-auftrag'));
+};
+
+const ernstfallListe = ['sterne','ballons','maulwurf','aufraeumen','tueren','weg','scrollen','rechtsklick'];
+
+// Erst prüfen: ohne die drei Level ist der Ernstfall zu.
+await page.evaluate(() => BRUECKE.zurKarte());
+await page.waitForTimeout(250);
+await page.locator('#teil-stationen .station').nth(0).click();   // Sterne: 0/3
+await page.waitForTimeout(300);
+const ernstfallZu = await page.evaluate(() => {
+  const d = document.querySelector('#levelDots .lvl.ernst');
+  return d ? { zu: d.classList.contains('zu'), titel: d.title } : null;
+});
+pruefe('Ohne die drei Level ist der Ernstfall gesperrt',
+       ernstfallZu && ernstfallZu.zu, ernstfallZu ? ernstfallZu.titel : 'kein Punkt');
+
+// Für die Durchspiel-Prüfung die Level setzen – geprüft werden hier die
+// Szenen, nicht die Freischaltung (die steht im Test darüber).
+await page.evaluate(ids => {
+  const fertig = {};
+  ids.forEach(id => fertig[id] = [1,2,3]);
+  BRUECKE.sterneMelden(BRUECKE.sterneLesen(), fertig, []);
+}, ernstfallListe);
+await page.reload();
+await page.waitForTimeout(900);
+
+let ernstfaelleOk = 0;
+for(const id of ernstfallListe){
+  await page.evaluate(() => BRUECKE.zurKarte());
+  await page.waitForTimeout(250);
+  const nr = ernstfallListe.indexOf(id);
+  await page.locator('#teil-stationen .station').nth(nr).click();
+  await page.waitForTimeout(300);
+  await page.evaluate(() => { const d = document.querySelector('#levelDots .lvl.ernst'); if(d) d.click(); });
+  await page.waitForTimeout(350);
+  const steht = await page.$('.ef-auftrag');
+  if(!steht){ pruefe('Ernstfall "' + id + '" baut sich auf', false, 'keine Auftragszeile'); continue; }
+  await ernstfallSpielen[id]();
+  let fertig = false;
+  try{
+    await page.waitForFunction(
+      () => document.querySelector('#overlay').classList.contains('show')
+         && /Abzeichen|geschafft/.test(document.querySelector('#ovTitle').textContent),
+      null, { timeout:5000 });
+    fertig = true;
+  }catch(e){ fertig = false; }
+  pruefe('Ernstfall "' + id + '" lässt sich abschliessen', fertig,
+         fertig ? await page.evaluate(() => document.querySelector('#ovText').textContent)
+                : 'kein Abzeichen nach 5 s');
+  if(fertig) ernstfaelleOk++;
+}
+pruefe('Alle acht Ernstfälle sind durchspielbar', ernstfaelleOk === 8,
+       ernstfaelleOk + ' von 8');
+
+await page.evaluate(() => BRUECKE.zurKarte());
+await page.waitForTimeout(300);
+const alleAbz = await page.evaluate(() =>
+  document.querySelectorAll('#teil-stationen .station .abz').length);
+pruefe('Alle acht Abzeichen stehen auf der Karte', alleAbz === 8, alleAbz + ' Medaillen');
+
+// 8g) Das Diplom
+await page.locator('#diplomKnopf').click();
+await page.waitForTimeout(350);
+const diplom = await page.evaluate(() => ({
+  sichtbar: document.querySelector('#diplom').classList.contains('zeigen'),
+  felder: [...document.querySelectorAll('.u-feld')].map(f => f.textContent),
+  abzeichen: document.querySelector('#diplAbz').textContent,
+  datum: document.querySelector('#diplDatum').textContent,
+  leer: document.querySelector('#diplName').value,
+}));
+pruefe('Das Diplom öffnet sich', diplom.sichtbar);
+pruefe('Das Namensfeld ist leer', diplom.leer === '', JSON.stringify(diplom.leer));
+pruefe('Es zeigt den echten Stand', diplom.felder.length >= 3, diplom.felder.join(' | '));
+pruefe('Die Abzeichen sind drauf', diplom.abzeichen.length > 0, diplom.abzeichen);
+pruefe('Ein Datum steht darauf', /\d{2}\.\d{2}\.\d{4}/.test(diplom.datum), diplom.datum);
+
+// Datenschutz: der Name darf nirgends landen
+await page.locator('#diplName').fill('Testkind Muster');
+await page.waitForTimeout(300);
+const nirgends = await page.evaluate(() => {
+  let alles = '';
+  for(let i = 0; i < localStorage.length; i++) alles += localStorage.getItem(localStorage.key(i));
+  for(let i = 0; i < sessionStorage.length; i++) alles += sessionStorage.getItem(sessionStorage.key(i));
+  return !/Testkind/.test(alles) && !/Testkind/.test(document.cookie);
+});
+pruefe('Der eingetippte Name wird nirgends gespeichert', nirgends);
+
+await page.locator('#diplZu').click();
+await page.waitForTimeout(250);
+await page.locator('#diplomKnopf').click();
+await page.waitForTimeout(250);
+pruefe('Nach dem Schliessen ist der Name weg',
+       await page.evaluate(() => document.querySelector('#diplName').value) === '');
+
+// Drucken: nur die Urkunde steht auf dem Papier
+await page.emulateMedia({ media:'print' });
+await page.waitForTimeout(200);
+const imDruck = await page.evaluate(() => {
+  const sicht = s => { const e = document.querySelector(s);
+    return e ? getComputedStyle(e).display !== 'none' : false; };
+  return {
+    urkunde: sicht('.urkunde'),
+    kopf:    sicht('#teil-stationen header.top'),
+    karte:   sicht('#home'),
+    knoepfe: sicht('.dipl-steuer'),
+    spiel:   sicht('#teil-sprung'),
+  };
+});
+await page.emulateMedia({ media:'screen' });
+pruefe('Gedruckt wird die Urkunde', imDruck.urkunde);
+pruefe('Die Bedienelemente kommen nicht aufs Papier',
+       !imDruck.kopf && !imDruck.karte && !imDruck.knoepfe && !imDruck.spiel,
+       JSON.stringify(imDruck));
+await page.evaluate(() => document.querySelector('#diplZu').click());
+await page.waitForTimeout(250);
 
 // 9) Nichts heisst mehr "Prototyp"
 const beschriftung = await page.evaluate(() => ({

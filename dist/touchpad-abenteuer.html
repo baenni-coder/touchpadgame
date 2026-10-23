@@ -42,6 +42,14 @@ body{
 /* Das Spielfeld ist immer bildschirmhoch und soll nicht wegscrollen. */
 #teil-sprung{overflow:hidden;touch-action:none}
 #teil-sprung[hidden],#teil-stationen[hidden]{display:none!important}
+/* Gedruckt wird nur das Diplom. Diese Regel muss global stehen: die
+   beiden Teile sind Geschwister, aus dem einen heraus erreicht man
+   den anderen nicht. */
+@media print{
+  #teil-sprung{display:none!important}
+  #teil-stationen{min-height:0}
+  html,body{background:#fff!important}
+}
 
 /* ---------- die acht Übungen ---------- */
 
@@ -257,6 +265,46 @@ body{
   #teil-stationen .ef-dialog .box{background:#fff;border-radius:18px;padding:18px 22px;max-width:300px;
     text-align:center;box-shadow:0 16px 34px var(--shadow)}
   #teil-stationen .ef-dialog .box p{font-weight:800;color:var(--ink);margin:6px 0 14px;font-size:15px}
+  /* Menüleiste – für Zeigen und ruhiges Steuern */
+  #teil-stationen .ef-menue{display:flex;gap:4px;padding:6px 10px;background:#F7F5FB;
+    border-bottom:2px solid #E2DDEC;flex:none;position:relative;z-index:20}
+  #teil-stationen .ef-menue .mtitel{padding:7px 14px;border-radius:9px;font-weight:800;font-size:15px;
+    cursor:default;white-space:nowrap}
+  #teil-stationen .ef-menue .mtitel.auf{background:var(--ink);color:#fff}
+  #teil-stationen .ef-klapp{position:absolute;top:100%;margin-top:3px;background:#fff;border-radius:12px;
+    padding:6px;box-shadow:0 12px 28px var(--shadow);min-width:184px;z-index:30}
+  #teil-stationen .ef-klapp .meintrag{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;
+    font-weight:700;font-size:15px;white-space:nowrap;cursor:default}
+  #teil-stationen .ef-klapp .meintrag.auf{background:#DCEBFF}
+  #teil-stationen .ef-klapp .meintrag.gesucht.auf{background:var(--mint);color:#fff}
+  #teil-stationen .ef-klapp .meintrag .pfeil{margin-left:auto;opacity:.5}
+  #teil-stationen .ef-klapp .trenner{height:2px;background:#EFECF6;margin:5px 8px}
+  /* Register (Tabs) – kleine Ziele sicher treffen */
+  #teil-stationen .ef-tabs{display:flex;gap:6px;padding:8px 10px 0;background:#F7F5FB;
+    border-bottom:2px solid #E2DDEC;flex:none;flex-wrap:wrap}
+  #teil-stationen .ef-tab{display:flex;align-items:center;gap:8px;background:#fff;border-radius:11px 11px 0 0;
+    padding:9px 10px 9px 14px;font-weight:800;font-size:14px;max-width:200px}
+  #teil-stationen .ef-tab .tname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #teil-stationen .ef-tab .zu{width:22px;height:22px;flex:none;border-radius:50%;border:none;background:#EFECF6;
+    font-size:13px;font-weight:800;cursor:pointer;color:var(--ink-soft);font-family:inherit;
+    display:grid;place-items:center;padding:0}
+  #teil-stationen .ef-tab .zu:hover{background:var(--coral);color:#fff}
+  #teil-stationen .ef-tab.behalten{border:2px solid var(--mint)}
+  /* Langes Dokument – zum Scrollen */
+  #teil-stationen .ef-doku{flex:1;overflow-y:auto;padding:0;position:relative;background:#fff}
+  #teil-stationen .ef-blatt{padding:20px 34px}
+  #teil-stationen .ef-blatt h4{font-size:19px;margin:22px 0 8px;scroll-margin-top:16px}
+  #teil-stationen .ef-blatt p{color:var(--ink-soft);font-weight:600;line-height:1.55;margin-bottom:10px;font-size:14.5px}
+  #teil-stationen .ef-blatt .marke{display:inline-block;background:var(--sun);color:var(--ink);
+    border-radius:999px;padding:3px 12px;font-weight:800;font-size:13px;margin-left:8px}
+  #teil-stationen .ef-blatt h4.gefunden{color:var(--mint)}
+  /* Kontextmenü – Rechtsklick */
+  #teil-stationen .ef-kontext{position:absolute;background:#fff;border-radius:12px;padding:6px;
+    box-shadow:0 14px 30px var(--shadow);z-index:140;min-width:178px}
+  #teil-stationen .ef-kontext button{display:block;width:100%;text-align:left;border:none;background:none;
+    padding:9px 13px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;
+    font-family:inherit;color:var(--ink)}
+  #teil-stationen .ef-kontext button:hover{background:#DCEBFF}
   /* Abzeichen */
   #teil-stationen .ef-abzeichen{font-size:60px;margin:6px 0}
   #teil-stationen .station .abz{position:absolute;top:10px;right:14px;font-size:27px;z-index:3;
@@ -266,6 +314,7 @@ body{
   #teil-stationen .station .lp.ernst.on{background:var(--grape);border-color:var(--grape)}
   #teil-stationen .lvl.ernst{width:auto;padding:0 9px;font-size:15px}
   #teil-stationen .lvl.ernst.done{background:var(--grape);color:#fff}
+  #teil-stationen .lvl.ernst.zu{opacity:.4}
 
   /* Ausgeschaltet: durchgestrichen – 🔇 ist je nach Schriftart
      selbst noch ein Lautsprecher und kaum zu unterscheiden. */
@@ -273,6 +322,55 @@ body{
   #teil-stationen .iconbtn.aus{opacity:.55;background:#DCD7E6}
   #teil-stationen .iconbtn.aus::after{content:'';position:absolute;left:14%;right:14%;top:calc(50% - 1.5px);
     height:3px;border-radius:2px;background:var(--ink);transform:rotate(-22deg);pointer-events:none}
+
+  /* ============================================================
+     DAS DIPLOM
+     Der Name wird getippt, gedruckt und wieder vergessen. Er wird
+     NICHT gespeichert – auf einem Schulgerät läse ihn sonst das
+     nächste Kind.
+     ============================================================ */
+  #teil-stationen #diplom{display:none}
+  #teil-stationen #diplom.zeigen{display:block}
+  #teil-stationen .dipl-steuer{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  #teil-stationen .dipl-hinweis{text-align:center;color:var(--ink-soft);font-size:13px;
+    font-weight:700;margin-top:14px}
+  #teil-stationen .urkunde{background:#fff;border-radius:20px;padding:38px 46px;max-width:780px;
+    margin:0 auto;box-shadow:0 18px 40px var(--shadow);position:relative;
+    border:5px double var(--grape);text-align:center}
+  #teil-stationen .urkunde .ecke{position:absolute;font-size:30px;opacity:.5}
+  #teil-stationen .urkunde .ecke.lo{top:14px;left:18px} #teil-stationen .urkunde .ecke.ro{top:14px;right:18px}
+  #teil-stationen .urkunde .ecke.lu{bottom:14px;left:18px} #teil-stationen .urkunde .ecke.ru{bottom:14px;right:18px}
+  #teil-stationen .urkunde .u-fuchs{font-size:56px;line-height:1}
+  #teil-stationen .urkunde h2{font-size:38px;letter-spacing:2px;margin:4px 0 2px}
+  #teil-stationen .urkunde .u-unter{color:var(--ink-soft);font-weight:800;font-size:15px;margin-bottom:20px}
+  #teil-stationen .urkunde .u-fuer{color:var(--ink-soft);font-weight:800;font-size:15px}
+  #teil-stationen .urkunde input.u-name{display:block;width:88%;margin:4px auto 20px;border:none;
+    border-bottom:3px dashed #CFC8DE;background:transparent;text-align:center;
+    font-family:inherit;font-size:30px;font-weight:800;color:var(--ink);padding:6px 0}
+  #teil-stationen .urkunde input.u-name:focus{outline:none;border-bottom-color:var(--grape)}
+  #teil-stationen .urkunde input.u-name::placeholder{color:#C9C3D6;font-weight:700;font-size:21px}
+  #teil-stationen .u-liste{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:6px 0 18px}
+  #teil-stationen .u-feld{background:#F7F5FB;border-radius:14px;padding:12px 18px;min-width:122px}
+  #teil-stationen .u-feld .zahl{font-size:26px;font-weight:800;display:block;line-height:1.2}
+  #teil-stationen .u-feld .was{font-size:12.5px;font-weight:800;color:var(--ink-soft)}
+  #teil-stationen .u-abz{font-size:24px;letter-spacing:3px;margin:2px 0 16px;min-height:30px}
+  #teil-stationen .u-fuss{display:flex;justify-content:space-between;gap:20px;margin-top:22px;
+    font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+  #teil-stationen .u-fuss .linie{flex:1;text-align:center}
+  #teil-stationen .u-fuss .linie span{display:block;border-top:2px solid #CFC8DE;margin-top:26px;padding-top:5px}
+  #teil-stationen .u-quelle{margin-top:18px;font-size:11.5px;color:var(--ink-soft);opacity:.8}
+
+  @page{size:A4 landscape;margin:12mm}
+  @media print{
+    html{background:#fff}
+    #teil-stationen{background:#fff}
+    #teil-stationen .top,#teil-stationen #home,#teil-stationen .gamewrap,#teil-stationen .dipl-steuer,#teil-stationen .dipl-hinweis{display:none!important}
+    #teil-stationen #diplom{display:block!important}
+    #teil-stationen #app{max-width:none;padding:0;min-height:0;display:block}
+    #teil-stationen .urkunde{box-shadow:none;max-width:none;margin:0;padding:26px 34px;
+      border-radius:0;border-width:4px}
+    #teil-stationen .urkunde input.u-name{border-bottom-style:solid}
+  }
 
   #teil-stationen .foot{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;margin-top:16px;opacity:.8}
   #teil-stationen .foot .urheber{font-size:12px;opacity:.75;display:inline-block;margin-top:3px}
@@ -382,8 +480,40 @@ body{
       <p>Wähle eine Station und übe das Touchpad – tippen, zeigen, ziehen und mehr!</p>
     </div>
     <div class="grid" id="stationGrid"></div>
+    <div style="text-align:center;margin-top:20px">
+      <button class="btn ghost" id="diplomKnopf">🏆 Mein Diplom</button>
+    </div>
     <div class="foot">Läuft ganz ohne Internet · Alles bleibt auf diesem Laptop<br><span class="urheber">Andreas Bänninger, PICTS BeLoSe · CC BY-SA 4.0</span></div>
   </main>
+
+  <!-- DIPLOM -->
+  <section id="diplom">
+    <div class="dipl-steuer">
+      <button class="btn ghost" id="diplZu">‹ Zurück zur Karte</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn primary" id="diplDruck">🖨️ Diplom drucken</button>
+    </div>
+    <div class="urkunde">
+      <span class="ecke lo">✦</span><span class="ecke ro">✦</span>
+      <span class="ecke lu">✦</span><span class="ecke ru">✦</span>
+      <div class="u-fuchs">🦊</div>
+      <h2>DIPLOM</h2>
+      <div class="u-unter">Touchpad-Abenteuer</div>
+      <div class="u-fuer">Dieses Diplom gehört</div>
+      <input class="u-name" id="diplName" type="text" maxlength="32"
+             placeholder="Hier deinen Namen eintippen"
+             autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="u-liste" id="diplZahlen"></div>
+      <div class="u-abz" id="diplAbz"></div>
+      <div class="u-fuss">
+        <div class="linie"><span id="diplDatum">Datum</span></div>
+        <div class="linie"><span>Unterschrift der Lehrperson</span></div>
+      </div>
+      <div class="u-quelle">Touchpad-Abenteuer · Andreas Bänninger, PICTS BeLoSe · CC BY-SA 4.0</div>
+    </div>
+    <p class="dipl-hinweis">Der Name wird nur für den Ausdruck gebraucht.
+      Er wird <strong>nicht gespeichert</strong> und verschwindet beim Schliessen.</p>
+  </section>
 
   <!-- SPIELBILDSCHIRM -->
   <section class="gamewrap" id="game">
@@ -621,10 +751,17 @@ window.BRUECKE = (function(){
 
     /* -- vom Jump-&-Run -- */
     sprungBereit(api){ teilSprung = api; tonVerteilen(); },
+    /* Für das Diplom: wie viele Jump-&-Run-Level sind geschafft? */
+    sprungStand(){
+      if(!teilSprung || !teilSprung.fortschrittLesen) return null;
+      return teilSprung.fortschrittLesen();
+    },
     zurKarte(){
       zeigen('stationen');
       if(teilSprung) teilSprung.musikStopp();   // auf der Karte ist es still
-      if(teilStationen) teilStationen.renderHome();
+      // goHome statt renderHome: räumt ein noch laufendes Übungsspiel
+      // auf und schaltet den Stationsteil wirklich auf die Karte.
+      if(teilStationen) (teilStationen.goHome || teilStationen.renderHome)();
     },
 
     /* -- Start -- */
@@ -805,6 +942,7 @@ let cleanup=null;   // Aufräumfunktion des laufenden Spiels
 function showScreen(which){
   $('#home').style.display = which==='home'?'block':'none';
   $('#game').classList.toggle('show', which==='game');
+  $('#diplom').classList.toggle('zeigen', which==='diplom');
 }
 function openStation(id){
   current=STATIONS.find(s=>s.id===id);
@@ -823,11 +961,23 @@ function buildLevelDots(){
   }
   // Hat die Station einen Ernstfall, bekommt er einen eigenen Schritt.
   if(ERNSTFALL[current.id]){
+    const geschafft = state.levelsDone[current.id].size >= CONFIG.LEVELS_PER_STATION;
+    const offen = geschafft || state.abzeichen.has(current.id);
     const dot=document.createElement('div');
     dot.className='lvl ernst'+(level===ERNSTFALL_NR?' on':'')
-               +(state.abzeichen.has(current.id)?' done':'');
+               +(state.abzeichen.has(current.id)?' done':'')
+               +(offen?'':' zu');
     dot.textContent='Ernstfall'; dot.dataset.i=ERNSTFALL_NR;
-    dot.title='Die echte Situation am Computer';
+    // Wer die drei Level schon hat, soll den Ernstfall direkt
+    // nochmal aufrufen können – sonst müsste man Level 3 wiederholen,
+    // bloss um wieder hinzukommen.
+    if(offen){
+      dot.title='Die echte Situation am Computer – hier klicken';
+      dot.style.cursor='pointer';
+      dot.onclick=()=>{ if(level!==ERNSTFALL_NR) startErnstfall(); };
+    }else{
+      dot.title='Zuerst die drei Level schaffen';
+    }
     d.appendChild(dot);
   }
 }
@@ -844,6 +994,7 @@ function updateDots(){
 
 function startLevel(){
   if(cleanup){cleanup();cleanup=null;}
+  efZeitLoeschen();
   const arena=$('#arena');
   // Arena leeren (Overlay + Howto behalten)
   [...arena.children].forEach(c=>{ if(c.id!=='overlay'&&c.id!=='howto') c.remove(); });
@@ -908,6 +1059,7 @@ const ERNSTFALL_NR = CONFIG.LEVELS_PER_STATION + 1;
 
 function startErnstfall(){
   if(cleanup){cleanup();cleanup=null;}
+  efZeitLoeschen();
   level = ERNSTFALL_NR;
   const arena=$('#arena');
   [...arena.children].forEach(c=>{ if(c.id!=='overlay'&&c.id!=='howto') c.remove(); });
@@ -926,8 +1078,7 @@ function ernstfallGeschafft({ fehler = 0 } = {}){
   const neu = !state.abzeichen.has(current.id);
   state.abzeichen.add(current.id);
   meldeStand();
-  const dot=$('#levelDots').querySelector('.lvl.ernst');
-  if(dot){ dot.classList.add('done'); dot.classList.remove('on'); }
+  buildLevelDots();
 
   $('#ovTitle').textContent = neu ? 'Abzeichen verdient! 🏅' : 'Nochmal geschafft! 🏅';
   $('#ovStars').innerHTML = '<span class="ef-abzeichen">🏅</span>';
@@ -950,6 +1101,7 @@ function meldeStand(){
 
 function goHome(){
   if(cleanup){cleanup();cleanup=null;}
+  efZeitLoeschen();
   renderHome();
   showScreen('home');
 }
@@ -1434,6 +1586,14 @@ const ERNSTFALL = {};
 
 const DATEI_EMO = { bild:'🖼️', text:'📄', ton:'🎵', film:'🎬' };
 
+/* Zeitgeber der laufenden Szene. Ohne das kann ein Nachzügler aus der
+   vorigen Szene das Abzeichen-Fenster in die nächste hineinplatzen
+   lassen – ein Kind, das schnell weiterklickt, sähe plötzlich einen
+   Erfolg, der nicht zu dem gehört, was es gerade tut. */
+let efZeitgeber = [];
+function efSpaeter(fn, ms){ const id = setTimeout(fn, ms); efZeitgeber.push(id); return id; }
+function efZeitLoeschen(){ efZeitgeber.forEach(clearTimeout); efZeitgeber = []; }
+
 /* Baut Auftragszeile + Fenster. Gibt die Bausteine zurück,
    damit die einzelne Szene nur noch ihre Dateien hineinlegt. */
 function schreibtisch(arena, o){
@@ -1529,7 +1689,7 @@ ERNSTFALL.tueren = (arena, fertig) => {
       el.classList.add('offen'); el.classList.remove('gewaehlt');
       el.querySelector('.d-emo').textContent = '✅';
       sfx.coin(); offen++; setScore(offen); stand();
-      if(offen >= noetig) setTimeout(()=>fertig({ fehler }), 450);
+      if(offen >= noetig) efSpaeter(()=>fertig({ fehler }), 450);
     }else{
       fehler++; sfx.wrong();
       el.classList.add('falsch');
@@ -1641,7 +1801,7 @@ ERNSTFALL.aufraeumen = (arena, fertig) => {
         el.style.transform = 'scale(0)'; el.style.opacity = '0';
         setTimeout(()=>{ el.remove(); if(platz) platz.remove(); }, 200);
         stand();
-        if(fertigeZahl >= dateien.length) setTimeout(()=>fertig({ fehler }), 450);
+        if(fertigeZahl >= dateien.length) efSpaeter(()=>fertig({ fehler }), 450);
         return;
       }
       if(platz){ platz.replaceWith(el); platz = null; }
@@ -1661,6 +1821,464 @@ ERNSTFALL.aufraeumen = (arena, fertig) => {
   stand();
   return ()=>{};
 };
+
+/* ---------- ERNSTFALL ZU "STERNE SAMMELN": ZEIGEN OHNE KLICK ----------
+   Im Spiel sammelt man Sterne durch blosses Darüberfahren. Am Computer
+   ist das die Menüleiste: Menüs klappen auf, wenn der Zeiger darüber
+   steht. Wer aus Gewohnheit klickt, kommt hier nicht weiter. */
+ERNSTFALL.sterne = (arena, fertig) => {
+  const menues = [
+    { name:'Datei',     eintraege:['Neu','Öffnen','Speichern','Drucken'] },
+    { name:'Bearbeiten',eintraege:['Rückgängig','Ausschneiden','Kopieren','Einfügen'] },
+    { name:'Ansicht',   eintraege:['Grösser','Kleiner','Vollbild'] },
+  ];
+  const auftraege = ['Drucken','Kopieren','Vollbild'];
+  let dran = 0, offenes = null, halteZeit = null;
+
+  const t = schreibtisch(arena, { auftrag:'', fenster:'📝 Mein Text' });
+  const leiste = document.createElement('div');
+  leiste.className = 'ef-menue';
+  t.wrap.querySelector('.fenster-inhalt').before(leiste);
+
+  function stand(){
+    t.auftrag.innerHTML = `Fahre mit dem Zeiger – <b>ohne zu klicken</b> – `
+      + `zu <b>${auftraege[dran]}</b>. &nbsp;${dran}/${auftraege.length}`;
+  }
+  function zuklappen(){
+    if(offenes){ offenes.klapp.remove(); offenes.titel.classList.remove('auf'); offenes = null; }
+    if(halteZeit){ clearTimeout(halteZeit); halteZeit = null; }
+  }
+  function aufklappen(m, titelEl){
+    if(offenes && offenes.m === m) return;
+    zuklappen();
+    const k = document.createElement('div');
+    k.className = 'ef-klapp';
+    k.style.left = titelEl.offsetLeft + 'px';
+    m.eintraege.forEach(e=>{
+      const i = document.createElement('div');
+      i.className = 'meintrag' + (e === auftraege[dran] ? ' gesucht' : '');
+      i.textContent = e;
+      i.addEventListener('pointerenter', ()=>{
+        k.querySelectorAll('.meintrag').forEach(x=>x.classList.remove('auf'));
+        i.classList.add('auf');
+        if(halteZeit) clearTimeout(halteZeit);
+        if(e === auftraege[dran]){
+          // Kurz draufbleiben genügt – kein Klick nötig.
+          halteZeit = efSpaeter(()=>treffer(), 420);
+        }
+      });
+      i.addEventListener('pointerleave', ()=>{
+        i.classList.remove('auf');
+        if(halteZeit){ clearTimeout(halteZeit); halteZeit = null; }
+      });
+      k.appendChild(i);
+    });
+    leiste.appendChild(k);
+    titelEl.classList.add('auf');
+    offenes = { m, klapp:k, titel:titelEl };
+  }
+  function treffer(){
+    sfx.coin(); dran++; setScore(dran); zuklappen();
+    if(dran >= auftraege.length){ efSpaeter(()=>fertig({ fehler:0 }), 420); return; }
+    stand();
+  }
+
+  menues.forEach(m=>{
+    const el = document.createElement('div');
+    el.className = 'mtitel'; el.textContent = m.name;
+    el.addEventListener('pointerenter', ()=>aufklappen(m, el));
+    leiste.appendChild(el);
+  });
+  // Verlässt der Zeiger die Leiste samt Klappe, schliesst sie wieder.
+  leiste.addEventListener('pointerleave', e=>{
+    if(!offenes) return;
+    if(e.relatedTarget && leiste.contains(e.relatedTarget)) return;
+    zuklappen();
+  });
+  stand();
+  return ()=>zuklappen();
+};
+
+/* ---------- ERNSTFALL ZU "BALLONS TIPPEN": LESEN, DANN KLICKEN ----------
+   Im Spiel wird schnell getippt. Am Computer ist genau das gefährlich:
+   Fenster wollen gelesen werden. Hier zählt nicht das Tempo, sondern
+   ob der richtige Knopf getroffen wird. */
+ERNSTFALL.ballons = (arena, fertig) => {
+  const faelle = [
+    { frage:'Du hast den Aufsatz verändert und willst ihn behalten.',
+      fenster:'Möchtest du die Änderungen an <b>Aufsatz.docx</b> speichern?',
+      knoepfe:['Speichern','Nicht speichern','Abbrechen'], richtig:'Speichern' },
+    { frage:'Du hast aus Versehen die falsche Datei gelöscht.',
+      fenster:'<b>Ferienfoto.jpg</b> wurde in den Papierkorb gelegt.',
+      knoepfe:['Rückgängig','In Ordnung'], richtig:'Rückgängig' },
+    { frage:'Du bist fertig und willst nichts verändern.',
+      fenster:'Soll <b>Mathe.pdf</b> überschrieben werden?',
+      knoepfe:['Überschreiben','Abbrechen'], richtig:'Abbrechen' },
+  ];
+  let dran = 0, fehler = 0;
+  const t = schreibtisch(arena, { auftrag:'', fenster:'💻 Dein Computer fragt nach' });
+
+  function zeige(){
+    const f = faelle[dran];
+    t.auftrag.innerHTML = `<b>Lies zuerst.</b> ${f.frage} &nbsp;${dran}/${faelle.length}`;
+    t.flaeche.innerHTML = '';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:18px;padding:22px 26px;max-width:480px;'
+      + 'text-align:center;box-shadow:0 14px 30px var(--shadow)';
+    box.innerHTML = `<div style="font-size:34px">💬</div>
+      <p style="font-weight:800;margin:10px 0 18px;font-size:16px">${f.fenster}</p>`;
+    const reihe = document.createElement('div');
+    reihe.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+    f.knoepfe.forEach(k=>{
+      const b = document.createElement('button');
+      // Alle Knöpfe gleich aussehen lassen! Wäre der richtige
+      // hervorgehoben, klickte man ihn, ohne zu lesen – und genau
+      // das Lesen ist hier die Übung.
+      b.className = 'btn ghost';
+      b.textContent = k;
+      b.onclick = ()=>{
+        if(k === f.richtig){
+          sfx.coin(); dran++; setScore(dran);
+          if(dran >= faelle.length){ efSpaeter(()=>fertig({ fehler }), 400); return; }
+          zeige();
+        }else{
+          fehler++; sfx.wrong();
+          efDialog(t.wrap, `<b>${k}</b> war nicht gemeint.<br>Lies den Auftrag oben nochmals.`);
+        }
+      };
+      reihe.appendChild(b);
+    });
+    box.appendChild(reihe);
+    t.flaeche.appendChild(box);
+  }
+  zeige();
+  return ()=>{};
+};
+
+/* ---------- ERNSTFALL ZU "MAULWURF-KLOPFEN": GENAU ZIELEN ----------
+   Im Spiel wird auf kleine Ziele geklopft. Am Computer sind die kleinsten
+   Ziele die Kreuzchen der Register – und daneben zu treffen heisst, das
+   falsche Fenster zu schliessen. */
+ERNSTFALL.maulwurf = (arena, fertig) => {
+  const register = [
+    { name:'Mathe-Übungen',  behalten:true  },
+    { name:'Spiele gratis',  behalten:false },
+    { name:'Lexikon',        behalten:true  },
+    { name:'Gewinnspiel!!!', behalten:false },
+    { name:'Schulwebseite',  behalten:true  },
+    { name:'Werbung',        behalten:false },
+  ];
+  const wegDamit = register.filter(r=>!r.behalten).length;
+  let zu = 0, fehler = 0;
+
+  const t = schreibtisch(arena, { auftrag:'', fenster:'🌐 Zu viele Register offen' });
+  const leiste = document.createElement('div');
+  leiste.className = 'ef-tabs';
+  t.wrap.querySelector('.fenster-inhalt').before(leiste);
+
+  function stand(){
+    t.auftrag.innerHTML = `Schliesse die Register, die <b>nicht zur Schule</b> gehören.`
+      + ` &nbsp;<b>${zu}/${wegDamit}</b>`;
+  }
+  register.forEach(r=>{
+    const el = document.createElement('div');
+    el.className = 'ef-tab' + (r.behalten ? ' behalten' : '');
+    el.innerHTML = `<span class="tname">${r.name}</span>`;
+    const x = document.createElement('button');
+    x.className = 'zu'; x.textContent = '✕';
+    x.title = 'Register schliessen';
+    x.onclick = ()=>{
+      if(r.behalten){
+        fehler++; sfx.wrong();
+        el.classList.add('falsch');
+        setTimeout(()=>el.classList.remove('falsch'), 320);
+        efDialog(t.wrap, `<b>${r.name}</b> brauchst du noch.<br>Schliesse nur, was nicht zur Schule gehört.`);
+        return;
+      }
+      sfx.coin(); zu++; setScore(zu);
+      el.style.transition = 'opacity .2s,transform .2s';
+      el.style.opacity = '0'; el.style.transform = 'scale(.7)';
+      setTimeout(()=>el.remove(), 200);
+      stand();
+      if(zu >= wegDamit) efSpaeter(()=>fertig({ fehler }), 450);
+    };
+    el.appendChild(x);
+    leiste.appendChild(el);
+  });
+  t.flaeche.innerHTML = '<p style="color:var(--ink-soft);font-weight:700;text-align:center;'
+    + 'max-width:330px;line-height:1.5">Die Register mit grünem Rand gehören zur Schule.<br>'
+    + 'Sie bleiben offen.</p>';
+  stand();
+  return ()=>{};
+};
+
+/* ---------- ERNSTFALL ZU "WEG FINDEN": RUHIG DURCHS MENÜ ----------
+   Im Spiel wird die Maus über einen schmalen Weg geführt. Am Computer
+   ist der schmale Weg ein verschachteltes Menü: Datei › Neu › Ordner.
+   Rutscht der Zeiger heraus, klappt alles zu und man fängt von vorn an –
+   die wohl häufigste Mausfrust-Erfahrung überhaupt. */
+ERNSTFALL.weg = (arena, fertig) => {
+  /* ZIEL[0] ist der Menütitel, danach je ein Eintrag pro Klappe. */
+  const ZIEL = ['Datei', 'Neu', 'Ordner'];
+  const INHALT = [
+    ['Neu', 'Öffnen', 'Umbenennen', 'Löschen'],   // Klappe für ZIEL[1]
+    ['Ordner', 'Textdatei', 'Bild'],              // Klappe für ZIEL[2]
+  ];
+  let tiefe = 0, abgerutscht = 0, klappen = [];
+
+  const t = schreibtisch(arena, { auftrag:'', fenster:'📁 Meine Dateien' });
+  const leiste = document.createElement('div');
+  leiste.className = 'ef-menue';
+  t.wrap.querySelector('.fenster-inhalt').before(leiste);
+
+  function stand(){
+    const weg = ZIEL.map((z,i)=> i < tiefe ? '<b>'+z+'</b>' : z).join(' › ');
+    t.auftrag.innerHTML = 'Lege einen neuen Ordner an: ' + weg
+      + (abgerutscht ? ' &nbsp;<span style="opacity:.6">(' + abgerutscht + '× abgerutscht)</span>' : '');
+    setScore(Math.max(0, tiefe - 1));
+  }
+  function schliessenAb(n){
+    klappen.slice(n).forEach(k=>k.remove());
+    klappen = klappen.slice(0, n);
+  }
+  function vonVorn(){
+    if(tiefe > 0){ abgerutscht++; sfx.bonk(); }
+    tiefe = 0; schliessenAb(0);
+    leiste.querySelectorAll('.mtitel').forEach(e=>e.classList.remove('auf'));
+    stand();
+  }
+
+  /* stufe = Platz in ZIEL, den diese Klappe enthält (1 oder 2). */
+  function klappeOeffnen(stufe, links, oben){
+    const k = document.createElement('div');
+    k.className = 'ef-klapp';
+    k.style.left = links + 'px';
+    if(oben != null){ k.style.top = oben + 'px'; k.style.marginTop = '0'; }
+    INHALT[stufe-1].forEach((e, i)=>{
+      const istZiel = e === ZIEL[stufe];
+      const weiter = istZiel && stufe < ZIEL.length - 1;
+      const eintrag = document.createElement('div');
+      eintrag.className = 'meintrag' + (istZiel ? ' gesucht' : '');
+      eintrag.innerHTML = e + (weiter ? '<span class="pfeil">›</span>' : '');
+      eintrag.addEventListener('pointerenter', ()=>{
+        k.querySelectorAll('.meintrag').forEach(x=>x.classList.remove('auf'));
+        eintrag.classList.add('auf');
+        schliessenAb(klappen.indexOf(k) + 1);
+        if(!istZiel) return;
+        tiefe = stufe + 1; stand();
+        if(tiefe > ZIEL.length - 1 && !weiter){
+          sfx.coin();
+          efSpaeter(()=>fertig({ fehler: abgerutscht }), 450);
+          return;
+        }
+        if(weiter) klappeOeffnen(stufe + 1, links + 150,
+                                 k.offsetTop + eintrag.offsetTop - 4);
+      });
+      k.appendChild(eintrag);
+    });
+    leiste.appendChild(k);
+    klappen.push(k);
+    return k;
+  }
+
+  ['Datei','Bearbeiten','Ansicht'].forEach(name=>{
+    const el = document.createElement('div');
+    el.className = 'mtitel'; el.textContent = name;
+    el.addEventListener('pointerenter', ()=>{
+      leiste.querySelectorAll('.mtitel').forEach(x=>x.classList.remove('auf'));
+      schliessenAb(0);
+      if(name !== ZIEL[0]){ tiefe = 0; stand(); return; }
+      el.classList.add('auf');
+      tiefe = 1; stand();
+      klappeOeffnen(1, el.offsetLeft, null);
+    });
+    leiste.appendChild(el);
+  });
+  leiste.addEventListener('pointerleave', e=>{
+    if(e.relatedTarget && leiste.contains(e.relatedTarget)) return;
+    vonVorn();
+  });
+  t.flaeche.innerHTML = '<p style="color:var(--ink-soft);font-weight:700;text-align:center;'
+    + 'max-width:340px;line-height:1.5">Fahre langsam. Verlässt der Zeiger das Menü,'
+    + ' klappt es zu und du beginnst von vorn.</p>';
+  stand();
+  return ()=>schliessenAb(0);
+};
+
+/* ---------- ERNSTFALL ZU "HOCH UND RUNTER": SCROLLEN ----------
+   Im Spiel fahren Edelsteine in die Lupe. Am Computer ist das die
+   alltäglichste Sache überhaupt: in einem langen Text die Stelle
+   finden, die man sucht. */
+ERNSTFALL.scrollen = (arena, fertig) => {
+  const kapitel = [
+    'Der Wald', 'Die Tiere', 'Die Bäume', 'Der Bach',
+    'Die Vögel', 'Die Pilze', 'Der Winter',
+  ];
+  const gesucht = ['Der Bach', 'Die Pilze'];
+  let dran = 0;
+
+  const t = schreibtisch(arena, { auftrag:'', fenster:'📄 Lesetext.pdf' });
+  t.flaeche.remove();
+  const doku = document.createElement('div');
+  doku.className = 'ef-doku';
+  const blatt = document.createElement('div');
+  blatt.className = 'ef-blatt';
+  kapitel.forEach((k,i)=>{
+    const h = document.createElement('h4');
+    h.textContent = (i+1) + '. ' + k;
+    h._kapitel = k;
+    blatt.appendChild(h);
+    for(let n=0;n<3;n++){
+      const pp = document.createElement('p');
+      pp.textContent = 'Hier steht ein Abschnitt über ' + k.toLowerCase()
+        + '. Er ist absichtlich lang, damit du zum Suchen scrollen musst. '
+        + 'Zwei Finger aufs Touchpad legen und gemeinsam schieben.';
+      blatt.appendChild(pp);
+    }
+  });
+  doku.appendChild(blatt);
+  t.wrap.querySelector('.fenster-inhalt').appendChild(doku);
+
+  function stand(){
+    t.auftrag.innerHTML = `Scrolle mit <b>zwei Fingern</b> zum Kapitel `
+      + `<b>${gesucht[dran]}</b>. &nbsp;${dran}/${gesucht.length}`;
+  }
+  /* Getroffen ist, wer die Überschrift ruhig im Fenster stehen hat. */
+  let halten = null;
+  function pruefen(){
+    const ziel = [...blatt.querySelectorAll('h4')].find(h=>h._kapitel === gesucht[dran]);
+    if(!ziel) return;
+    const r = ziel.getBoundingClientRect(), d = doku.getBoundingClientRect();
+    const drin = r.top > d.top + 10 && r.bottom < d.top + d.height * 0.55;
+    if(drin && !halten){
+      halten = efSpaeter(()=>{
+        halten = null;
+        ziel.classList.add('gefunden');
+        ziel.insertAdjacentHTML('beforeend', '<span class="marke">gefunden ✓</span>');
+        sfx.coin(); dran++; setScore(dran);
+        if(dran >= gesucht.length){ efSpaeter(()=>fertig({ fehler:0 }), 500); return; }
+        stand();
+      }, 600);
+    }else if(!drin && halten){ clearTimeout(halten); halten = null; }
+  }
+  doku.addEventListener('scroll', pruefen);
+  stand();
+  return ()=>{ if(halten) clearTimeout(halten); };
+};
+
+/* ---------- ERNSTFALL ZU "GESCHENKE AUSPACKEN": RECHTSKLICK ----------
+   Im Spiel öffnet der Zwei-Finger-Tipp ein Geschenk. Am Computer öffnet
+   er das Kontextmenü – und dort steht fast alles, was man mit einer
+   Datei anstellen kann. */
+ERNSTFALL.rechtsklick = (arena, fertig) => {
+  const auftraege = [
+    { datei:'unbenannt.txt', tue:'Umbenennen', satz:'Die Datei hat noch keinen richtigen Namen.' },
+    { datei:'Werbung.pdf',   tue:'Löschen',    satz:'Die brauchst du nicht mehr.' },
+    { datei:'Aufsatz.docx',  tue:'Kopieren',   satz:'Davon willst du eine zweite Fassung.' },
+  ];
+  const menue = ['Öffnen','Umbenennen','Kopieren','Löschen'];
+  let dran = 0, fehler = 0, offenesMenue = null;
+
+  const t = schreibtisch(arena, { auftrag:'', fenster:'📁 Meine Dateien' });
+  function stand(){
+    const a = auftraege[dran];
+    t.auftrag.innerHTML = `${a.satz} <b>Rechtsklick</b> auf <b>${a.datei}</b>`
+      + ` und dann <b>${a.tue}</b>. &nbsp;${dran}/${auftraege.length}`;
+  }
+  function menueZu(){ if(offenesMenue){ offenesMenue.remove(); offenesMenue = null; } }
+
+  auftraege.forEach(a=>{
+    const el = dateiKachel({ name:a.datei, typ: a.datei.endsWith('.txt') ? 'text'
+                              : a.datei.endsWith('.pdf') ? 'text' : 'text' });
+    el.addEventListener('contextmenu', e=>{
+      e.preventDefault();
+      menueZu();
+      if(a !== auftraege[dran]){
+        fehler++; sfx.wrong();
+        efDialog(t.wrap, `Gefragt ist <b>${auftraege[dran].datei}</b>.`);
+        return;
+      }
+      const m = document.createElement('div');
+      m.className = 'ef-kontext';
+      const r = t.wrap.getBoundingClientRect();
+      m.style.left = Math.min(e.clientX - r.left, r.width - 190) + 'px';
+      m.style.top  = Math.min(e.clientY - r.top,  r.height - 190) + 'px';
+      menue.forEach(punkt=>{
+        const b = document.createElement('button');
+        b.textContent = punkt;
+        b.onclick = ()=>{
+          menueZu();
+          if(punkt === a.tue){
+            sfx.coin(); dran++; setScore(dran);
+            el.classList.add('offen');
+            el.querySelector('.d-emo').textContent = '✅';
+            if(dran >= auftraege.length){ efSpaeter(()=>fertig({ fehler }), 450); return; }
+            stand();
+          }else{
+            fehler++; sfx.wrong();
+            efDialog(t.wrap, `<b>${punkt}</b> war nicht gefragt.<br>Lies den Auftrag oben nochmals.`);
+          }
+        };
+        m.appendChild(b);
+      });
+      t.wrap.appendChild(m);
+      offenesMenue = m;
+    });
+    t.flaeche.appendChild(el);
+  });
+  // Woanders hintippen schliesst das Menü – wie überall.
+  const wegklicken = e=>{ if(offenesMenue && !offenesMenue.contains(e.target)) menueZu(); };
+  arena.addEventListener('pointerdown', wegklicken);
+  stand();
+  return ()=>{ menueZu(); arena.removeEventListener('pointerdown', wegklicken); };
+};
+
+/* ============================================================
+   DAS DIPLOM
+   Zeigt den echten Stand – ein geschöntes Diplom wäre keines.
+   Der Name wird getippt und gedruckt, aber nirgends gespeichert:
+   auf einem Schulgerät läse ihn sonst das nächste Kind, und das
+   Spiel hält sich sonst konsequent an "nur Zahlen".
+   ============================================================ */
+function diplomOeffnen(){
+  const stationenFertig = STATIONS.filter(
+    st => state.levelsDone[st.id].size >= CONFIG.LEVELS_PER_STATION).length;
+  const moeglich = Object.keys(ERNSTFALL).length;
+  const felder = [
+    { zahl: state.totalStars,      was: 'Sterne' },
+    { zahl: stationenFertig + ' von ' + STATIONS.length, was: 'Stationen' },
+    { zahl: state.abzeichen.size + ' von ' + moeglich,   was: 'Ernstfälle' },
+  ];
+  // Die Level des Fuchs-Sprungs nur nennen, wenn er freigespielt ist.
+  if(window.BRUECKE && window.BRUECKE.sprungStand){
+    const sp = window.BRUECKE.sprungStand();
+    // Nur nennen, wenn auch wirklich gespielt wurde – "0 von 4" auf
+    // einem Diplom entmutigt mehr, als es aussagt.
+    if(sp && sp.gesamt && sp.geschafft > 0)
+      felder.push({ zahl: sp.geschafft + ' von ' + sp.gesamt, was: 'Fuchs-Sprung-Level' });
+  }
+  $('#diplZahlen').innerHTML = felder.map(f =>
+    `<div class="u-feld"><span class="zahl">${f.zahl}</span><span class="was">${f.was}</span></div>`
+  ).join('');
+  $('#diplAbz').textContent = state.abzeichen.size
+    ? '🏅'.repeat(state.abzeichen.size) : '';
+  // Datum kommt aus dem Gerät und verlässt es nicht.
+  $('#diplDatum').textContent = new Date().toLocaleDateString('de-CH',
+    { day:'2-digit', month:'2-digit', year:'numeric' });
+  $('#diplName').value = '';
+  showScreen('diplom');
+  setTimeout(()=>$('#diplName').focus(), 60);
+}
+function diplomSchliessen(){
+  $('#diplName').value = '';   // nichts bleibt stehen
+  showScreen('home');
+}
+$('#diplomKnopf').onclick = diplomOeffnen;
+$('#diplZu').onclick = diplomSchliessen;
+$('#diplDruck').onclick = ()=>window.print();
+$('#diplName').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); $('#diplName').blur(); }
+});
 
 /* ============================================================
    Kopfzeilen-Knöpfe
@@ -3505,6 +4123,10 @@ if(window.BRUECKE){
     musikStopp, musikStart,
     tonSetzen: an => tonSetzen(an, false),
     tonLesen: ()=> tonAn,
+    fortschrittLesen: ()=>({
+      geschafft: Object.keys(fortschritt.best).length,
+      gesamt: LEVELS.length,
+    }),
     anzahlLevels: LEVELS.length,
   });
 }

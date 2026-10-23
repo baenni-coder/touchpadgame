@@ -73,7 +73,10 @@ function cssEinschraenken(css, behaelter){
     }
     const block = css.slice(k+1, e-1);
 
-    if(kopf.startsWith('@keyframes') || kopf.startsWith('@font-face')){
+    // @page gehört zur Seite, nicht zu einem Element – ein Container
+    // davor macht die Regel ungültig (wichtig fürs Diplom-Drucken).
+    if(kopf.startsWith('@keyframes') || kopf.startsWith('@font-face')
+       || kopf.startsWith('@page')){
       aus += kopf + '{' + block + '}';                 // unverändert
     }else if(kopf.startsWith('@media') || kopf.startsWith('@supports')){
       aus += kopf + '{' + cssEinschraenken(block, behaelter) + '}';
@@ -149,6 +152,14 @@ body{
 /* Das Spielfeld ist immer bildschirmhoch und soll nicht wegscrollen. */
 #teil-sprung{overflow:hidden;touch-action:none}
 #teil-sprung[hidden],#teil-stationen[hidden]{display:none!important}
+/* Gedruckt wird nur das Diplom. Diese Regel muss global stehen: die
+   beiden Teile sind Geschwister, aus dem einen heraus erreicht man
+   den anderen nicht. */
+@media print{
+  #teil-sprung{display:none!important}
+  #teil-stationen{min-height:0}
+  html,body{background:#fff!important}
+}
 
 /* ---------- die acht Übungen ---------- */
 ${stilStationen}
