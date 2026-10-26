@@ -1,0 +1,6 @@
+# Von tools/tiled.mjs erzeugt – jederzeit neu herstellbar mit
+#   node tools/tiled.mjs export
+tiled/
+
+node_modules/
+.DS_Store

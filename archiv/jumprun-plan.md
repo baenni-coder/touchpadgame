@@ -1,6 +1,6 @@
 # Vom Touchpad-Abenteuer zum echten Arcade-Jump-&-Run
 
-**Stand:** 22.09.2026 · **Phase 1 bis 5 stehen** (`prototyp.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
+**Stand:** 22.09.2026 · **Phase 1 bis 5 stehen** (`src/fuchssprung.html`) · **Ausgangslage:** `original/touchpad-abenteuer.html` (eine Datei, 8 Stationen, DOM + Emoji, komplett offline)
 
 ---
 
@@ -172,7 +172,7 @@ Die Zeitangaben sind ungefähre Arbeitssitzungen mit mir – nicht deine Zeit; d
 ### Phase 0 · Entscheiden (dein Part, ~15 Min)
 Steuerungsweg A/B/C · Umfang (wie viele Levels?) · Grafikquelle (Kenney / selbst zeichnen / erst mal Platzhalter) · Verhältnis zu den 8 Stationen (ersetzen, ergänzen, Hub-Welt?)
 
-### Phase 1 · Motor & Spielgefühl — ✅ **erledigt** (`prototyp.html`)
+### Phase 1 · Motor & Spielgefühl — ✅ **erledigt** (`src/fuchssprung.html`)
 Spielschleife mit festem Zeitschritt, Kachel-Kollision, Einweg-Plattformen, Kamera, alle Game-Feel-Mechaniken, ein Testlevel, Grafik und Ton komplett aus Code.
 
 **Gemessen** (`tools/messen.mjs`, echter Browser):
@@ -307,7 +307,7 @@ zurückholen; ein Test prüft, dass keine E-Mail-Adresse darin steht.
 
 ## 7. Mein Vorschlag für den Einstieg
 
-Nicht alles auf einmal planen, sondern **Phase 1 sofort bauen** – als eigenständige `prototyp.html`, die du doppelklicken und in fünf Minuten beurteilen kannst. Mit Platzhaltergrafik, mit allen drei Steuerungsprofilen zum Ausprobieren, ein Testlevel.
+Nicht alles auf einmal planen, sondern **Phase 1 sofort bauen** – als eigenständige `src/fuchssprung.html`, die du doppelklicken und in fünf Minuten beurteilen kannst. Mit Platzhaltergrafik, mit allen drei Steuerungsprofilen zum Ausprobieren, ein Testlevel.
 
 Danach weisst du aus dem Bauch heraus, welcher Steuerungsweg der richtige ist – und diese Antwort ist mehr wert als jede weitere Seite Planung.
 

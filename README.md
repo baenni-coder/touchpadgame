@@ -1,179 +1,194 @@
-# Touchpad-Abenteuer
+# 🦊 Touchpad-Abenteuer
 
-Lern-App für die 3. Klasse: acht Stationen, an denen Kinder den Umgang mit dem
-Touchpad üben – zeigen, tippen, ziehen, doppelklicken, scrollen, Rechtsklick.
+**Eine Lern-App für die 3. Klasse: Kinder üben den Umgang mit dem Touchpad –
+zeigen, klicken, ziehen, doppelklicken, scrollen, Rechtsklick.**
 
-Läuft als **eine einzige HTML-Datei**, komplett offline, ohne Internet.
-Es werden keine Daten übertragen; alles bleibt auf dem Gerät (revDSG-freundlich).
+Acht Übungsstationen, zu jeder ein **Ernstfall** am nachgebauten Computer-
+Schreibtisch, ein **Jump-&-Run** als Belohnung und ein **Diplom** zum Ausdrucken.
 
-## Inhalt
+Das Ganze ist **eine einzige HTML-Datei**. Keine Installation, kein Konto,
+kein Internet. Doppelklicken und los.
 
-| Pfad | Beschreibung |
+---
+
+## ⬇️ Herunterladen
+
+Zwei Dateien, mehr braucht es nicht:
+
+| | |
 |---|---|
-| **`dist/touchpad-abenteuer.html`** | **Das fertige Spiel – diese Datei verteilst du.** Übungen und Jump-&-Run in einem. |
-| **`dist/anleitung.html`** | **Die Anleitung für Lehrpersonen** – druckbar, zum Mitgeben. |
-| `src/stationen.html` | Quelle: die acht Touchpad-Übungen |
-| `prototyp.html` | Quelle: das Jump-&-Run (läuft auch allein) |
-| `src/bruecke.js` | Quelle: verbindet beide Teile, Speicherstand, Lehrer-Bereich |
-| `original/touchpad-abenteuer.html` | Die ursprüngliche Übungs-App, unverändert als Referenz |
-| `src/anleitung.html` | Quelle der Lehrpersonen-Anleitung |
-| `docs/unterricht.md` | Kurzfassung fürs Repository |
-| `docs/jumprun-plan.md` | Plan und Übersicht für den Ausbau |
-| `docs/sprites.md` | Wie sich Grafik austauschen lässt |
-| `tools/` | Werkzeuge: bauen, Level prüfen, Physik messen, Tests |
+| 🎮 **[Das Spiel → `dist/touchpad-abenteuer.html`](dist/touchpad-abenteuer.html)** | Auf den Schülergeräten ablegen. Doppelklick genügt. |
+| 📄 **[Anleitung für Lehrpersonen → `dist/anleitung.html`](dist/anleitung.html)** | Zum Lesen und Ausdrucken. Erklärt Stationen, Ernstfälle, Lehrer-Bereich und Datenschutz. |
 
-## Bauen
+> **So laden Sie eine Datei herunter:** auf den Link klicken, dann oben rechts
+> auf **Raw** → **Rechtsklick → „Ziel speichern unter…“**.
+> Oder alles auf einmal: oben auf der Repo-Seite der grüne Knopf
+> **Code → Download ZIP**.
 
-```
-node tools/bauen.mjs        # erzeugt dist/touchpad-abenteuer.html + dist/anleitung.html
-node tools/test-dist.mjs    # prüft die fertige Datei
-```
+---
 
-Das Bauskript setzt die beiden Teile zusammen. Sie sind eigenständige
-Seiten mit eigenem CSS und eigenen globalen Namen – damit sie sich nicht
-in die Quere kommen, bekommt jeder Teil einen eigenen Container, sein CSS
-wird darauf eingeschränkt und sein JavaScript läuft in einer eigenen
-Funktion. Verbunden sind sie nur über `src/bruecke.js`.
+## Datenschutz
 
-**Änderungen gehören in die Quellen**, nicht in `dist/` – die Datei dort
-wird bei jedem Bauen überschrieben.
+Entwickelt für den Einsatz an Schweizer Schulen, mit Blick auf das revDSG:
 
-## Fuchs-Sprung (Prototyp)
+- Die Datei **lädt zur Laufzeit nichts nach** und **sendet nichts**. Keine
+  Schriften, keine Bilder, keine Statistik, kein Tracker.
+- Gespeichert werden **ausschliesslich Zahlen** – Sterne, erledigte Level,
+  Punktestände. Keine Namen, nichts Persönliches.
+- Der Speicherstand liegt im Browser des Geräts (`localStorage`) und verlässt
+  es nie.
+- Das **Diplom** fragt nach einem Namen. Dieser wird **nicht gespeichert**: er
+  steht nur im Formular, solange das Diplom offen ist, und verschwindet beim
+  Schliessen. Auf geteilten Geräten liest ihn also kein anderes Kind.
 
-`prototyp.html` doppelklicken. Die Grafik ist bewusst schlicht und entsteht
-komplett im Code – es wird keine einzige Datei nachgeladen.
+Ein Test der Auslieferungsdatei prüft all das bei jedem Bauen mit.
 
-Drin ist: **Titelbild mit Vorführmodus** · **drei Levels** mit steigender
-Schwierigkeit · Laufen und Springen mit Coyote Time, Sprungpuffer und
-variabler Sprunghöhe · Gegner (Läufer und Flieger) · Stacheln · drei Herzen
-mit Schonzeit nach einem Treffer · Checkpoints · Bonus-Diamanten ·
-**Punkte mit Kombo** · **Chiptune-Musik** · Pause · Spielende mit neuem
-Versuch · gespeicherter Fortschritt und Bestwerte.
+---
 
-| Level | Was neu dazukommt |
-|---|---|
-| 1 · Erste Schritte | Nur laufen, springen, sammeln. Keine Gegner, keine Stacheln. |
-| 2 · Waldweg | Gegner, Stacheln, Abgründe, Einweg-Plattformen. |
-| 3 · Hoch hinaus | Mehr in die Höhe, Flieger auf dem Weg, Stacheln unter den Sprüngen. |
-| 4 · Der Lift | **Liftplattformen**, die man mit zwei Fingern hoch- und runterfährt. |
+## Was drin ist
 
-Ein Level wird erst freigeschaltet, wenn das davor geschafft ist. Der
-Fortschritt liegt in `localStorage` – **auf dem Gerät**, nur Zahlen, keine
-Namen, und er wird nirgendwohin gesendet.
+### Die acht Übungen
 
-Drei Steuerungen zum Vergleichen, umschaltbar mit <kbd>1</kbd> <kbd>2</kbd>
-<kbd>3</kbd> oder per Knopf:
-
-| Taste | Profil | Bedienung |
+| Station | Geübt wird | Der Ernstfall dazu |
 |---|---|---|
-| 1 | Tastatur | Pfeiltasten · Leertaste springen (länger halten = höher) · Bild↑/Bild↓ für den Lift |
-| 2 | Touchpad | Zeiger neben den Fuchs bewegen · klicken und halten zum Springen · **zwei Finger bewegen den Lift** |
-| 3 | Gamepad | Steuerkreuz oder Stick · A-Taste springen · rechter Stick für den Lift |
+| ⭐ Sterne sammeln | Zeiger führen, ohne zu klicken | Menüleiste: Menüs klappen beim Darüberfahren auf |
+| 🎈 Ballons tippen | Tippen und klicken | Fenster mit einer Frage – lesen, dann den richtigen Knopf treffen |
+| 🐹 Maulwurf-Klopfen | Zielen | Register schliessen, aber nur die richtigen |
+| 🧺 Aufräumen | Ziehen (Drag & Drop) | Dateien in die richtigen Ordner einsortieren |
+| 🚪 Türchen öffnen | Doppelklick | Bilder öffnen – einmal klicken wählt aus, zweimal öffnet |
+| 🚩 Weg finden | Ruhig und genau steuern | Verschachteltes Menü: Datei › Neu › Ordner |
+| 🛗 Hoch und runter | Mit zwei Fingern scrollen | Im langen Text ein Kapitel finden |
+| 🖱️ Geschenke auspacken | Rechtsklick | Kontextmenü: umbenennen, löschen, kopieren |
 
-**Touchpad ist die Standardeinstellung** – darum geht es hier schliesslich.
+Jede Station hat **drei Level** und gibt bis zu drei Sterne.
 
-**Der Doppelklick-Sprung** ist die zweite Touchpad-Übung: zweimal
-schnell klicken (bzw. Leertaste doppelt tippen, am Gamepad B) springt
-4.2 statt 2.9 Kacheln hoch. Nur damit erreicht man die blauen Bonus-Diamanten –
-das Level selbst ist aber auch ohne ihn durchspielbar.
+### Der Ernstfall
 
-<kbd>Esc</kbd> pausiert (zweimal: zurück zum Titelbild), <kbd>R</kbd>
-startet neu. <kbd>M</kbd> Ton, <kbd>N</kbd> Musik, <kbd>C</kbd>
-Bildröhren-Optik – dieselben drei auch als Knöpfe oben rechts.
+Kinder lernen „Doppelklick öffnet eine Tür“ – und stehen später trotzdem
+ratlos vor einer Datei. Diese Lücke schliesst der Ernstfall: dieselbe
+Bewegung, aber an einem Computer-Schreibtisch statt im Spiel.
 
-## Punkte
+**Der Unterschied ist Absicht:** In den drei Levels zählt das Tempo, im
+Ernstfall die *Richtigkeit*. Am Computer nützt die schnellste Hand nichts,
+wenn die falsche Datei erwischt wird. Darum gibt es hier keine Uhr und keine
+Sterne, sondern ein **Abzeichen** 🏅 – und bei einem Fehlgriff ein Fenster,
+das gelesen werden will.
 
-| Wofür | Punkte |
-|---|---|
-| Münze | 100 |
-| Bonus-Diamant | 1000 |
-| Gegner plätten | 200 |
-| Übriges Herz am Ziel | 500 |
-| Jede eingesparte Sekunde | 20 |
+Der Schreibtisch ist bewusst **kein Nachbau von Windows oder macOS**: Schulen
+fahren verschiedene Systeme, und gelernt werden soll die Handlung, nicht die
+Lage eines Knopfes bei einem Hersteller.
 
-Wer schnell hintereinander sammelt, baut eine **Kombo** auf: der
-Multiplikator steigt bis x9 und läuft nach 2,4 Sekunden ohne Beute wieder
-aus. Der beste Punktestand pro Level bleibt gespeichert und steht auf dem
-Titelbild.
+### Fuchs-Sprung
 
-## Musik
+Ab **12 Sternen** öffnet sich ein Arcade-Jump-&-Run mit vier Levels. Es ist
+selbst eine Touchpad-Übung: Standardsteuerung ist das Touchpad, der
+**Doppelklick** löst einen Extrasprung aus, und im vierten Level fährt man
+eine **Liftplattform mit zwei Fingern** hoch und runter.
 
-Die Chiptune-Schleife entsteht **im Code** – es wird keine Audiodatei
-geladen. Ein Sequenzer plant Melodie, Bass und Schlagzeug über die Uhr des
-Audio-Kontexts, damit der Takt nicht eiert. Die Noten stehen als
-Textraster im Objekt `TAKTE` und lassen sich dort direkt ändern:
+### Das Diplom
 
-```
-C4 .  E4 .  G4 .  E4 .    ein Feld = ein Sechzehntel, "." = nichts Neues
-```
+Knopf unten auf der Stationskarte. Urkunde mit Namensfeld, Sternen,
+geschafften Stationen und Abzeichen – druckt quer auf A4, mit Platz für die
+Unterschrift der Lehrperson. Sie zeigt den echten Stand, auch „2 von 8“.
 
-Der Browser lässt Ton erst nach der ersten Eingabe zu – die Musik startet
-deshalb beim ersten Tastendruck oder Klick.
+### Der Lehrer-Bereich
 
-## Werkzeuge
+Taste **L** oder langer Druck auf den Sternezähler – beides trifft ein Kind
+nicht zufällig. Dort lassen sich Sterne vergeben, die Freischaltschwelle
+ändern, alle Jump-&-Run-Level öffnen und der Fortschritt löschen.
 
-Brauchen Node.js und laufen alle lokal:
-
-```
-node tools/test.mjs           # 102 Browsertests
-node tools/messen.mjs         # misst Sprunghöhe und -weite
-node tools/level-pruefen.mjs  # prüft, ob Ziel und Münzen erreichbar sind
-node tools/level-bauen.mjs    # erzeugt die Kachelkarten
-node tools/atlas-bauen.mjs    # erzeugt das Spritesheet
-node tools/tiled.mjs rundlauf # prüft den Tiled-Austausch
-```
-
-`tools/level-pruefen.mjs` ist der wichtigste davon: er sucht mit einer
-Breitensuche alle Standplätze ab und meldet, wenn eine Münze oder das Ziel
-nicht erreichbar ist – bevor ein Kind daran verzweifelt. Er prüft zwei
-Dinge getrennt: das Level muss **ohne** Doppelklick-Sprung durchspielbar
-sein, und die Bonus-Diamanten müssen **nur mit** ihm erreichbar sein.
-
-## Levels selbst bauen
-
-Zwei Wege:
-
-**In Tiled** (gratis, läuft lokal, lädt nichts hoch):
-
-```
-node tools/tiled.mjs export              # schreibt tiled/level1..3.json
-# in Tiled öffnen, ändern, als CSV speichern
-node tools/tiled.mjs import tiled/level1.json
-```
-
-**Im Code**: die Abschnitte in `tools/level-bauen.mjs` ändern. Danach
-**immer** `node tools/level-pruefen.mjs` laufen lassen – sonst landet
-schnell eine Plattform im Level, die eine Kachel zu hoch hängt.
-
-## Grafik
-
-Kacheln, Gegner, Herzen und Fahnen stammen aus **Kenneys „Pixel
-Platformer"** ([kenney.nl](https://kenney.nl), **CC0**, gemeinfrei). Der
-Fuchs und die Münzen sind selbst gezeichnet – das Paket enthält keine
-Tiere, und der Fuchs ist das Maskottchen der Lern-App.
-
-Herkunft und Lizenzen stehen in `CREDITS.md`, das Austauschen weiterer
-Sprites beschreibt `docs/sprites.md`.
+---
 
 ## Für den Unterricht
 
-Die vollständige Anleitung ist **`dist/anleitung.html`** – druckbar und
-eigenständig, zum Weitergeben an andere Schulen. `docs/unterricht.md` ist
-die Kurzfassung fürs Repository.
+Die vollständige Anleitung ist **[`dist/anleitung.html`](dist/anleitung.html)**
+– eigenständig und druckbar, gedacht zum Weitergeben an andere Schulen.
+[`docs/unterricht.md`](docs/unterricht.md) ist die Kurzfassung.
 
-Kurz: Die acht Übungen geben Sterne, ab **12 Sternen** öffnet sich das
-Jump-&-Run. Die Schwelle lässt sich im Lehrer-Bereich ändern (Taste **L**
-oder langer Druck auf den Sternezähler).
+---
 
-## Nächster Schritt
+## Mitentwickeln
 
-Siehe `docs/jumprun-plan.md`. Phase 1 bis 5 sind gebaut. Offen bleibt
-Phase 6: Spieltest mit der Klasse und Feinschliff an der Schwierigkeit.
+<details>
+<summary>Aufbau des Repositories und Werkzeuge (für Entwicklung)</summary>
+
+### Quellen und Auslieferung
+
+Die Datei in `dist/` wird **erzeugt**. Änderungen gehören in die Quellen,
+sonst sind sie beim nächsten Bauen weg.
+
+| Pfad | Was es ist |
+|---|---|
+| `src/stationen.html` | Die acht Übungen, die Ernstfälle und das Diplom |
+| `src/fuchssprung.html` | Das Jump-&-Run (läuft auch für sich allein) |
+| `src/bruecke.js` | Verbindet beide Teile: Speicherstand, Ton, Lehrer-Bereich |
+| `src/anleitung.html` | Quelle der Lehrpersonen-Anleitung |
+| `dist/` | **Erzeugt** – das, was verteilt wird |
+| `tools/` | Bauen, Tests, Level prüfen, Physik messen, Grafik |
+| `assets/` | Spritesheets (werden in die HTML-Datei einbetoniert) |
+| `docs/` | Unterricht, Grafik austauschen |
+| `archiv/` | Urfassung und alter Bauplan – für den Einsatz nicht nötig |
+
+### Bauen und prüfen
+
+```bash
+node tools/bauen.mjs          # erzeugt dist/touchpad-abenteuer.html + dist/anleitung.html
+node tools/test.mjs           # 102 Browsertests gegen src/fuchssprung.html
+node tools/test-dist.mjs      #  89 Browsertests gegen die fertige Datei
+node tools/level-pruefen.mjs  # prüft, ob Ziel, Münzen und Diamanten erreichbar sind
+```
+
+Braucht Node.js und Playwright-Chromium. Alles läuft lokal.
+
+Das Bauskript setzt zwei eigenständige Seiten zusammen. Damit sie sich nicht
+in die Quere kommen, bekommt jeder Teil einen eigenen Container, sein CSS wird
+darauf eingeschränkt und sein JavaScript läuft in einer eigenen Funktion.
+Verbunden sind sie nur über `src/bruecke.js`.
+
+### Weitere Werkzeuge
+
+```bash
+node tools/messen.mjs         # misst Sprunghöhe und -weite im Browser
+node tools/level-bauen.mjs    # erzeugt die Kachelkarten
+node tools/atlas-bauen.mjs    # erzeugt das Spritesheet
+node tools/tiled.mjs rundlauf # Level in Tiled bearbeiten (Export/Import)
+```
+
+`tools/level-pruefen.mjs` ist der wichtigste: er sucht mit einer Breitensuche
+alle Standplätze ab und meldet, wenn eine Münze oder das Ziel nicht erreichbar
+ist – bevor ein Kind daran verzweifelt. Er prüft zwei Dinge getrennt: das
+Level muss **ohne** Doppelklick-Sprung durchspielbar sein, und die
+Bonus-Diamanten müssen **nur mit** ihm erreichbar sein.
+
+### Texte ändern
+
+Der lange Lesetext im Scroll-Ernstfall steht als `LESETEXT` in
+`src/stationen.html` und darf frei umgeschrieben werden. Spielwerte des
+Jump-&-Runs stehen als `TUNING` ganz oben in `src/fuchssprung.html`,
+Zielzahlen der Übungen als `CONFIG` in `src/stationen.html`.
+
+</details>
+
+---
+
+## Grafik und Herkunft
+
+Kacheln, Gegner, Herzen und Fahnen stammen aus **Kenneys „Pixel Platformer“**
+([kenney.nl](https://kenney.nl), **CC0**, gemeinfrei). Der Fuchs und die
+Münzen sind selbst gezeichnet. Musik und Geräusche entstehen im Code – es wird
+keine Audiodatei geladen.
+
+Einzelheiten in [`CREDITS.md`](CREDITS.md), Austausch von Sprites in
+[`docs/sprites.md`](docs/sprites.md).
+
+---
 
 ## Urheber und Lizenz
 
 Erstellt von **Andreas Bänninger, PICTS BeLoSe**.
 
-Lizenz: **CC BY-SA 4.0** – kopieren, verändern und weitergeben ist erlaubt,
+**CC BY-SA 4.0** – kopieren, verändern und weitergeben ausdrücklich erlaubt,
 unter Namensnennung und unter derselben Lizenz. Vollständiger Text in
-`LICENSE`, Herkunft der Inhalte in `CREDITS.md`.
+[`LICENSE`](LICENSE).
+
+Weitergabe an andere Schulen ist erwünscht.

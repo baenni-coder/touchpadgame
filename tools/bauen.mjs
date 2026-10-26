@@ -3,7 +3,7 @@
    Setzt die Auslieferungsdatei zusammen:
 
      src/stationen.html   die acht Touchpad-Übungen
-     prototyp.html        das Jump-&-Run
+     src/fuchssprung.html das Jump-&-Run
         ->  dist/touchpad-abenteuer.html
 
    Beide Teile sind eigenständige Seiten mit eigenem CSS und
@@ -20,7 +20,7 @@ import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 
 /* Urheber und Lizenz stehen ausserdem – bewusst sichtbar – in
    src/stationen.html (Fusszeile), src/bruecke.js (Lehrer-Bereich),
-   prototyp.html (Titelbild) und src/anleitung.html. Wer sie ändert,
+   src/fuchssprung.html (Titelbild) und src/anleitung.html. Wer sie ändert,
    ändert sie an diesen Stellen. */
 const URHEBER = 'Andreas Bänninger, PICTS BeLoSe';
 const LIZENZ  = 'CC BY-SA 4.0 – Weitergabe und Bearbeitung erlaubt unter Namensnennung und gleichen Bedingungen';
@@ -98,7 +98,7 @@ function cssEinschraenken(css, behaelter){
 
 /* ---------- Bauen ---------- */
 const stationen = zerlegen('src/stationen.html');
-const sprung    = zerlegen('prototyp.html');
+const sprung    = zerlegen('src/fuchssprung.html');
 
 // Im Sprung-Teil steht "body{...}" für den ganzen Bildschirm – als
 // Container-Regel gilt das weiter, nur eben innerhalb der Hülle.
@@ -120,7 +120,7 @@ const html = `<!DOCTYPE html>
    Acht Übungen am Touchpad und ein Jump-&-Run als Belohnung.
 
    Zusammengebaut am ${heute} von tools/bauen.mjs
-   aus src/stationen.html, prototyp.html und src/bruecke.js.
+   aus src/stationen.html, src/fuchssprung.html und src/bruecke.js.
    NICHT von Hand ändern – Änderungen gehören in die Quellen.
 
    Erstellt von ${URHEBER}

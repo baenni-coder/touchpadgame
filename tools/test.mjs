@@ -14,7 +14,7 @@ const fehler = [];
 page.on('pageerror', e => fehler.push('JS-Fehler: ' + e.message));
 page.on('console', m => { if (m.type() === 'error') fehler.push('Konsole: ' + m.text()); });
 
-await page.goto('file://' + process.cwd() + '/prototyp.html');
+await page.goto('file://' + process.cwd() + '/src/fuchssprung.html');
 await page.waitForTimeout(700);
 
 // Das Spiel startet auf dem Titelbild. Die Tests prüfen die Spielmechanik,

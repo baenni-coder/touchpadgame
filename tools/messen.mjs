@@ -10,7 +10,7 @@ import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-await page.goto('file://' + process.cwd() + '/prototyp.html');
+await page.goto('file://' + process.cwd() + '/src/fuchssprung.html');
 await page.waitForTimeout(400);
 
 const proben = await page.evaluate(() => {

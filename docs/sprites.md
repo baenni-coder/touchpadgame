@@ -1,7 +1,7 @@
 # Sprites austauschen
 
 Alle Figuren und Kacheln kommen aus **Spriteblättern**, die als Base64 im
-`BLAETTER`-Objekt in `prototyp.html` stecken.
+`BLAETTER`-Objekt in `src/fuchssprung.html` stecken.
 
 ## Wie das aufgebaut ist
 
@@ -60,7 +60,7 @@ es ein Sprite mit freiem Hintergrund.
 
 ## Wenn die Kacheln eine andere Grösse haben
 
-Die Kachelgrösse des Spiels steht als `TILE` in `prototyp.html`. Ändert
+Die Kachelgrösse des Spiels steht als `TILE` in `src/fuchssprung.html`. Ändert
 man sie, müssen **alle Pixelwerte im `TUNING`-Block proportional
 mitgezogen werden** – sonst ändert sich das Spielgefühl und die Levels
 stimmen nicht mehr.

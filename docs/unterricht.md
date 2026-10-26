@@ -22,7 +22,13 @@ Beide entstehen mit `node tools/bauen.mjs`.
 ## Das Wichtigste in Kürze
 
 - **Acht Übungen** zum Touchpad, je drei Level, bis zu drei Sterne.
+- **Zu jeder Übung ein Ernstfall**: dieselbe Bewegung an einem nachgebauten
+  Computer-Schreibtisch. Dort zählt nicht das Tempo, sondern die Richtigkeit –
+  darum gibt es dafür ein Abzeichen 🏅 statt Sterne. Freiwillig und
+  überspringbar.
 - **Ab 12 Sternen** öffnet sich das Jump-&-Run *Fuchs-Sprung* mit vier Leveln.
+- **Diplom** zum Ausdrucken: Knopf unten auf der Stationskarte. Der Name wird
+  getippt und gedruckt, aber **nicht gespeichert**.
 - **Lehrer-Bereich**: Taste <kbd>L</kbd> oder langer Druck auf den Sternezähler.
   Dort: Schwelle ändern, alle Level öffnen, Sterne vergeben, Fortschritt löschen.
 - **Drei Steuerungen** (Touchpad, Tastatur, Gamepad) – zum Differenzieren in
@@ -32,8 +38,12 @@ Beide entstehen mit `node tools/bauen.mjs`.
 
 Die Datei lädt zur Laufzeit **nichts nach** und **sendet nichts** – ein Test
 prüft das bei jedem Bauen mit. Gespeichert werden nur Zahlen (Sterne,
-erledigte Level, Punktestände), **keine Namen**. Alles liegt im Browser
-dieses einen Geräts und lässt sich im Lehrer-Bereich löschen.
+erledigte Level, Abzeichen, Punktestände), **keine Namen**. Alles liegt im
+Browser dieses einen Geräts und lässt sich im Lehrer-Bereich löschen.
+
+Auch der Name auf dem **Diplom** wird nicht gespeichert: er steht nur im
+Formular, solange das Diplom offen ist, und verschwindet beim Schliessen.
+Auf geteilten Geräten liest ihn also kein anderes Kind.
 
 ## Urheber und Lizenz
 
