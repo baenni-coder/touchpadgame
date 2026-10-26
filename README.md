@@ -11,6 +11,16 @@ kein Internet. Doppelklicken und los.
 
 ---
 
+## ▶️ Sofort ausprobieren
+
+**[baenni-coder.github.io/touchpadgame](https://baenni-coder.github.io/touchpadgame/)**
+
+Läuft direkt im Browser, ohne Installation und ohne Anmeldung. Zum Einsatz in
+der Klasse lädt man die Datei besser herunter – dann braucht es auch kein
+Internet mehr.
+
+---
+
 ## ⬇️ Herunterladen
 
 Zwei Dateien, mehr braucht es nicht:
