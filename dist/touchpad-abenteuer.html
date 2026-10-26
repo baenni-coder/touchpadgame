@@ -9,7 +9,7 @@
    TOUCHPAD-ABENTEUER  ·  für die 3. Klasse
    Acht Übungen am Touchpad und ein Jump-&-Run als Belohnung.
 
-   Zusammengebaut am 2026-10-23 von tools/bauen.mjs
+   Zusammengebaut am 2026-10-26 von tools/bauen.mjs
    aus src/stationen.html, prototyp.html und src/bruecke.js.
    NICHT von Hand ändern – Änderungen gehören in die Quellen.
 
@@ -292,7 +292,9 @@ body{
   #teil-stationen .ef-tab.behalten{border:2px solid var(--mint)}
   /* Langes Dokument – zum Scrollen */
   #teil-stationen .ef-doku{flex:1;overflow-y:auto;padding:0;position:relative;background:#fff}
-  #teil-stationen .ef-blatt{padding:20px 34px}
+  /* Kurze Zeilen lesen sich für Drittklässler leichter – und machen
+     das Blatt höher, sodass wirklich gescrollt werden muss. */
+  #teil-stationen .ef-blatt{padding:20px 34px;max-width:600px;margin:0 auto}
   #teil-stationen .ef-blatt h4{font-size:19px;margin:22px 0 8px;scroll-margin-top:16px}
   #teil-stationen .ef-blatt p{color:var(--ink-soft);font-weight:600;line-height:1.55;margin-bottom:10px;font-size:14.5px}
   #teil-stationen .ef-blatt .marke{display:inline-block;background:var(--sun);color:var(--ink);
@@ -1586,6 +1588,69 @@ const ERNSTFALL = {};
 
 const DATEI_EMO = { bild:'🖼️', text:'📄', ton:'🎵', film:'🎬' };
 
+/* ============================================================
+   LESETEXT  –  zum Ändern
+   Der lange Text im Ernstfall von "Hoch und runter". Hier darf
+   frei umgeschrieben werden: andere Kapitel, anderes Thema,
+   kürzer oder länger. Nur zweierlei beachten –
+     * es braucht genug Text, damit wirklich gescrollt werden muss
+     * die beiden gesuchten Kapitel stehen unten bei "gesucht"
+       und müssen genau gleich geschrieben sein wie hier.
+   Schweizer Rechtschreibung: ss statt ß.
+   ============================================================ */
+const LESETEXT = [
+  { titel:'Der Wald', absaetze:[
+    'Ein Wald ist mehr als viele Bäume nebeneinander. Unter dem Laub leben '
+    + 'Käfer, Würmer und Asseln. Sie zerkleinern alles, was herunterfällt, '
+    + 'und machen daraus wieder Erde.',
+    'Am Waldrand ist es heller und wärmer als in der Mitte. Darum wachsen '
+    + 'dort andere Pflanzen als weiter drinnen, und es summt viel mehr.',
+    'Wer leise geht, sieht mehr. Die meisten Tiere hören uns lange, bevor '
+    + 'wir sie entdecken, und verstecken sich rechtzeitig.' ]},
+  { titel:'Die Tiere', absaetze:[
+    'Rehe fressen am liebsten früh am Morgen und in der Dämmerung. Tagsüber '
+    + 'liegen sie oft im hohen Gras und ruhen sich aus.',
+    'Der Fuchs ist ein geschickter Jäger. Er hört eine Maus noch unter dem '
+    + 'Schnee und springt dann mit einem hohen Satz auf sie zu.',
+    'Eichhörnchen vergraben im Herbst Nüsse. Einige vergessen sie wieder – '
+    + 'und daraus wachsen im Frühling neue Bäume.' ]},
+  { titel:'Die Bäume', absaetze:[
+    'Eine Buche kann über zweihundert Jahre alt werden. Ihr Stamm ist glatt '
+    + 'und grau, und im Herbst leuchten ihre Blätter kupferrot.',
+    'Tannen und Fichten behalten ihre Nadeln auch im Winter. So können sie '
+    + 'Licht nutzen, sobald die Sonne scheint.',
+    'An einem gefällten Stamm sieht man Ringe. Jeder Ring ist ein Jahr. '
+    + 'Breite Ringe bedeuten, dass es ein gutes Jahr war.' ]},
+  { titel:'Der Bach', absaetze:[
+    'Der Bach kommt aus einer Quelle weiter oben am Hang. Sein Wasser ist '
+    + 'auch im Sommer kalt, weil es lange unter der Erde geflossen ist.',
+    'Unter den flachen Steinen leben Larven, die später zu Insekten werden. '
+    + 'Wer einen Stein anhebt, legt ihn danach wieder genau so zurück.',
+    'Nach starkem Regen wird der Bach braun und schnell. Dann trägt er Erde '
+    + 'mit sich, und man bleibt besser am Ufer.' ]},
+  { titel:'Die Vögel', absaetze:[
+    'Der Specht hämmert mit dem Schnabel gegen den Stamm. So findet er '
+    + 'Käferlarven unter der Rinde und zimmert sich seine Höhle.',
+    'Im Frühling singen die Vögel am lautesten. Sie zeigen damit an, wo ihr '
+    + 'Revier ist, und suchen einen Partner.',
+    'Manche Vögel bleiben den ganzen Winter hier. Andere fliegen weit nach '
+    + 'Süden und kommen erst im März zurück.' ]},
+  { titel:'Die Pilze', absaetze:[
+    'Was wir Pilz nennen, ist nur der kleinere Teil. Der grösste Teil liegt '
+    + 'als feines Geflecht im Boden und ist nicht zu sehen.',
+    'Viele Pilze leben mit Bäumen zusammen. Der Baum gibt Zucker ab, der '
+    + 'Pilz dafür Wasser und Nährstoffe. Beide haben etwas davon.',
+    'Im Wald gilt: anschauen ja, essen nur mit einem Erwachsenen, der sich '
+    + 'auskennt. Einige Pilze sehen harmlos aus und sind es nicht.' ]},
+  { titel:'Der Winter', absaetze:[
+    'Im Winter ist der Wald still. Der Schnee schluckt die Geräusche, und '
+    + 'viele Tiere schlafen oder sparen ihre Kraft.',
+    'Im frischen Schnee sieht man Spuren. An ihrer Form und am Abstand '
+    + 'erkennt man, wer hier durchgegangen ist und wie schnell.',
+    'Unter der Schneedecke ist es wärmer als darüber. Mäuse legen dort '
+    + 'Gänge an und kommen so durch den Winter.' ]},
+];
+
 /* Zeitgeber der laufenden Szene. Ohne das kann ein Nachzügler aus der
    vorigen Szene das Abzeichen-Fenster in die nächste hineinplatzen
    lassen – ein Kind, das schnell weiterklickt, sähe plötzlich einen
@@ -1694,7 +1759,8 @@ ERNSTFALL.tueren = (arena, fertig) => {
       fehler++; sfx.wrong();
       el.classList.add('falsch');
       setTimeout(()=>el.classList.remove('falsch'), 320);
-      efDialog(t.wrap, `<b>${d.name}</b> ist kein Bild.<br>Schliesse es wieder und suche weiter.`);
+      // "Schliesse es wieder" wäre falsch: geöffnet wurde ja nichts.
+      efDialog(t.wrap, `<b>${d.name}</b> ist kein Bild.<br>Schau auf das Symbol und suche weiter.`);
     }
   }
 
@@ -2110,31 +2176,28 @@ ERNSTFALL.weg = (arena, fertig) => {
    alltäglichste Sache überhaupt: in einem langen Text die Stelle
    finden, die man sucht. */
 ERNSTFALL.scrollen = (arena, fertig) => {
-  const kapitel = [
-    'Der Wald', 'Die Tiere', 'Die Bäume', 'Der Bach',
-    'Die Vögel', 'Die Pilze', 'Der Winter',
-  ];
+  const kapitel = LESETEXT.map(k => k.titel);
   const gesucht = ['Der Bach', 'Die Pilze'];
   let dran = 0;
 
   const t = schreibtisch(arena, { auftrag:'', fenster:'📄 Lesetext.pdf' });
-  t.flaeche.remove();
+  // Die ganze Dateifläche weg, nicht nur das Kachelraster darin –
+  // sonst nimmt sie die halbe Fensterbreite ein und der Text klebt rechts.
+  t.wrap.querySelector('.ef-flaeche').remove();
   const doku = document.createElement('div');
   doku.className = 'ef-doku';
   const blatt = document.createElement('div');
   blatt.className = 'ef-blatt';
-  kapitel.forEach((k,i)=>{
+  LESETEXT.forEach((k,i)=>{
     const h = document.createElement('h4');
-    h.textContent = (i+1) + '. ' + k;
-    h._kapitel = k;
+    h.textContent = (i+1) + '. ' + k.titel;
+    h._kapitel = k.titel;
     blatt.appendChild(h);
-    for(let n=0;n<3;n++){
+    k.absaetze.forEach(text=>{
       const pp = document.createElement('p');
-      pp.textContent = 'Hier steht ein Abschnitt über ' + k.toLowerCase()
-        + '. Er ist absichtlich lang, damit du zum Suchen scrollen musst. '
-        + 'Zwei Finger aufs Touchpad legen und gemeinsam schieben.';
+      pp.textContent = text;
       blatt.appendChild(pp);
-    }
+    });
   });
   doku.appendChild(blatt);
   t.wrap.querySelector('.fenster-inhalt').appendChild(doku);
